@@ -11,7 +11,7 @@ Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is r
 - Legacy iNES ROM/ZIP read-only parser; checksums, mapper, bank boundaries, trainer offsets and explicit errors.
 - CHR-ROM 2bpp tile decoder and synthetic grayscale tile/bank PNG exporter with deterministic manifest.
 - Automated synthetic parsing, bitplane, ZIP safety, provenance and CLI tests.
-- GitHub Actions matrix for Windows and Ubuntu, Python 3.11/3.12; workflow status pending GitHub execution.
+- GitHub Actions matrix for Windows and Ubuntu, Python 3.11/3.12; **all four PR CI jobs passed** on 2026-11-08.
 - Project governance and engineering docs.
 
 ## Validated locally on 2026-11-08
@@ -27,10 +27,10 @@ Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is r
 - No MesenCE integration, OAM/palette capture, animations, decoded levels or audio.
 - No emulator state synchronization experiment or tested native Windows desktop UI.
 - Coverage beyond raw CHR tile count has not been assessed.
-- GitHub CI and native Windows validation are separate gates and must not be assumed passed.
+- GitHub CI passed on the feature PR; native Windows desktop/emulator validation has not occurred.
 
 ## Next steps
 
-1. Review and merge the foundation PR after checks.
-2. Use the `research/smb3-emulator-feasibility` branch to prove synchronized capture of OAM, palettes, CHR mapping and rendered pixels at known frame boundaries.
-3. Only then settle the emulator adapter boundary and start the static PySide6 explorer.
+1. Review foundation PR #1 (CI passed) and merge when approved.
+2. Work issue #2 on `research/smb3-emulator-feasibility` to prove synchronized capture of OAM, palettes, CHR mapping and rendered pixels at known frame boundaries.
+3. Implement issue #3: the static PySide6 explorer. Gate live features on the emulator proof.
