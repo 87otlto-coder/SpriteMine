@@ -8,7 +8,7 @@ Game: SMB3 US PRG1 / Revision A, mapper 4 (MMC3).
 
 Can SpriteMine obtain synchronized, reproducible OAM, palette, effective CHR mapping, scanline/frame state, and final rendered pixels from MesenCE without tightly coupling the PySide6 application to the emulator?
 
-## Known source-level observations (not a successful integration)
+A pinned source API inventory and renderer caveat analysis is available in [MESENCE_API_INVENTORY.md](MESENCE_API_INVENTORY.md).\n\n## Known source-level observations (not a successful integration)
 
 MesenCE's `InteropDLL/DebugApiWrapper.cpp` declares `GetSpriteList`, `GetTilemap`, `GetPaletteInfo`, and memory access functions. `InteropDLL/EmuApiWrapper.cpp` provides ROM load and save-state functions. `Core/NES/Debugger/NesPpuTools.h` contains PPU tooling. These are promising **code-level interfaces**, not evidence that a stable external bridge or atomic capture exists.
 
@@ -66,6 +66,6 @@ Expected: the first checkout contains this research plan; the final command prin
 | Date | Experiment | Status | Evidence |
 |---|---|---|---|
 | 2026-11-08 | Source API surface reconnaissance | Source inspected; integration unproven | Source links above |
-| TBD | Windows build, reproducible state | Not started | — |
+| 2026-11-09 | Pinned interop API and debugger-preview analysis | Source inspected; no runtime proof | [API inventory](MESENCE_API_INVENTORY.md) |\n| TBD | Windows build, reproducible state | Not started | — |
 | TBD | Atomic OAM/palette/CHR capture | Not started | — |
 | TBD | Independent Mario frame reconstruction | Not started | — |
