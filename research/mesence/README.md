@@ -111,3 +111,7 @@ Get-ChildItem -Path "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE" -Filter "mapping_probe
 You may share the **JSON metadata** or Script Window log for further diagnosis; do not upload ROMs or extracted graphics to public GitHub.
 
 **Interpretation:** If the upper 4 KiB is populated at startFrame but blank at endFrame, phase-dependent mapping is demonstrated. If both are blank, the mapping could change during visible scanlines, or Mesen's debug read could be unsuitable. Either result is useful, but neither alone establishes exactly which physical CHR bank supplied Mario's rendered pixels. Test remains research-only.
+
+## Confirmed start/end phase result — 2026-11-09
+
+The actual MesenCE metadata captured by the owner for frames 136117/136118 shows upper PPU nonzero bytes **2991 at startFrame** versus **0 at endFrame**. All five potentially on-screen OAM entries with odd 8×16 tile IDs reference nonblank patterns at start and blank patterns at end. This confirms phase-sensitive debugger-visible PPU pattern data in SMB3. It does **not** yet identify physical CHR-ROM bank IDs or prove whether mapper writes happen inside visible scanlines. Do not substitute pre-render snapshots for scanline-accurate game asset provenance without further testing.
