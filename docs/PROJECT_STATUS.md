@@ -46,3 +46,7 @@ Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is r
 ### Mocked Lua capture execution — verified 2026-11-09
 
 GitHub Actions [run 42585418488](https://github.com/87otlto-coder/SpriteMine/actions/runs/42585418488) successfully executed the original Lua probe against a synthetic stand-in for MesenCE's Lua `emu` API, emitted two complete frame capture sets (100 and 101), and structurally validated the binary payloads and manifests. Seven independent Python validator tests also passed. The normal cross-platform tests passed separately. **This is software/mock validation, not an actual emulator observation.** The next required evidence is an on-device MesenCE capture and playback/snapshot comparison.
+
+## Local environment alignment — 2026-11-09
+
+The owner confirmed `F:\Dev\ROMMAGE\SOURCE\SpriteMine` was refreshed successfully, and `F:\Dev\ROMMAGE\TOOLS\SpriteMine-research` already holds the up-to-date research branch. MesenCE is installed in `TOOLS`. The Lua probe now defaults to `F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE` for local capture output (the folder must exist). CI uses `SPRITEMINE_CAPTURE_DIR` to override the path. No real emulator captures have been verified yet. See `research/mesence/README.md`.

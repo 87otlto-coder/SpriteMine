@@ -1,7 +1,7 @@
 -- SpriteMine MesenCE source-level feasibility probe (not a validated emulator adapter).
 -- Requires MesenCE's script file I/O permission. Captures two endFrame samples.
 -- Run while the verified SMB3 US PRG1 ROM is actively playing.
--- Output is LOCAL: MesenCE's LuaScriptData/spritemine_frame_probe folder.
+-- Output is LOCAL: F:/Dev/ROMMAGE/FIXTURE/SMB3/MesenCE by default.
 -- This original script depends on MesenCE Lua API semantics and must be tested on Windows.
 
 local PROBE_VERSION = "spritemine-mesence-endframe-v1"
@@ -20,11 +20,13 @@ if type(io) ~= "table" or type(io.open) ~= "function" then
     return
 end
 
-local OUTPUT_DIR = emu.getScriptDataFolder()
-if type(OUTPUT_DIR) ~= "string" or OUTPUT_DIR == "" then
-    emu.log("SpriteMine: MesenCE did not provide an accessible script data folder.")
-    return
-end
+-- Project-owned capture location. PowerShell must create this folder first.
+-- Environment override is available for automated tests or alternative drives.
+local DEFAULT_OUTPUT_DIR = "F:/Dev/ROMMAGE/FIXTURE/SMB3/MesenCE"
+local configured_dir = type(os) == "table" and type(os.getenv) == "function"
+    and os.getenv("SPRITEMINE_CAPTURE_DIR") or nil
+local OUTPUT_DIR = configured_dir and configured_dir ~= ""
+    and configured_dir or DEFAULT_OUTPUT_DIR
 
 local function quote_json(value)
     local s = tostring(value)

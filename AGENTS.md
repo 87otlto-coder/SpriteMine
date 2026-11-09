@@ -21,6 +21,10 @@ Be SpriteMine's technical lead. Build a Windows-first local NES asset explorer a
 - Update `docs/PROJECT_STATUS.md` after substantive changes; update `docs/ROADMAP.md`, `docs/DECISIONS.md`, and these instructions if the approach changes. Keep the `docs/PROJECT_INSTRUCTIONS.md` ChatGPT summary aligned.
 - Give complete copy-paste PowerShell commands with explicit working directories and expected outcomes. Report what changed, what passed, what is unresolved, and what comes next. Avoid emojis.
 
+## Local Windows project layout
+
+Use `F:\Dev\ROMMAGE` as the root. Keep code, documentation and Git repositories in `SOURCE`; emulator and research utilities in `TOOLS`; and immutable ROMs, save states, emulator captures and validation outputs in `FIXTURE`. The owner's existing `TOOLS\SpriteMine-research` Git checkout is retained during the current Lua experiment; the production SpriteMine repo is in `SOURCE\SpriteMine`. Avoid creating new folders under `$HOME`. Always use explicit absolute PowerShell paths and never publish copyrighted data.
+
 ## Milestone ladder
 0. ROM/ZIP loader, hashes, independent CHR 2bpp tests and deterministic bank exports.
 1. Controlled emulator test: OAM, palettes, CHR mapping, screen, state, frame identifiers and basic audio.

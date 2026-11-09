@@ -50,22 +50,15 @@ Do not proceed with a live Sprite Inspector until one complete SMB3 frame can be
 
 ## Windows research setup (PowerShell)
 
-Keep emulator sources outside SpriteMine, which should never contain a copied GPL core or copyrighted ROM:
+Existing owner setup: the research branch is already checked out in `F:\Dev\ROMMAGE\TOOLS\SpriteMine-research` and MesenCE is installed in `TOOLS`. No additional emulator source clone is required for the Lua experiment. Refresh the research checkout and create the capture directory with:
 
 ```powershell
-Set-Location -Path $HOME
-git clone https://github.com/87otlto-coder/SpriteMine.git "$HOME\SpriteMine"
-Set-Location -Path "$HOME\SpriteMine"
-git fetch origin
-git switch research/smb3-emulator-feasibility
-
-Set-Location -Path $HOME
-git clone https://github.com/nesdev-org/MesenCE.git "$HOME\MesenCE-research"
-Set-Location -Path "$HOME\MesenCE-research"
-git rev-parse HEAD
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+New-Item -ItemType Directory -Force -Path "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE" | Out-Null
 ```
 
-Expected: the first checkout contains this research plan; the final command prints the exact MesenCE source revision. Build instructions and results remain TBD until verified on Windows.
+Expected: research checkout is current and a local capture directory exists. Follow the Lua experiment guide at `research/mesence/README.md`. Build instructions for a custom MesenCE adapter remain TBD; no C++ integration has been verified.
 
 ## Experiment log
 

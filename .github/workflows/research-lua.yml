@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SPRITEMINE_TEST_OUTPUT: /tmp/spritemine-probe
+      SPRITEMINE_CAPTURE_DIR: /tmp/spritemine-probe
     steps:
       - uses: actions/checkout@v4
       - name: Install stock Lua parser
