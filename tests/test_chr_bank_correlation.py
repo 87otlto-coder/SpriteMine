@@ -65,3 +65,10 @@ def test_private_real_smb3_capture_correlation_if_configured():
         item["physical_1k_chr_bank_matches"] for item in result["snapshot_windows"]
     ] == [[92], [93], [94], [95], [126], [126], [126], [126]]
     assert len(result["layouts_matching_all_eight_snapshot_windows"]) >= 2
+
+
+def test_odd_2k_bank_selectors_ignore_bit_zero():
+    # An odd bank number must still select the even-aligned two-page pair.
+    regs = {0: 9, 1: 103, 2: 83, 3: 4, 4: 34, 5: 50}
+    assert expected_mmc3_pages(regs, 0) == [8, 9, 102, 103, 83, 4, 34, 50]
+    assert expected_mmc3_pages(regs, 1) == [83, 4, 34, 50, 8, 9, 102, 103]
