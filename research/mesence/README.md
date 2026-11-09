@@ -172,3 +172,14 @@ Remove-Item Env:SPRITEMINE_TEST_ROM, Env:SPRITEMINE_CAPTURE_PPU_PATTERN, Env:SPR
 ~~~
 
 Adjust the fixture paths to their actual local locations and ensure the Python environment has both SpriteMine and pytest installed. This opt-in test confirms the cross-session mapping pattern and SHA-1; it is intentionally skipped in GitHub CI because raw game files are private.
+
+## ROM-backed MMC3 mapping decoder (read-only)
+
+Two related research utilities serve different purposes:
+
+- correlate_chr_banks.py: given a local ROM, a **raw 8192-byte captured PPU pattern file**, and MMC3 trace, match each captured 1 KiB PPU slot to its physical CHR-ROM bank; report ambiguity when multiple physical banks contain identical data.
+- decode_mmc3_trace.py: given a local SMB3 ROM and a trace JSON, model all **known** MMC3 CHR register values at each observed frame boundary, list eight physical bank indexes and exact ROM offsets, and compute the expected full PPU pattern SHA-256. Optionally compare private capture ZIP PPU snapshots by hash. It does not output any graphics bytes and refuses guesses before all six CHR registers have been observed.
+
+**Verified result:** modeled endFrame 8 KiB PPU SHA-256 = 0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918, exactly matching the private captures for frames 29276 and 29277. The predicted startFrame PPU SHA-256 = ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5; a byte-for-byte independent startFrame capture still needs to be performed.
+
+See docs/research/MMC3_CHR_MAPPING_VERIFICATION.md for the source table and complete evidence. Full provenance is confined to local FIXTURE paths.
