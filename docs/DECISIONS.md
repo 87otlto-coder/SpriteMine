@@ -23,3 +23,7 @@ Decision: automated CI uses synthetic ROM bytes only. User-provided SMB3 is test
 ## ADR-006: Explicit unsupported headers (2026-11-08)
 
 Decision: only legacy iNES parsing is implemented in Phase 0; detect/reject NES 2.0 rather than silently misinterpreting bank sizes or RAM fields.
+
+## ADR-007: Lua-first emulator capture feasibility probe (2026-11-09, provisional)
+
+Try MesenCE's documented Lua scripting facilities for a **research-only** two-frame capture before constructing a C++ interop shim. Use the `endFrame` event and local script data folder with explicitly enabled file I/O; save the original game assets outside GitHub. Validate the byte-stream structure and source identity independently in Python. This does not establish coherent PPU state, final rendered visibility, or physical MMC3 bank provenance. If Lua cannot provide synchronized observations, return to a small C++ instrumentation adapter; do not silently treat the Lua probe as production integration.
