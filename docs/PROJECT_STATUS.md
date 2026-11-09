@@ -58,3 +58,9 @@ The owner provided a MesenCE capture ZIP with **two real SMB3 PRG1 frames** (292
 Important: OAM shows two potentially on-screen 8×16 entries corresponding spatially to Mario; their odd tile IDs select PPU `0x1000–0x1FFF` in 8×16 mode. The captured upper pattern table contains only zero bytes. The endFrame snapshot **cannot reconstruct these visible Mario tiles**. Hypotheses: a different MMC3 CHR bank mapping at the rendering scanline, or unexpected debug read behavior. Neither is confirmed. Screen buffers change by 3 pixels while OAM/palette/pattern snapshots remain identical. The next task is a time-separated PPU mapping experiment. See `docs/RESEARCH_LOG.md`.
 
 Only metadata findings are stored in GitHub. All game asset bytes remain out of the repository.
+
+## 2026-11-09 — Mapping phase dependence verified on device
+
+The owner supplied metadata-only MesenCE `spritemine-mapping-phase-v1` output for frames **136117–136118**, ROM SHA-1 matching previously verified SMB3 PRG1. At **startFrame** (PPU scanline -1), upper PPU 4 KiB contains **2,991 nonzero bytes**; at **endFrame** (scanline 240) the same range has **0**. Lower 4 KiB goes **3,211→3,735**. All 5 potential on-screen odd-tile 8×16 OAM entries change from **0 blank referenced patterns** to **5 blank**. Both frames reproduce these counts. This confirms phase-sensitive effective PPU pattern content, **not** exact MMC3 register writes, scanline-specific mapping, or sprite pixel reconstruction.
+
+The next blocker is identifying rendering-time physical CHR bank provenance. See `docs/RESEARCH_LOG.md`; do not mark live Sprite Inspector complete. 
