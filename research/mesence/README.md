@@ -115,3 +115,29 @@ You may share the **JSON metadata** or Script Window log for further diagnosis; 
 ## Confirmed start/end phase result — 2026-11-09
 
 The actual MesenCE metadata captured by the owner for frames 136117/136118 shows upper PPU nonzero bytes **2991 at startFrame** versus **0 at endFrame**. All five potentially on-screen OAM entries with odd 8×16 tile IDs reference nonblank patterns at start and blank patterns at end. This confirms phase-sensitive debugger-visible PPU pattern data in SMB3. It does **not** yet identify physical CHR-ROM bank IDs or prove whether mapper writes happen inside visible scanlines. Do not substitute pre-render snapshots for scanline-accurate game asset provenance without further testing.
+
+## Next on-device experiment — MMC3 register writes
+
+**Motivation:** Real frames 136117/136118 have upper PPU pattern nonzero counts **2991 at startFrame → 0 at endFrame**, for two consecutive frames. Five potentially on-screen odd 8×16 sprite patterns are nonblank at start and blank at end. This establishes phase-dependent mapped content, not its cause.
+
+New script: `research/mesence/spritemine_mmc3_trace.lua`. It records *only* metadata for **CPU writes to MMC3 bank-select/data range $8000–$9FFF**, plus frame/scanline/cycle and pre-write register values, for two complete frame intervals. A hard limit of 128 writes prevents runaway logging. The callback is invoked **before** the write takes effect, so the script does not claim an observed post-write bank state. Writes during VBlank outside the sampled intervals may be missed.
+
+Refresh the existing research checkout:
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+Test-Path ".\research\mesence\spritemine_mmc3_trace.lua"
+~~~
+
+Expected: `True`. In MesenCE, stop the previous Lua script (square Stop button in **Debug → Script Window**). Choose **File → Open**, select `F:\Dev\ROMMAGE\TOOLS\SpriteMine-research\research\mesence\spritemine_mmc3_trace.lua`, then press **F5** while SMB3 is playing. The script will log `SpriteMine MMC3 trace COMPLETE` and the location of a small `mmc3_trace_*.json` file within `F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE`.
+
+To locate the newest report:
+
+~~~powershell
+Get-ChildItem -Path "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE" -Filter "mmc3_trace_*.json" |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1 FullName, Length, LastWriteTime
+~~~
+
+Share the JSON metadata report or error log, not the underlying ROM or captured screen bytes. Its timestamps may show when bank-select/data writes occur during active scanlines; further tests will be required to link those writes to exact physical CHR-ROM sources and sprite pixel output. This is research instrumentation, not the final live Sprite Inspector.
