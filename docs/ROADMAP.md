@@ -5,7 +5,7 @@ Status is recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md). Work remains **SMB
 | Phase | Deliverable | Demonstrable acceptance |
 |---|---|---|
 | 0. Foundation | ROM parser, 2bpp CHR export, tests | Correct user ROM hashes; 16 bank images / 8,192 tiles; deterministic offsets; CI |
-| 1. Emulator feasibility | Replaceable capture adapter proof | At a reproducible frame, captured OAM/palettes/CHR mapping agree with actual output; state + input replay works |
+| 1. Emulator feasibility | Replaceable capture adapter proof | Real OAM/palette/frame capture and ROM-backed boundary CHR mapping now verified; still need rendering-time synchronization and save-state/input replay |
 | 2. Static explorer | PySide6 ROM, bank, tile, palette views | Load verified ROM, inspect and export any tile with provenance |
 | 3. Sprite inspector | Reconstruct hardware components and visible sprites | Reconstruct Mario from verified OAM components with correct alpha/flip/priority behavior |
 | 4. Animations | Capture, align, preview and export | Mario walk plus one enemy animation export with durations/origins, no background contamination |
