@@ -18,11 +18,15 @@ jobs:
       - name: Install stock Lua parser
         run: sudo apt-get update && sudo apt-get install -y lua5.4
       - name: Validate Lua syntax (not Mesen runtime API)
-        run: luac5.4 -p research/mesence/spritemine_frame_probe.lua
+        run: |
+          luac5.4 -p research/mesence/spritemine_frame_probe.lua
+          luac5.4 -p research/mesence/spritemine_mapping_probe.lua
       - name: Execute Lua probe with synthetic emulator API
         run: |
           mkdir -p "$SPRITEMINE_TEST_OUTPUT"
           lua5.4 research/mesence/mock_mesence.lua research/mesence/spritemine_frame_probe.lua
+      - name: Execute phase-sensitive mapping probe mock
+        run: lua5.4 research/mesence/mock_mesence_mapping.lua research/mesence/spritemine_mapping_probe.lua
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -33,3 +37,21 @@ jobs:
         run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
       - name: Diagnose mock OAM and PPU pattern mapping
         run: python research/mesence/diagnose_capture.py "$SPRITEMINE_TEST_OUTPUT"
+      - name: Verify start/end phase comparison in synthetic MesenCE
+        run: |
+          python - <<'PY'
+          import glob
+          import json
+          import os
+          folder = os.environ["SPRITEMINE_TEST_OUTPUT"]
+          paths = glob.glob(os.path.join(folder, "mapping_probe_*.json"))
+          assert len(paths) == 1, paths
+          result = json.load(open(paths[0], encoding="utf-8"))
+          assert result["tool"] == "spritemine-mapping-phase-v1"
+          assert len(result["pairs"]) == 2
+          for pair in result["pairs"]:
+              assert pair["start"]["ppu_upper_nonzero"] == 4096
+              assert pair["end"]["ppu_upper_nonzero"] == 0
+              assert pair["end"]["odd_tile_blank_patterns"] == 2
+          print("Two simulated start/end mapper phase comparisons validated")
+          PY
