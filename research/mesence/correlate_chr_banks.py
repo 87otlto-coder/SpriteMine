@@ -41,8 +41,8 @@ def expected_mmc3_pages(registers: dict[int, int], chr_mode: int) -> list[int]:
     if chr_mode not in (0, 1) or any(i not in registers for i in range(6)):
         raise ValueError("Need CHR mode 0 or 1 and bank registers R0..R5")
     r = registers
-    pair0 = [r[0] & 0xFE, r[0] | 1]
-    pair1 = [r[1] & 0xFE, r[1] | 1]
+    pair0 = [r[0] & 0xFE, (r[0] & 0xFE) + 1]
+    pair1 = [r[1] & 0xFE, (r[1] & 0xFE) + 1]
     singles = [r[2], r[3], r[4], r[5]]
     return pair0 + pair1 + singles if chr_mode == 0 else singles + pair0 + pair1
 
