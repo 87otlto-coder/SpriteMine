@@ -33,7 +33,7 @@ Record the exact MesenCE commit/build in every experiment.
 
 ### New Lua-first execution path (2026-11-09)
 
-[research/mesence](../../research/mesence/README.md) contains an original, small Lua `endFrame` recorder and stdlib Python capture validator. It exploits verified upstream API *declarations*, but MesenCE runtime behavior and frame synchronization are **not yet proven**. Both independent research CI workflows passed: stock Lua 5.4 syntax check and synthetic capture validation, plus the normal Python matrix. The emulator's bundled Lua version is different from the stock parser, so runtime execution remains a separate gate. File I/O/OS permission must be explicitly enabled in MesenCE for the probe to save data; do not turn on network access.
+[research/mesence](../../research/mesence/README.md) contains an original, small Lua `endFrame` recorder and stdlib Python capture validator. It exploits verified upstream API *declarations*, but MesenCE runtime behavior and frame synchronization are **not yet proven**. Both independent research CI workflows passed: stock Lua 5.4 syntax check and synthetic capture validation, plus the normal Python matrix. The emulator's bundled Lua version is different from the stock parser, so runtime execution remains a separate gate. File I/O/OS permission must be explicitly enabled in MesenCE for the probe to save data; do not turn on network access. A second CI run also executed the Lua recorder against a synthetic `emu` API and validated two emitted frame captures in Python (7 unit tests passed). Actual MesenCE execution remains untested.
 
 ## Required evidence per experiment
 
