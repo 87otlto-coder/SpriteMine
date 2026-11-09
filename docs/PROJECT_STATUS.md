@@ -68,3 +68,9 @@ The next blocker is identifying rendering-time physical CHR bank provenance. See
 ## 2026-11-09 — Next instrumentation implemented
 
 Research branch contains `research/mesence/spritemine_mmc3_trace.lua`, a bounded, metadata-only trace of CPU writes to MMC3 $8000–$9FFF during two sampled frame intervals. It records PPU scanline/cycle, frame/clock, write address/value and the bank-select versus bank-data classification. The callback observes **pre-write** state; it cannot itself establish mapped CHR data after each write. The synthetic Lua mock and generated JSON checks passed GitHub research CI (run 42692943952); cross-platform Python checks also passed (run 42692943950). **Real MesenCE execution remains pending.** Run instructions are in `research/mesence/README.md`. Preserve all ROMs and rendered graphics exclusively in FIXTURE.
+
+## 2026-11-09 — Physical CHR-ROM bank identity verified for captured mapping
+
+Independent private-ROM byte comparison identified all 8 earlier endFrame PPU windows exactly as physical 1-KiB CHR banks `[92,93,94,95,126,126,126,126]`. Bank 126 is genuinely blank. The real MMC3 register trace from a separate gameplay interval repeatedly writes that same configuration at scanline 193 (R0=92, R1=94, R2..R5=126). VBlank register values predict `[8,9,102,103,83,4,34,50]` whose nonzero counts exactly agree with the independently captured pre-render mapping phase. This is a high-confidence **cross-session configuration explanation**, not a verified same-scanline Mario sprite reconstruction.
+
+Implemented reproducible metadata-only correlation tool `research/mesence/correlate_chr_banks.py` with synthetic regression tests. Further evidence needed: same-session rendering-scanline capture and independent visible-sprite pixel reconstruction. See `docs/RESEARCH_LOG.md`.
