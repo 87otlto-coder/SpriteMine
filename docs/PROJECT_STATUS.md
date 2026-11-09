@@ -1,5 +1,11 @@
 # Project status
 
+**Latest research snapshot — 2026-11-09:** Phase 0 foundation merged to main. Phase 2 static explorer is in PR #4 with real Windows launch/import/atlas/tile inspection observed; remaining export and edge-case checks pending. Phase 1 MesenCE can now capture actual SMB3 state, and independent MMC3 register traces can reconstruct **all 8 physical CHR-ROM bank mappings at sampled frame boundaries**. The predicted endFrame 8192-byte PPU image matches two private capture snapshots byte for byte, verified by SHA-256. Exact render-time Mario sprite reconstruction, save-state replay and full coverage remain unproven. See [MMC3 CHR mapping verification](research/MMC3_CHR_MAPPING_VERIFICATION.md).
+
+**Research tools:** correlate_chr_banks.py matches captured PPU windows to physical ROM banks; decode_mmc3_trace.py models complete bank mappings at frame boundaries from timestamped writes, computes source offsets/PPU SHA-256 and can compare a private capture ZIP. Both are read-only and output metadata only. Synthetic tests cover odd 2 KiB bank alignment.
+
+---
+
 Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is refreshed with major work.
 
 ## Active milestone
