@@ -34,3 +34,11 @@ Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is r
 1. Review and merge the foundation PR after checks.
 2. Use the `research/smb3-emulator-feasibility` branch to prove synchronized capture of OAM, palettes, CHR mapping and rendered pixels at known frame boundaries.
 3. Only then settle the emulator adapter boundary and start the static PySide6 explorer.
+
+## 2026-11-09 — MesenCE Lua research probe (research branch only)
+
+- Added `research/mesence/spritemine_frame_probe.lua`, a two-frame NES endFrame capture experiment for OAM (256 B), palette RAM (32 B), PPU pattern read space (8,192 B), and video-filtered RGB screen.
+- Added `research/mesence/verify_capture.py` with strict filename, dimension, size and frame-identity validation, plus optional SMB3 PRG1 ROM SHA-256 confirmation. Never emits or commits captured pixel data.
+- Lua syntax checking with stock Lua 5.4 and all synthetic validator tests passed on GitHub Actions; normal Python matrix passed too.
+- **Still unverified:** any real MesenCE file export, exact memory mapping, screen-buffer/frame alignment, input replay, MMC3 bank provenance, and semantic Mario reconstruction. Lua I/O needs explicit user permission.
+- Runtime instructions: `research/mesence/README.md`. This branch is experimental; do not merge into `main` as finished integration.
