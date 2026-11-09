@@ -20,3 +20,7 @@ Source code contains debugger-oriented tilemap/sprite/palette access and emulato
 - https://github.com/nesdev-org/MesenCE
 - https://github.com/TASEmulators/fceux
 - https://github.com/captainsouthbird/smb3 (research reference; licensing review needed before reuse)
+
+## 2026-11-09 — Lua capture feasibility spike
+
+Source-verified capabilities at pinned MesenCE commit `4b8a196e299b3de297b204fd1208d2981562c89b`: Lua endFrame callback, NES OAM/palette memory types, side-effect-disabled PPU address-space reads, getScreenBuffer/getScreenSize, getState/getRomInfo, and per-script data folder. Confirmed from `LuaApi.cpp`, `ScriptingContext.cpp`, and bundled Lua example. File/OS access is opt-in in MesenCE. Original Lua recorder plus Python validator committed on research branch; GitHub Lua syntax + Python synthetic tests passed. These are not runtime observations; **Windows emulator execution is pending**. See `research/mesence/README.md`.
