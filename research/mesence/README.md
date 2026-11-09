@@ -83,3 +83,31 @@ py -3.12 ".\research\mesence\diagnose_capture.py" "F:\Dev\ROMMAGE\FIXTURE\SMB3\M
 ```
 
 This prints **derived metadata only**, including potential on-screen hardware sprite entries and any blank captured tile sources. The next research experiment will test rendering-time mapper state, not another identical endFrame snapshot.
+
+## Next experiment — startFrame vs endFrame pattern bank comparison
+
+The first real SMB3 capture was structurally valid, but its two 8×16 Mario-position OAM entries selected the upper pattern table while the endFrame upper table was entirely zero. A mapper bank change between visible rendering and VBlank is a hypothesis, not a confirmed cause.
+
+The targeted follow-up script is research/mesence/spritemine_mapping_probe.lua. It reads **derived counts only** for lower/upper 4 KiB PPU pattern regions, plus the number of potential on-screen OAM entries with odd 8×16 tile IDs. It samples two startFrame / endFrame callback pairs and saves a small JSON file in the same FIXTURE directory. No game imagery is written by this diagnostic script.
+
+First refresh the research checkout:
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+Test-Path ".\research\mesence\spritemine_mapping_probe.lua"
+~~~
+
+Expected: the final command prints True. In MesenCE, keep the verified SMB3 ROM running in World 1-1, open **Debug → Script Window**, stop the older capture script if still active (square Stop icon), then **File → Open** the new spritemine_mapping_probe.lua and press **F5**. With I/O/OS access enabled and network access still disabled, two log summaries should appear. The last line prints the path to a mapping_probe_*.json file.
+
+To locate this metadata file:
+
+~~~powershell
+Get-ChildItem -Path "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE" -Filter "mapping_probe_*.json" |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 3 FullName, Length, LastWriteTime
+~~~
+
+You may share the **JSON metadata** or Script Window log for further diagnosis; do not upload ROMs or extracted graphics to public GitHub.
+
+**Interpretation:** If the upper 4 KiB is populated at startFrame but blank at endFrame, phase-dependent mapping is demonstrated. If both are blank, the mapping could change during visible scanlines, or Mesen's debug read could be unsuitable. Either result is useful, but neither alone establishes exactly which physical CHR bank supplied Mario's rendered pixels. Test remains research-only.
