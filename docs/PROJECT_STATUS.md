@@ -21,7 +21,7 @@ Branch `feature/static-chr-explorer` implements a **static-only PySide6 CHR brow
 - Select tiles; show global index, bank coordinates, ROM and CHR byte offsets.
 - Choose synthetic grayscale, green or amber palette previews. These are **not** authentic SMB3 palettes.
 - Export selected tile, bank or all banks in grayscale with deterministic manifest.
-- Synthetic rendering tests and offscreen Qt smoke tests; CI pending.
+- Synthetic rendering tests and offscreen Qt smoke tests; **all six CI jobs passed** on Windows and Ubuntu (Python 3.11/3.12 core matrix plus two Qt smoke jobs). A GUI export regression test has also been added; its CI result must be checked separately.
 
 This phase can progress independently while the MesenCE adapter feasibility is investigated.
 

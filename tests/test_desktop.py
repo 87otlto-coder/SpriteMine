@@ -1,3 +1,6 @@
+import json
+from types import SimpleNamespace
+
 """Headless Qt smoke tests, run with QT_QPA_PLATFORM=offscreen."""
 
 import os
@@ -69,4 +72,40 @@ def test_chr_ram_disables_exports(app):
     assert not window.export_tile_action.isEnabled()
     assert "runtime capture required" in window.statusBar().currentMessage()
     assert window.tile_preview.text() == "No static CHR-ROM graphics"
+    window.close()
+
+
+def test_gui_export_routes_to_provenance_extractor(app, tmp_path, monkeypatch):
+    from spritemine import desktop
+
+    window = MainWindow()
+    window.load_rom_object(synthetic_rom(chr_banks=2))
+    monkeypatch.setattr(
+        desktop, "QFileDialog",
+        SimpleNamespace(getExistingDirectory=lambda *_args: str(tmp_path)),
+    )
+    messages = []
+    monkeypatch.setattr(
+        desktop, "QMessageBox",
+        SimpleNamespace(
+            information=lambda *_args: messages.append("information"),
+            warning=lambda *_args: messages.append("warning"),
+        ),
+    )
+    window._on_tile_selected(17)
+    window.palette_combo.setCurrentIndex(1)
+    window.export_tile_action.trigger()
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    assert manifest["provenance_type"] == "raw"
+    assert manifest["palette"] == "synthetic_grayscale_not_authentic_nes_palette"
+    assert len(manifest["entries"]) == 1
+    assert manifest["entries"][0]["tile_index"] == 17
+    assert (tmp_path / "chr_tile_0017.png").exists()
+
+    window.export_all_action.trigger()
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    assert len(manifest["entries"]) == 2
+    assert (tmp_path / "chr_bank_00.png").exists()
+    assert (tmp_path / "chr_bank_01.png").exists()
+    assert messages == ["information", "information"]
     window.close()
