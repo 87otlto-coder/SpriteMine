@@ -1,12 +1,16 @@
 # SpriteMine — reproducible MesenCE Lua capture spike
 
-This is an **unvalidated research experiment**, not a production emulator adapter. The Lua script uses real MesenCE API functions identified from the upstream source at commit `4b8a196e299b3de297b204fd1208d2981562c89b`, but has **not yet been run against SMB3 in Windows MesenCE**. It does not decode semantic characters or map PPU addresses to physical ROM banks.
+This is a **runtime-unvalidated research experiment**, not a production emulator adapter. The Lua script uses real MesenCE API functions identified from the upstream source at commit `4b8a196e299b3de297b204fd1208d2981562c89b`, but has **not yet been run against SMB3 in Windows MesenCE**. It does not decode semantic characters or map PPU addresses to physical ROM banks.
 
 ## Why Lua first?
 
 MesenCE already has a debugger scripting API: `emu.addEventCallback(..., emu.eventType.endFrame)`, `emu.read(..., emu.memType.nesSpriteRam)`, `nesPaletteRam`, `nesPpuDebug`, `emu.getScreenSize`, `emu.getScreenBuffer`, `emu.getState`, `emu.getRomInfo` and `emu.getScriptDataFolder`. It may let us verify a real capture without embedding a GPL-licensed emulator or guessing C++ interop struct layouts.
 
 Important: **MesenCE disables Lua file I/O by default unless script I/O/OS access is enabled in its debugger settings.** The probe checks this and reports a clear error if disabled. Allow file I/O only for scripts you trust; it grants filesystem access. No network permissions are required.
+
+## Verified synthetic execution (2026-11-09)
+
+GitHub Actions passed the stock Lua syntax check, **executed the complete original Lua recorder using a synthetic `emu` API**, produced two complete binary capture sets and JSON manifests (frame 100/101), and validated the generated files in Python. All **7 capture-validator unit tests passed**. This proves our code path and file contract work under the mock; **it does not prove MesenCE will supply coherent memory or screen data**. [Research CI run](https://github.com/87otlto-coder/SpriteMine/actions/runs/42585418488).
 
 ## Windows steps
 
