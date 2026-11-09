@@ -2,9 +2,11 @@
 
 ## Automated Python tests (no copyrighted ROM required)
 
+Commands below use Python 3.12. Python 3.11 is also supported; check installed runtimes with `py -0p` before creating a virtual environment.
+
 ```powershell
 Set-Location -Path "$HOME\SpriteMine"
-py -3.11 -m venv .venv
+py -3.12 -m venv .venv
 & ".\.venv\Scripts\python.exe" -m pip install -e ".[dev,gui]"
 & ".\.venv\Scripts\python.exe" -m pytest -q
 ```
