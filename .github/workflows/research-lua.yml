@@ -11,7 +11,7 @@ jobs:
     name: Lua syntax and capture verifier
     runs-on: ubuntu-latest
     env:
-      SPRITEMINE_TEST_OUTPUT: ${{ runner.temp }}/spritemine-probe
+      SPRITEMINE_TEST_OUTPUT: /tmp/spritemine-probe
     steps:
       - uses: actions/checkout@v4
       - name: Install stock Lua parser
