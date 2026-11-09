@@ -1,6 +1,6 @@
 # SpriteMine — MesenCE frame capture experiment
 
-This is an **experimental Lua recorder**, not a completed emulator integration. Synthetic GitHub CI verified that the script can write two frame sets and that the Python validator reads them. A real MesenCE/SMB3 capture has not yet been observed.
+This is a **research toolkit, not a completed emulator adapter**. Real MesenCE/SMB3 endFrame capture, start/endFrame mapping comparison, and MMC3 register-write trace have now been observed and validated structurally. Exact rendering-scanline sprite reconstruction remains unproven. GitHub CI also validates synthetic file writing and modeling.
 
 ## Local organization
 
@@ -157,3 +157,18 @@ git pull --ff-only origin research/smb3-emulator-feasibility
 ~~~
 
 **Adapt the three input paths to the actual file locations.** The correlation tool requires the editable `spritemine` package in the Python environment; if necessary install the main checkout with `-e ".[dev]"` first. Expected metadata: eight uniquely matched windows `[92,93,94,95,126,126,126,126]` and a matching modeled layout at scanline 193, reproduced in two frames. The tool prints no copyrighted ROM bytes or images. The trace and snapshot come from different gameplay intervals, so agreement validates a repeated mapper configuration, not synchronization.
+
+## Optional full SMB3 provenance regression
+
+After placing the original ROM, prior extracted PPU pattern snapshot and metadata trace under `FIXTURE` and setting your three environment variables, run the research tests locally:
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+$env:SPRITEMINE_TEST_ROM = "F:\Dev\ROMMAGE\FIXTURE\SMB3\Super Mario Bros. 3.zip"
+$env:SPRITEMINE_CAPTURE_PPU_PATTERN = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\frame_0000029277_ppu_pattern.bin"
+$env:SPRITEMINE_CAPTURE_MMC3_TRACE = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\mmc3_trace_0000189263_1794256680.json"
+& "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe" -m pytest -q tests/test_chr_bank_correlation.py
+Remove-Item Env:SPRITEMINE_TEST_ROM, Env:SPRITEMINE_CAPTURE_PPU_PATTERN, Env:SPRITEMINE_CAPTURE_MMC3_TRACE -ErrorAction SilentlyContinue
+~~~
+
+Adjust the fixture paths to their actual local locations and ensure the Python environment has both SpriteMine and pytest installed. This opt-in test confirms the cross-session mapping pattern and SHA-1; it is intentionally skipped in GitHub CI because raw game files are private.
