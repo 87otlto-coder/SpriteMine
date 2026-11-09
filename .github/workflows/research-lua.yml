@@ -35,7 +35,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -e ".[dev]"
       - name: Test synthetic capture schema and safety checks
-        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_chr_bank_correlation.py
+        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py
       - name: Validate actual binary files from mocked Lua probe
         run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
       - name: Diagnose mock OAM and PPU pattern mapping
