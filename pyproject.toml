@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spritemine"
-version = "0.1.0"
+version = "0.2.0"
 description = "Read-only NES asset exploration, beginning with Super Mario Bros. 3"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,9 +13,11 @@ dependencies = ["Pillow>=10,<13"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+gui = ["PySide6>=6.7,<7"]
 
 [project.scripts]
 spritemine = "spritemine.cli:main"
+spritemine-gui = "spritemine.desktop:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

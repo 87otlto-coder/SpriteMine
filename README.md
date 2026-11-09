@@ -1,35 +1,36 @@
 # SpriteMine
 
-**SMB3 first.** A local, Windows-first toolkit for investigating, reconstructing and exporting audiovisual assets from NES games. The first milestone targets **Super Mario Bros. 3 (US PRG1 / Revision A)**. This repository is a development workbench, not yet a desktop application.
+**SMB3 first.** A local, Windows-first toolkit for investigating, reconstructing and exporting audiovisual assets from NES games. The first milestone targets **Super Mario Bros. 3 (US PRG1 / Revision A)**. The desktop explorer is an early static-only prototype.
 
-## Current state — Phase 0 foundation
+## Current capabilities
 
 - Read-only `.nes` and single-ROM `.zip` input with iNES 1.0 validation, hashes, mapper, PRG/CHR boundaries and trainer handling.
-- NES CHR-ROM 2bpp decoder; grayscale 8×8 tiles and 8 KiB bank atlas PNG export.
-- Deterministic JSON manifest with ROM fingerprint, bank, tile offsets and PNG checksum.
-- Pure synthetic tests and optional local SMB3 integration validation. ROMs are never checked into GitHub.
-- **Not implemented:** desktop UI, live emulator capture, authentic runtime palettes, semantic sprites, animations, level reconstruction, and audio extraction.
+- NES CHR-ROM 2bpp decoding, grayscale 8×8 tiles, 8 KiB bank atlas PNG export.
+- Deterministic JSON manifest with ROM fingerprint, CHR/ROM offsets, bank and tile indices, PNG checksums.
+- **Experimental PySide6 desktop explorer** on `feature/static-chr-explorer`: scrollable CHR atlas, tile picker, bank selection, pixel-perfect zoom, synthetic palette previews, source offsets, grayscale exports.
+- Synthetic unit tests, opt-in local SMB3 validation, and Windows/Ubuntu CI.
 
-The grayscale previews are **not authentic game palettes**. NES 2.0 parsing and CHR-RAM graphics capture are explicitly not supported yet.
+**Important:** Static CHR bytes do not include the original NES palette assignments or semantic sprite identities. Synthetic preview colors are not authentic SMB3 colors. NES 2.0 and CHR-RAM static extraction are currently unsupported. Runtime capture, character reconstruction, animations, levels and audio are future milestones.
 
-## Windows setup (PowerShell)
+## Windows installation (PowerShell)
 
-Install Python 3.11+ and Git. The commands below clone into `$HOME\SpriteMine`; if you already have a clone, use your existing folder instead.
+Install Python 3.11+ and Git, then use:
 
 ```powershell
 Set-Location -Path $HOME
 git clone https://github.com/87otlto-coder/SpriteMine.git "$HOME\SpriteMine"
 Set-Location -Path "$HOME\SpriteMine"
 git fetch origin
-git switch feature/foundation-rom-chr
+git switch feature/static-chr-explorer
 py -3.11 -m venv .venv
-& ".\.venv\Scripts\python.exe" -m pip install -e ".[dev]"
+& ".\.venv\Scripts\python.exe" -m pip install -e ".[dev,gui]"
 & ".\.venv\Scripts\python.exe" -m pytest -q
+& ".\.venv\Scripts\python.exe" -m spritemine.desktop
 ```
 
-The `git switch` line is temporary until the foundation PR is merged into `main`.
+Expected: a SpriteMine window with a ROM/ZIP Open command, CHR atlas, controls and tile inspection panel. This is a **prototype**, not a packaged installer. The `git switch` step is temporary until the desktop explorer PR is merged.
 
-To inspect a local, legally obtained ROM (replace the example path):
+To verify the command-line extractor, replace the example ROM path with your locally stored, legally obtained file:
 
 ```powershell
 Set-Location -Path "$HOME\SpriteMine"
@@ -37,21 +38,24 @@ Set-Location -Path "$HOME\SpriteMine"
 & ".\.venv\Scripts\python.exe" -m spritemine chr-export "C:\Games\Super Mario Bros. 3.zip" --output "$HOME\SpriteMine-exports\smb3-chr"
 ```
 
-Expected: JSON metadata, then 16 PNG bank images and `manifest.json` in the export folder for the verified SMB3 PRG1 ROM. To export one 8×8 tile: add `--tile 0`; to export a single bank: add `--bank 0`.
+Expected: JSON metadata and 16 PNG bank previews plus `manifest.json` for the verified ROM. For a single bank add `--bank 0`; for a tile add `--tile 0`. Reusing an output directory overwrites its `manifest.json`.
 
-## Source ROM verification
+## Primary ROM verification
 
-Expected user-supplied SMB3 PRG1 `.nes` SHA-256: `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`; PRG CRC32 `A0ED7D20`, CHR CRC32 `C2928C49`. Never distribute the ROM or generated graphics.
+The known user-supplied SMB3 PRG1 ROM has SHA-256:
+`4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`.
+PRG CRC32: `A0ED7D20`; CHR CRC32: `C2928C49`.
+Do not commit the ROM, emulator states, or generated copyrighted assets.
 
-## Project references
+## Project documentation
 
-- [Instructions for development agents](AGENTS.md)
-- [ChatGPT project instruction summary](docs/PROJECT_INSTRUCTIONS.md)
-- [Current status](docs/PROJECT_STATUS.md)
+- [Developer/agent instructions](AGENTS.md)
+- [ChatGPT Project Instructions summary](docs/PROJECT_INSTRUCTIONS.md)
+- [Live status](docs/PROJECT_STATUS.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Architecture and provenance](docs/ARCHITECTURE.md)
 - [Technical decisions](docs/DECISIONS.md)
 - [Research log](docs/RESEARCH_LOG.md)
-- [Validation procedures](docs/TESTING.md)
+- [Testing and Windows validation](docs/TESTING.md)
 
-Development uses `feature/*` branches and PRs to `main`. Use `research/*` for experiments. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Use `feature/*` development branches, `research/*` experiments, and pull requests to `main`. Read [CONTRIBUTING.md](CONTRIBUTING.md).

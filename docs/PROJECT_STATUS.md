@@ -1,36 +1,43 @@
 # Project status
 
-Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is refreshed with major work.
+Updated: 2026-11-09. GitHub implementation and test results take precedence over conversations.
 
-## Active milestone
+## Foundation: merged
 
-**SMB3 PRG1 Phase 0 — foundation.** Feature branch `feature/foundation-rom-chr` contains the initial implementation. Merge requires PR review and any pending CI verification.
+PR #1 merged into `main` (commit `117362e447bf2555c990898dc135b80032328835`).
 
-## Implemented in foundation branch
+- Read-only legacy iNES ROM/ZIP loader, checksums, mapper/bank/trainer inspection and explicit unsupported-format errors.
+- Deterministic CHR-ROM 2bpp decoding, grayscale bank/tile PNG exports and JSON provenance.
+- Synthetic tests and optional private SMB3 PRG1 validation.
+- Four foundation CI jobs passed: Python 3.11/3.12, Windows and Ubuntu.
+- Previously verified supplied SMB3 ZIP: mapper 4, PRG 256 KiB, CHR 128 KiB, 16 CHR banks / 8,192 raw 8×8 tiles; known ROM SHA-256 and PRG/CHR CRCs in README.
 
-- Legacy iNES ROM/ZIP read-only parser; checksums, mapper, bank boundaries, trainer offsets and explicit errors.
-- CHR-ROM 2bpp tile decoder and synthetic grayscale tile/bank PNG exporter with deterministic manifest.
-- Automated synthetic parsing, bitplane, ZIP safety, provenance and CLI tests.
-- GitHub Actions matrix for Windows and Ubuntu, Python 3.11/3.12; **all four PR CI jobs passed** on 2026-11-08.
-- Project governance and engineering docs.
+## Active work: Phase 2 prototype (PR pending)
 
-## Validated locally on 2026-11-08
+Branch `feature/static-chr-explorer` implements a **static-only PySide6 CHR browser**:
 
-- 12 synthetic Python unit tests passed; the optional SMB3 integration test passes when supplied with the ROM (13 total).
-- User-provided SMB3 ZIP: iNES, mapper 4, PRG 256 KiB, CHR 128 KiB, whole-ROM SHA-256 `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`.
-- PRG/CHR CRC32 `A0ED7D20`/`C2928C49`; combined CRC32 `2E6301ED`.
-- 16 exported 8 KiB CHR bank PNGs represent 8,192 tiles. Grayscale values are synthetic.
+- ROM import and verification notice.
+- Select any 8 KiB CHR bank, inspect and zoom its 512 raw tiles.
+- Select tiles; show global index, bank coordinates, ROM and CHR byte offsets.
+- Choose synthetic grayscale, green or amber palette previews. These are **not** authentic SMB3 palettes.
+- Export selected tile, bank or all banks in grayscale with deterministic manifest.
+- Synthetic rendering tests and offscreen Qt smoke tests; CI pending.
 
-## Not yet implemented / verified
+This phase can progress independently while the MesenCE adapter feasibility is investigated.
 
-- No PySide6 interface or user-facing installer.
-- No MesenCE integration, OAM/palette capture, animations, decoded levels or audio.
-- No emulator state synchronization experiment or tested native Windows desktop UI.
-- Coverage beyond raw CHR tile count has not been assessed.
-- GitHub CI passed on the feature PR; native Windows desktop/emulator validation has not occurred.
+## Runtime research: unproven
 
-## Next steps
+Branch `research/smb3-emulator-feasibility` has an experiment plan for synchronized OAM, palette, MMC3 CHR mapping, frame/scanline, screenshot, state replay and audio capture. **No emulator integration has been demonstrated.** Issue #2 tracks this gate.
 
-1. Review foundation PR #1 (CI passed) and merge when approved.
-2. Work issue #2 on `research/smb3-emulator-feasibility` to prove synchronized capture of OAM, palettes, CHR mapping and rendered pixels at known frame boundaries.
-3. Implement issue #3: the static PySide6 explorer. Gate live features on the emulator proof.
+## Pending
+
+- Confirm desktop feature CI, test GUI interactively on the owner's Windows computer, then review and merge UI PR.
+- Prove same-frame MesenCE state acquisition before live sprite tools.
+- Correct runtime palettes, transparent sprite reconstruction, animation capture, World 1-1 decoding and audio remain unimplemented.
+- No Windows installer or evidence-based SMB3 decoded asset coverage report yet.
+
+## Next
+
+1. Review static explorer PR, resolve CI failures, get first actual Windows GUI run.
+2. Continue MesenCE research issue #2 on research branch; validate synchronization before coupling live UI.
+3. Record user-observed results and acceptance in this file.
