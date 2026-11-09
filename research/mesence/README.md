@@ -10,17 +10,20 @@ Important: **MesenCE disables Lua file I/O by default unless script I/O/OS acces
 
 ## Windows steps
 
-Use your existing `$HOME\SpriteMine` clone without changing its current working branch:
+Keep your running desktop explorer checkout untouched by using a second, small Git clone dedicated to research:
 
 ```powershell
-Set-Location -Path "$HOME\SpriteMine"
-git fetch origin
-git worktree add "$HOME\SpriteMine-research" research/smb3-emulator-feasibility
-Set-Location -Path "$HOME\SpriteMine-research"
+Set-Location -Path $HOME
+$researchDir = Join-Path $HOME "SpriteMine-research"
+if (-not (Test-Path (Join-Path $researchDir ".git"))) {
+    git clone --branch research/smb3-emulator-feasibility --single-branch https://github.com/87otlto-coder/SpriteMine.git $researchDir
+}
+Set-Location -Path $researchDir
+git pull --ff-only origin research/smb3-emulator-feasibility
 git rev-parse --short HEAD
 ```
 
-If the research worktree already exists, skip `git worktree add` and run `git pull --ff-only origin research/smb3-emulator-feasibility` from inside it.
+Expected: `$HOME\SpriteMine-research\research\mesence\spritemine_frame_probe.lua` exists. No changes are made to your desktop explorer folder.
 
 Expected: a separate folder `$HOME\SpriteMine-research` containing `research\mesence\spritemine_frame_probe.lua`.
 
