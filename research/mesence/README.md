@@ -141,3 +141,19 @@ Get-ChildItem -Path "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE" -Filter "mmc3_trace_*.
 ~~~
 
 Share the JSON metadata report or error log, not the underlying ROM or captured screen bytes. Its timestamps may show when bank-select/data writes occur during active scanlines; further tests will be required to link those writes to exact physical CHR-ROM sources and sprite pixel output. This is research instrumentation, not the final live Sprite Inspector.
+
+## Reproduce physical CHR-ROM bank correlation (optional advanced check)
+
+Use the owner's immutable SMB3 PRG1 ROM/ZIP, the earlier extracted `frame_0000029277_ppu_pattern.bin`, and the metadata-only trace `mmc3_trace_0000189263_1794256680.json`. These inputs remain inside `FIXTURE` and must never be committed to GitHub.
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+
+& "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe" ".\research\mesence\correlate_chr_banks.py" `
+    --rom "F:\Dev\ROMMAGE\FIXTURE\SMB3\Super Mario Bros. 3.zip" `
+    --pattern "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\frame_0000029277_ppu_pattern.bin" `
+    --trace "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\mmc3_trace_0000189263_1794256680.json"
+~~~
+
+**Adapt the three input paths to the actual file locations.** The correlation tool requires the editable `spritemine` package in the Python environment; if necessary install the main checkout with `-e ".[dev]"` first. Expected metadata: eight uniquely matched windows `[92,93,94,95,126,126,126,126]` and a matching modeled layout at scanline 193, reproduced in two frames. The tool prints no copyrighted ROM bytes or images. The trace and snapshot come from different gameplay intervals, so agreement validates a repeated mapper configuration, not synchronization.
