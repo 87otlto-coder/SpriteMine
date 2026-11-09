@@ -40,3 +40,17 @@ Created `research/mesence/mock_mesence.lua` and updated research CI to invoke th
 **Research response:** `research/mesence/diagnose_capture.py` now reports these read-only pattern/OAM consistency checks without outputting copyrighted pixels. Next experiment: compare pattern tables at `startFrame` versus `endFrame`, then investigate scanline-sensitive CHR mapping if necessary. Do not mark sprite reconstruction complete until the actual visible-frame tile source is identified and replayable.
 
 Archive SHA-256 (provenance only): `27e43e5dbf681ab402f27e6b61e7846b298a52ae43995277f428e01ff6879b88`. **No capture bytes or images were committed to GitHub.** MesenCE binary version not independently recorded in this archive.
+
+## 2026-11-09 — On-device startFrame/endFrame mapping comparison (confirmed)
+
+**Source evidence:** owner-supplied private metadata-only `mapping_probe_0000136117_1794255614.json` from MesenCE Lua script `spritemine-mapping-phase-v1`, ROM SHA-1 `6BD518E85EB46A4252AF07910F61036E84B020D1` (matches the prior verified SMB3 US PRG1 capture identity). Do not commit the private fixture itself.
+
+**Frame 136117:** `startFrame` at PPU scanline -1 / cycle 0: upper 4 KiB has **2,991** nonzero bytes; lower has **3,211**. Five potentially on-screen OAM entries, all with odd 8×16 tile IDs, have **zero blank referenced patterns**. `endFrame` at scanline 240 / cycle 0: upper 4 KiB has **0** nonzero bytes; lower has **3,735**; all five referenced odd-tile patterns appear blank.
+
+**Frame 136118:** precisely repeats 2,991→0 upper, 3,211→3,735 lower, and 0→5 blank odd-tile patterns. The recorded event identifiers and master clocks differ across phases. Structural self-consistency is high, although MesenCE binary/version and saved-state replay have not been recorded for this experiment.
+
+**Proven:** the debug-visible effective PPU pattern space differs dramatically between the pre-render (startFrame) and VBlank (endFrame) observation points in this running SMB3 scene. End-of-frame pattern snapshots do not represent the pattern bytes for all potentially visible OAM sprites throughout a frame.
+
+**Hypothesis (not yet proven):** SMB3 is changing MMC3 bank registers during frame rendering / VBlank. The source of the change (mapper writes versus a debugging effect) and exact rendering-time CHR mapping are still unknown. We must trace mapper register writes and/or record rendering-scanline PPU fetches before asserting bank identities or validated character reconstruction. Simply switching all exports to `startFrame` would be premature.
+
+**Next:** add a bounded, non-mutating mapper register write trace with PPU scanline/cycle/frame timestamps, and validate it on real MesenCE while retaining only metadata in the repository.
