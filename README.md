@@ -14,7 +14,7 @@
 
 ## Windows installation (PowerShell)
 
-Install Python 3.11+ and Git, then use:
+Install Python 3.12 and Git, then use the commands below. Python 3.11 is also supported; the example uses 3.12 because the Windows setup was validated with that version. To list installed Python runtimes, run `py -0p`:
 
 ```powershell
 Set-Location -Path $HOME
@@ -22,7 +22,7 @@ git clone https://github.com/87otlto-coder/SpriteMine.git "$HOME\SpriteMine"
 Set-Location -Path "$HOME\SpriteMine"
 git fetch origin
 git switch feature/static-chr-explorer
-py -3.11 -m venv .venv
+py -3.12 -m venv .venv
 & ".\.venv\Scripts\python.exe" -m pip install -e ".[dev,gui]"
 & ".\.venv\Scripts\python.exe" -m pytest -q
 & ".\.venv\Scripts\python.exe" -m spritemine.desktop
