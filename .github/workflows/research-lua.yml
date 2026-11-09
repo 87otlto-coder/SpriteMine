@@ -21,12 +21,15 @@ jobs:
         run: |
           luac5.4 -p research/mesence/spritemine_frame_probe.lua
           luac5.4 -p research/mesence/spritemine_mapping_probe.lua
+          luac5.4 -p research/mesence/spritemine_mmc3_trace.lua
       - name: Execute Lua probe with synthetic emulator API
         run: |
           mkdir -p "$SPRITEMINE_TEST_OUTPUT"
           lua5.4 research/mesence/mock_mesence.lua research/mesence/spritemine_frame_probe.lua
       - name: Execute phase-sensitive mapping probe mock
         run: lua5.4 research/mesence/mock_mesence_mapping.lua research/mesence/spritemine_mapping_probe.lua
+      - name: Execute bounded MMC3 register trace mock
+        run: lua5.4 research/mesence/mock_mmc3_trace.lua research/mesence/spritemine_mmc3_trace.lua
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -37,6 +40,25 @@ jobs:
         run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
       - name: Diagnose mock OAM and PPU pattern mapping
         run: python research/mesence/diagnose_capture.py "$SPRITEMINE_TEST_OUTPUT"
+      - name: Verify MMC3 register trace from synthetic MesenCE
+        run: |
+          python - <<'PY'
+          import json, glob, os
+          paths = glob.glob(os.path.join(os.environ["SPRITEMINE_TEST_OUTPUT"], "mmc3_trace_*.json"))
+          assert len(paths) == 1, paths
+          report = json.load(open(paths[0], encoding="utf-8"))
+          assert report["tool"] == "spritemine-mmc3-register-trace-v1"
+          assert report["completed_frame_pairs"] == 2
+          assert report["dropped_writes"] == 0
+          assert len(report["boundaries"]) == 4
+          assert len(report["writes"]) == 4
+          assert [(w["address"], w["value"], w["register"]) for w in report["writes"]] == [
+              (0x8000, 0x82, "bankSelect"), (0x8001, 10, "bankData"),
+              (0x8000, 0x82, "bankSelect"), (0x8001, 10, "bankData")
+          ]
+          assert all(w["ppu_scanline"] in (66, 67) for w in report["writes"])
+          print("MMC3 mock report verified")
+          PY
       - name: Verify start/end phase comparison in synthetic MesenCE
         run: |
           python - <<'PY'
@@ -55,3 +77,4 @@ jobs:
               assert pair["end"]["odd_tile_blank_patterns"] == 2
           print("Two simulated start/end mapper phase comparisons validated")
           PY
+
