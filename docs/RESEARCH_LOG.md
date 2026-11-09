@@ -24,3 +24,7 @@ Source code contains debugger-oriented tilemap/sprite/palette access and emulato
 ## 2026-11-09 — Lua capture feasibility spike
 
 Source-verified capabilities at pinned MesenCE commit `4b8a196e299b3de297b204fd1208d2981562c89b`: Lua endFrame callback, NES OAM/palette memory types, side-effect-disabled PPU address-space reads, getScreenBuffer/getScreenSize, getState/getRomInfo, and per-script data folder. Confirmed from `LuaApi.cpp`, `ScriptingContext.cpp`, and bundled Lua example. File/OS access is opt-in in MesenCE. Original Lua recorder plus Python validator committed on research branch; GitHub Lua syntax + Python synthetic tests passed. These are not runtime observations; **Windows emulator execution is pending**. See `research/mesence/README.md`.
+
+## 2026-11-09 — Mocked Lua recorder execution
+
+Created `research/mesence/mock_mesence.lua` and updated research CI to invoke the actual recorder with synthetic, non-copyrighted OAM/palette/PPU/screen bytes. The emitted two frame captures passed `verify_capture.py`, and 7 Python validator tests passed. GitHub Actions run 42585418488 succeeded. This verifies script file output and metadata format under the mock only; MesenCE runtime sync, mapped CHR identity, save-state replay and visual correctness remain untested.
