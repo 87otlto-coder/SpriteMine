@@ -21,7 +21,7 @@ Branch `feature/static-chr-explorer` implements a **static-only PySide6 CHR brow
 - Select tiles; show global index, bank coordinates, ROM and CHR byte offsets.
 - Choose synthetic grayscale, green or amber palette previews. These are **not** authentic SMB3 palettes.
 - Export selected tile, bank or all banks in grayscale with deterministic manifest.
-- Synthetic rendering tests and offscreen Qt smoke tests; **all six CI jobs passed** on Windows and Ubuntu (Python 3.11/3.12 core matrix plus two Qt smoke jobs). A GUI export regression test has also been added; its CI result must be checked separately.
+- Synthetic rendering tests and offscreen Qt smoke tests; **all six CI jobs passed** on Windows and Ubuntu (Python 3.11/3.12 core matrix plus two Qt smoke jobs). The GUI export regression test also passed in the latest six-job CI run (PR #4, commit `537e446e6dfc142004e0259d352c6f1a3d9e8108`).
 
 This phase can progress independently while the MesenCE adapter feasibility is investigated.
 
@@ -31,13 +31,13 @@ Branch `research/smb3-emulator-feasibility` has an experiment plan for synchroni
 
 ## Pending
 
-- Confirm desktop feature CI, test GUI interactively on the owner's Windows computer, then review and merge UI PR.
+- Desktop CI passed; test GUI interactively on the owner's Windows computer, then review and merge PR #4.
 - Prove same-frame MesenCE state acquisition before live sprite tools.
 - Correct runtime palettes, transparent sprite reconstruction, animation capture, World 1-1 decoding and audio remain unimplemented.
 - No Windows installer or evidence-based SMB3 decoded asset coverage report yet.
 
 ## Next
 
-1. Review static explorer PR, resolve CI failures, get first actual Windows GUI run.
+1. Review PR #4, which has passing CI; get first actual Windows GUI run.
 2. Continue MesenCE research issue #2 on research branch; validate synchronization before coupling live UI.
 3. Record user-observed results and acceptance in this file.
