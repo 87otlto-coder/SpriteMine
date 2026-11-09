@@ -50,3 +50,11 @@ GitHub Actions [run 42585418488](https://github.com/87otlto-coder/SpriteMine/act
 ## Local environment alignment — 2026-11-09
 
 The owner confirmed `F:\Dev\ROMMAGE\SOURCE\SpriteMine` was refreshed successfully, and `F:\Dev\ROMMAGE\TOOLS\SpriteMine-research` already holds the up-to-date research branch. MesenCE is installed in `TOOLS`. The Lua probe now defaults to `F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE` for local capture output (the folder must exist). CI uses `SPRITEMINE_CAPTURE_DIR` to override the path. No real emulator captures have been verified yet. See `research/mesence/README.md`.
+
+## 2026-11-09 — Real SMB3 capture received and structurally verified
+
+The owner provided a MesenCE capture ZIP with **two real SMB3 PRG1 frames** (29276–29277, 10 files). The Python structural validator passed and ROM SHA-1/SHA-256 identities match the locally supplied verified ROM. This completes the first *real capture creation and file-integrity* gate, **not** the synchronization or sprite-reconstruction gate.
+
+Important: OAM shows two potentially on-screen 8×16 entries corresponding spatially to Mario; their odd tile IDs select PPU `0x1000–0x1FFF` in 8×16 mode. The captured upper pattern table contains only zero bytes. The endFrame snapshot **cannot reconstruct these visible Mario tiles**. Hypotheses: a different MMC3 CHR bank mapping at the rendering scanline, or unexpected debug read behavior. Neither is confirmed. Screen buffers change by 3 pixels while OAM/palette/pattern snapshots remain identical. The next task is a time-separated PPU mapping experiment. See `docs/RESEARCH_LOG.md`.
+
+Only metadata findings are stored in GitHub. All game asset bytes remain out of the repository.
