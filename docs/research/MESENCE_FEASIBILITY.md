@@ -70,3 +70,11 @@ Expected: research checkout is current and a local capture directory exists. Fol
 | TBD | Windows build, reproducible state | Not started | — |
 | TBD | Atomic OAM/palette/CHR capture | Not started | — |
 | TBD | Independent Mario frame reconstruction | Not started | — |
+
+## 2026-11-09: First on-device capture — partially proven
+
+**Now proven:** Real MesenCE/SMB3 Lua file output and two valid endFrame capture sets, source ROM identity, OAM and palette buffer sizes, and video buffer dimensions. A structural capture success is supported by the owner's private ZIP and local `verify_capture.py` execution.
+
+**New blocking observation:** Two 8×16 OAM entries spatially overlap visible Mario, use odd tile numbers (5, 7), and therefore select PPU table `0x1000–0x1FFF`. At both captured endFrame moments that table is entirely zero. The mapped pattern snapshot cannot reconstruct the visible character. An MMC3 bank switch between sprite rendering and VBlank or the PPU debug read mapping is a hypothesis, **not yet a finding**.
+
+**Next experiment:** Compare `startFrame` and `endFrame` PPU pattern state on a controlled scene; if still blank, instrument PPU rendering or mapper address resolution at scanlines that contain Mario. Maintain original capture data outside GitHub. Use `research/mesence/diagnose_capture.py` for repeatable content-free diagnostics.
