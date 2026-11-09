@@ -8,7 +8,9 @@ Game: SMB3 US PRG1 / Revision A, mapper 4 (MMC3).
 
 Can SpriteMine obtain synchronized, reproducible OAM, palette, effective CHR mapping, scanline/frame state, and final rendered pixels from MesenCE without tightly coupling the PySide6 application to the emulator?
 
-A pinned source API inventory and renderer caveat analysis is available in [MESENCE_API_INVENTORY.md](MESENCE_API_INVENTORY.md).\n\n## Known source-level observations (not a successful integration)
+A pinned source API inventory and renderer caveat analysis is available in [MESENCE_API_INVENTORY.md](MESENCE_API_INVENTORY.md).
+
+## Known source-level observations (not a successful integration)
 
 MesenCE's `InteropDLL/DebugApiWrapper.cpp` declares `GetSpriteList`, `GetTilemap`, `GetPaletteInfo`, and memory access functions. `InteropDLL/EmuApiWrapper.cpp` provides ROM load and save-state functions. `Core/NES/Debugger/NesPpuTools.h` contains PPU tooling. These are promising **code-level interfaces**, not evidence that a stable external bridge or atomic capture exists.
 
@@ -28,6 +30,10 @@ Record the exact MesenCE commit/build in every experiment.
 4. **Reconstruction:** Render Mario's OAM components from captured CHR/attributes/palette, checking flips, transparency, priority and 8-sprites-per-scanline behavior. Compare against the emulator frame without claiming every hardware entry is visible.
 5. **Scanline mapping:** Check whether MMC3 CHR mappings / other rendering state can change during a frame; avoid treating a single frame-level snapshot as complete where it is not.
 6. **Audio spike:** Capture a short, reproducible PCM section if available without introducing another emulator dependency.
+
+### New Lua-first execution path (2026-11-09)
+
+[research/mesence](../../research/mesence/README.md) contains an original, small Lua `endFrame` recorder and stdlib Python capture validator. It exploits verified upstream API *declarations*, but MesenCE runtime behavior and frame synchronization are **not yet proven**. Both independent research CI workflows passed: stock Lua 5.4 syntax check and synthetic capture validation, plus the normal Python matrix. The emulator's bundled Lua version is different from the stock parser, so runtime execution remains a separate gate. File I/O/OS permission must be explicitly enabled in MesenCE for the probe to save data; do not turn on network access.
 
 ## Required evidence per experiment
 
@@ -66,6 +72,8 @@ Expected: the first checkout contains this research plan; the final command prin
 | Date | Experiment | Status | Evidence |
 |---|---|---|---|
 | 2026-11-08 | Source API surface reconnaissance | Source inspected; integration unproven | Source links above |
-| 2026-11-09 | Pinned interop API and debugger-preview analysis | Source inspected; no runtime proof | [API inventory](MESENCE_API_INVENTORY.md) |\n| TBD | Windows build, reproducible state | Not started | — |
+| 2026-11-09 | Pinned interop API and debugger-preview analysis | Source inspected; no runtime proof | [API inventory](MESENCE_API_INVENTORY.md) |
+| 2026-11-09 | Lua probe syntax / structural validator | Automated checks passed; actual MesenCE run pending | [Lua experiment](../../research/mesence/README.md) |
+| TBD | Windows build, reproducible state | Not started | — |
 | TBD | Atomic OAM/palette/CHR capture | Not started | — |
 | TBD | Independent Mario frame reconstruction | Not started | — |
