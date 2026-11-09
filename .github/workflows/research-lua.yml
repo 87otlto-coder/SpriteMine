@@ -10,15 +10,23 @@ jobs:
   lua-probe:
     name: Lua syntax and capture verifier
     runs-on: ubuntu-latest
+    env:
+      SPRITEMINE_TEST_OUTPUT: ${{ runner.temp }}/spritemine-probe
     steps:
       - uses: actions/checkout@v4
       - name: Install stock Lua parser
         run: sudo apt-get update && sudo apt-get install -y lua5.4
       - name: Validate Lua syntax (not Mesen runtime API)
         run: luac5.4 -p research/mesence/spritemine_frame_probe.lua
+      - name: Execute Lua probe with synthetic emulator API
+        run: |
+          mkdir -p "$SPRITEMINE_TEST_OUTPUT"
+          lua5.4 research/mesence/mock_mesence.lua research/mesence/spritemine_frame_probe.lua
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: python -m pip install -e ".[dev]"
       - name: Test synthetic capture schema and safety checks
         run: python -m pytest -q tests/test_research_capture.py
+      - name: Validate actual binary files from mocked Lua probe
+        run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
