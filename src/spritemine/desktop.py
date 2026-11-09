@@ -246,8 +246,8 @@ class MainWindow(QMainWindow):
         if self.rom is None or not self.rom.chr:
             self.atlas.set_image(None)
             self.atlas.set_selected(None)
-            self.tile_preview.setText("No static CHR-ROM graphics")
             self.tile_preview.setPixmap(QPixmap())
+            self.tile_preview.setText("No static CHR-ROM graphics")
             self.tile_details.clear()
             return
         image = preview_bank(self.rom, self.bank_spin.value(), str(self.palette_combo.currentData()))

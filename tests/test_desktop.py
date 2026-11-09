@@ -68,4 +68,5 @@ def test_chr_ram_disables_exports(app):
     assert not window.bank_spin.isEnabled()
     assert not window.export_tile_action.isEnabled()
     assert "runtime capture required" in window.statusBar().currentMessage()
+    assert window.tile_preview.text() == "No static CHR-ROM graphics"
     window.close()
