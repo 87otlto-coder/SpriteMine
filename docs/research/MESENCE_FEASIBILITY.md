@@ -78,3 +78,9 @@ Expected: research checkout is current and a local capture directory exists. Fol
 **New blocking observation:** Two 8×16 OAM entries spatially overlap visible Mario, use odd tile numbers (5, 7), and therefore select PPU table `0x1000–0x1FFF`. At both captured endFrame moments that table is entirely zero. The mapped pattern snapshot cannot reconstruct the visible character. An MMC3 bank switch between sprite rendering and VBlank or the PPU debug read mapping is a hypothesis, **not yet a finding**.
 
 **Next experiment:** Compare `startFrame` and `endFrame` PPU pattern state on a controlled scene; if still blank, instrument PPU rendering or mapper address resolution at scanlines that contain Mario. Maintain original capture data outside GitHub. Use `research/mesence/diagnose_capture.py` for repeatable content-free diagnostics.
+
+## 2026-11-09: Live phase comparison succeeds
+
+Second on-device experiment returned two matched `startFrame` (scanline -1) / `endFrame` (scanline 240) observation pairs, frames 136117–136118. At start, upper pattern area had 2,991 nonzero bytes and all 5 potentially visible OAM odd-tile references were nonblank. At end, upper pattern area was zero and all 5 referenced patterns appeared blank. Both frames were consistent. **Established:** the endFrame view is not a reliable substitute for a rendering-time CHR mapping. **Not established:** which mapper register writes cause this, exact physical ROM banks for Mario, sprite visibility, or synced frame-pixel reconstruction.
+
+Next research task: bounded tracing of MMC3 bank selection register writes (`$8000/$8001` and mirrors) with frame/PPU position and a clear note that Lua CPU write callbacks fire **before** writes are applied. Do not infer resulting mapped bytes from pre-write samples.
