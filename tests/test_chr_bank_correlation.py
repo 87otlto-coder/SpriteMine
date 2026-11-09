@@ -44,3 +44,24 @@ def test_chr_mode_is_bit_7_not_bit_6():
 def test_invalid_snapshot_size():
     with pytest.raises(ValueError, match="8192"):
         inspect_pattern(bytes(8192), bytes(8191))
+
+
+def test_private_real_smb3_capture_correlation_if_configured():
+    """Run only with local copyrighted fixtures, never in public CI."""
+    import os
+    from pathlib import Path
+    from research.mesence.correlate_chr_banks import correlate
+
+    variables = [
+        os.environ.get("SPRITEMINE_TEST_ROM"),
+        os.environ.get("SPRITEMINE_CAPTURE_PPU_PATTERN"),
+        os.environ.get("SPRITEMINE_CAPTURE_MMC3_TRACE"),
+    ]
+    if not all(variables):
+        pytest.skip("Private ROM, PPU pattern and MMC3 trace paths not all configured")
+    result = correlate(*(Path(path) for path in variables))
+    assert result["trace_rom_sha1_matches_rom"] is True
+    assert [
+        item["physical_1k_chr_bank_matches"] for item in result["snapshot_windows"]
+    ] == [[92], [93], [94], [95], [126], [126], [126], [126]]
+    assert len(result["layouts_matching_all_eight_snapshot_windows"]) >= 2
