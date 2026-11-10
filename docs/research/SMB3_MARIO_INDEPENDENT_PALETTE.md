@@ -55,3 +55,53 @@ The 118 transparent source positions cannot be confirmed against an independent 
 Likewise, this single pose does not establish all Mario animations, sprite priority for other scenes, eight-sprites-per-scanline evaluation, edge clipping, or universal display palettes.
 
 **Decision:** Proceed with the no-recapture local palette test and optional colored preview. Only after actual success should we mark Mario's **138 opaque pixels under the documented default MesenCE palette assumptions** independently verified. Full composite/transparent background proof remains open.
+
+
+## Run the independent test and export local reference-color Mario (Windows PowerShell)
+
+Do not repeat the MesenCE capture. All required raw files are already under FIXTURE.
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+if ($LASTEXITCODE -ne 0) { throw "Could not update research branch." }
+
+$manifest = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\render_0000450823_1794339466.json"
+if (-not (Test-Path -LiteralPath $manifest)) { throw "Missing saved render manifest." }
+
+$roms = @(Get-ChildItem -LiteralPath "F:\Dev\ROMMAGE\FIXTURE" -Recurse -File |
+    Where-Object { $_.Name -in @("Super Mario Bros. 3.zip","Super Mario Bros. 3.nes") })
+if ($roms.Count -ne 1) { throw "Expected exactly one SMB3 ROM in FIXTURE." }
+
+$python = "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe"
+if (-not (Test-Path -LiteralPath $python)) { throw "SpriteMine Python venv missing." }
+
+$raw = & $python ".\research\mesence\analyze_render_capture.py" $manifest --rom $roms[0].FullName --group-oam "10,11"
+if ($LASTEXITCODE -ne 0) { $raw; throw "Independent RGB verification failed to run." }
+
+$report = ($raw -join [Environment]::NewLine) | ConvertFrom-Json
+$check = $report.independent_default_palette_check
+$check | Select-Object status, pixels_expected, pixels_compared, pixels_exact, pixels_mismatched, pixels_out_of_bounds, exact_fraction | Format-List
+$check.sprite_palette_entries | Format-Table -AutoSize
+
+$reportPath = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\screencheck_independent_render_0000450823_1794339466.json"
+if (Test-Path -LiteralPath $reportPath) { throw "Report exists; refusing overwrite: $reportPath" }
+[IO.File]::WriteAllText($reportPath, ($raw -join [Environment]::NewLine),
+    (New-Object System.Text.UTF8Encoding($false)))
+Write-Host "New metadata report saved: $reportPath"
+
+if ($check.status -eq "reference_opaque_pixels_exact") {
+    $out = "F:\Dev\ROMMAGE\FIXTURE\SMB3\SpriteComponents\render_0000450823_1794339466_default2c02"
+    $preview = & $python ".\research\mesence\sprite_components.py" $manifest --rom $roms[0].FullName --sample 3 --group-oam "10,11" --reference-colors --output-dir $out
+    if ($LASTEXITCODE -ne 0) { $preview; throw "Reference-color preview export failed." }
+    explorer.exe $out
+} else {
+    Write-Warning "Independent palette check is not exact. Preserve report for investigation."
+}
+~~~
+
+**Expected if the live capture used the default 2C02 palette:** status reference_opaque_pixels_exact; 138/138 pixels exact, 0 mismatches. This is a **prediction until the command runs on the saved capture**. It may instead produce a mismatch or unsupported code; preserve that evidence rather than forcing success.
+
+If the check passes, the new local FIXTURE directory contains grayscale diagnostic previews plus reference-colored 8x16 components and the 16x16 candidate composite PNG with index-0 transparency. This is a MesenCE default 2C02 reference rendering, not proof of other video configurations, background priority or the full visible composite.
+
+Please share only screencheck_independent_render_0000450823_1794339466.json. Original ROMs and all generated game graphics remain in FIXTURE and out of GitHub.
