@@ -121,6 +121,9 @@ def test_research_cli_session_preview_and_metadata(tmp_path, monkeypatch):
     session = "phase_0000265171_1794292304"
     manifest = tmp_path / f"{session}.json"
     oam, ppu, palette = fixture()
+    palette_ram = bytearray(palette)
+    palette_ram[0x11:0x14] = bytes((0x16, 0x36, 0x0F))
+    palette = bytes(palette_ram)
     files = {}
     for key, data in (("oam", oam), ("ppu_pattern", ppu), ("palette", palette)):
         name = f"{session}_3_startFrame_{key}.bin"
@@ -153,7 +156,8 @@ def test_research_cli_session_preview_and_metadata(tmp_path, monkeypatch):
     )
     target = tmp_path / "private_previews"
     result = component_module.inspect_session(
-        manifest, tmp_path / "unused-rom.nes", sample_number=3, output_dir=target
+        manifest, tmp_path / "unused-rom.nes", sample_number=3,
+        output_dir=target, reference_colors=True,
     )
     assert result["result"] == "captured_8x16_hardware_components_only"
     assert result["potentially_on_screen_count"] == 1
@@ -165,6 +169,15 @@ def test_research_cli_session_preview_and_metadata(tmp_path, monkeypatch):
         assert image.mode == "RGBA"
         assert image.size == (8, 16)
         assert image.getpixel((1, 0))[3] == 0
+    colored = target / "hardware_oam_10_frame_265172_mesen2c02ref.png"
+    with Image.open(colored) as image:
+        assert image.mode == "RGBA"
+        assert image.getpixel((0, 0)) == (0xB5, 0x31, 0x20, 255)
+        assert image.getpixel((0, 8)) == (0xFE, 0xCC, 0xC5, 255)
+        assert image.getpixel((1, 0))[3] == 0
+    reference = result["default_2c02_reference_previews"]
+    assert reference["local_exports"][0]["file"] == colored.name
+    assert "NesDefaultVideoFilter.cpp" in reference["source_url"]
     with pytest.raises(FileExistsError, match="Refusing to overwrite"):
         component_module.inspect_session(
             manifest, tmp_path / "unused-rom.nes", output_dir=target
@@ -237,3 +250,43 @@ def test_explicit_group_overlap_preserves_earlier_hardware_oam_priority():
         compose_explicit_oam_group([first, first])
     with pytest.raises(ValueError, match="at least one"):
         compose_explicit_oam_group([])
+
+
+def test_default_2c02_color_preview_group_and_unsupported_code():
+    from dataclasses import replace
+    from research.mesence.sprite_components import (
+        default_2c02_reference_preview, compose_explicit_oam_group,
+    )
+    oam, ppu, palette = fixture()
+    colors = bytearray(palette)
+    colors[0x11:0x14] = bytes((0x16, 0x36, 0x0F))
+    component = decode_component(oam, ppu, bytes(colors), 10)
+    preview = default_2c02_reference_preview(component, bytes(colors))
+    assert preview.getpixel((0, 0)) == (181, 49, 32, 255)
+    assert preview.getpixel((0, 8)) == (254, 204, 197, 255)
+    assert preview.getpixel((1, 0)) == (0, 0, 0, 0)
+    second = replace(component, oam_index=11, x=108)
+    group, metadata = compose_explicit_oam_group(
+        [component, second], reference_palette_ram=bytes(colors)
+    )
+    assert group.size == (16, 16)
+    assert group.getpixel((0, 0)) == (181, 49, 32, 255)
+    assert group.getpixel((8, 8)) == (254, 204, 197, 255)
+    assert metadata["rendering"] == (
+        "MesenCE_2C02_default_reference_3_codes_alpha_index0_transparent"
+    )
+    colors[0x11] = 0x12
+    with pytest.raises(ValueError, match="unsupported"):
+        default_2c02_reference_preview(component, bytes(colors))
+
+
+def test_default_reference_palette_validates_transparency_before_lookup():
+    from research.mesence.nes_palette_reference import (
+        sprite_rgba_from_default_reference,
+    )
+    palette = bytes(32)
+    assert sprite_rgba_from_default_reference(palette, 2, 0) == (0, 0, 0, 0)
+    with pytest.raises(ValueError, match="unsupported"):
+        sprite_rgba_from_default_reference(palette, 0, 1)
+    with pytest.raises(ValueError, match="slot"):
+        sprite_rgba_from_default_reference(palette, 4, 0)
