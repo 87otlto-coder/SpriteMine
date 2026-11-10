@@ -44,10 +44,10 @@ jobs:
           from pathlib import Path
           folder = Path(os.environ["SPRITEMINE_TEST_OUTPUT"])
           chr_data = bytes((bank * 3 + i) % 256 for bank in range(128) for i in range(1024))
-          image = b"NES\\x1a" + bytes((1, 16, 0x40, 0)) + bytes(8) + bytes(16384) + chr_data
+          image = b"NES\x1a" + bytes((1, 16, 0x40, 0)) + bytes(8) + bytes(16384) + chr_data
           (folder / "synthetic.nes").write_bytes(image)
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as out:
-              out.write("SPRITEMINE_TEST_ROM_SHA1=" + hashlib.sha1(image).hexdigest().upper() + "\\n")
+              out.write("SPRITEMINE_TEST_ROM_SHA1=" + hashlib.sha1(image).hexdigest().upper() + "\n")
           PY
       - name: Execute same-session phase recorder against synthetic MesenCE
         run: lua5.4 research/mesence/mock_mesence_phase.lua research/mesence/spritemine_phase_capture.lua
