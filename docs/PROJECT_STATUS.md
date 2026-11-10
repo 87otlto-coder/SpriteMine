@@ -96,3 +96,11 @@ With the verified ROM and register-write model, the *predicted* second startFram
 Owner ran `research/mesence/verify_phase_capture.py` locally with the verified SMB3 PRG1 ROM and uploaded its metadata-only report for session `phase_0000265171_1794292304` (frames 265171/265172). **Result: `pass_structural_phase_capture_validation`, `mapper_model_status=matches_known_boundaries`, `model_matches=3`, `model_mismatches=0`, `model_unknown_snapshots=1`, `dropped_writes=0`.** All 12 binary blobs were structurally checked locally. The known startFrame for frame 265172 and both endFrame observations matched the *entire* modeled 8,192-byte PPU pattern SHA-256. The first startFrame mapping is legitimately unknown because its register writes predate the trace; its observed hash happens to equal the other startFrame hash but is **not** independently reconstructed from same-session register history.
 
 **Gate cleared:** independent ROM-backed physical CHR mapping at captured frame boundaries. **Remaining:** actual visible-scanline tile usage, 8x16 OAM hardware sprite components, palette fidelity/transparency/priority, reproducible emulator save-state/input replay. No real user ROM or capture binary was added to GitHub.
+
+## 2026-11-10 — 8x16 OAM hardware component decoding prototype implemented
+
+Added research/mesence/sprite_components.py, which takes **verified startFrame sample #3** from the private phase capture, decodes individual 8x16 hardware OAM entries, and preserves flip flags, palette slots, behind-background priority, transparent pixel index 0, PPU tile addresses, source-ROM offsets and capture SHA-256 provenance. Optional local previews are synthetic grayscale RGBA PNGs; the exporter refuses to place captured game graphics in Git checkouts or overwrite prior files. Synthetic unit tests cover bitplanes, flips, alpha, positioning, source offsets and output safety.
+
+**No character or visible-sprite reconstruction is yet proven.** Final scanline visibility, hardware sprite limits, authentic palette RGB and correspondence to rendered gameplay remain unresolved. This research tool is not integrated into the PySide6 desktop UI. Windows owner validation has not been performed for this prototype.
+
+Procedure: research/mesence/README.md. Phase 3 acceptance remains open.
