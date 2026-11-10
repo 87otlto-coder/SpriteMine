@@ -83,3 +83,12 @@ The output groups expected nontransparent pixel indices by sprite palette slot a
 The diagnostic evaluates the exact OAM positions and four ±1-pixel controls, but never silently shifts the expected position to improve the score. If the active video filter changes the screen from 256x240, it reports unsupported geometry rather than scaling without proof. MesenCE's active video filter, palette emphasis/grayscale effects, sprite priority, background occlusion, hardware sprite evaluation, and the exact PPU fetch timing are still separate acceptance checks.
 
 The next engineering choice depends on the real report: if alignment/color consistency is high and mapping stable, add an explicitly calibrated RGB palette and true per-pixel regression test; otherwise first investigate timing and video-filter geometry. Do not alter historical FIXTURE captures.
+
+
+## Actual rendered RGB result and new independent reference (2026-11-10)
+
+Owner supplied render session render_0000450823_1794339466 and screencheck_render_0000450823_1794339466. Mario candidate OAM #10/#11 at X=128/136 and Y=162. Verified full 8KiB ROM-backed mapped graphics; 256x240 RGB; no early CHR bank changes; unchanged OAM/palette RAM across frame. The earlier diagnostic finds 138/138 pixels consistent with screen-fitted RGB groups: #B53120 (37), #FECCC5 (31) and #000000 (70), with ±1-pixel shifts reducing the score to 55–81/138.
+
+Independently inspecting MesenCE's built-in 2C02 default table confirms exactly those RGB values for NES color codes 0x16,0x36 and 0x0F. The latest analyzer uses **saved same-session palette RAM bytes** to select those upstream reference colors *before* comparing each opaque pixel with the rendered screen, without self-fitting. Exact result is pending an owner-side rerun on saved binaries, so do not promote the 138/138 fitted score to an independent color pass.
+
+Reference, acceptance conditions, and next steps: docs/research/SMB3_MARIO_INDEPENDENT_PALETTE.md. The 118 transparent background positions and hardware priority require separate evidence and remain unresolved.
