@@ -104,3 +104,9 @@ Added research/mesence/sprite_components.py, which takes **verified startFrame s
 **No character or visible-sprite reconstruction is yet proven.** Final scanline visibility, hardware sprite limits, authentic palette RGB and correspondence to rendered gameplay remain unresolved. This research tool is not integrated into the PySide6 desktop UI. Windows owner validation has not been performed for this prototype.
 
 Procedure: research/mesence/README.md. Phase 3 acceptance remains open.
+
+## 2026-11-10 — Real 8x16 hardware component preview: pause lettering, NOT Mario
+
+The owner successfully ran `sprite_components.py` on the verified `startFrame` sample #3 of frame 265172 and uploaded its metadata-only report and five local PNG previews. The five hardware sprite components spell **PAUSE** (OAM indices 0–4) at Y=89, X=96/112/128/144/160, all using palette slot 3, 8x16 height and recorded physical CHR-ROM tile offsets. This demonstrates that the captured PPU and OAM interpretation can recreate recognizable in-game graphical lettering with transparency, but the session was likely paused in **SMB3 itself**, so these are not Mario sprite parts. The visual identity comes from human inspection of the grayscale previews, not automated asset classification.
+
+**Next phase 3 evidence:** repeat the paired-phase experiment during *unpaused, visibly moving World 1-1 gameplay*, then use the verified sample #3 and metadata-only component diagnostic to inspect Mario-position OAM entries. Sprite-to-screen pixel correspondence, priority, clipping, save-state replay and authentic RGB remain unresolved. The pause capture is a reproducible source-evidence fixture, not a successful Mario sprite.
