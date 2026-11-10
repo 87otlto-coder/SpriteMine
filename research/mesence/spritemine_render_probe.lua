@@ -79,6 +79,7 @@ local pairs_done = 0
 local initial_frame = nil
 
 local function sample(event)
+    if spritemineReplayBoundary then spritemineReplayBoundary() end
     local s = emu.getState()
     assert(type(s["frameCount"]) == "number", "Missing frameCount")
     assert(emu.getMemorySize(emu.memType.nesSpriteRam) == 256, "Unexpected OAM size")
@@ -236,6 +237,7 @@ end
 
 local function on_start(_cpu)
     if finished then return end
+    if spritemineReplayReady and not spritemineReplayReady() then return end
     if pending then
         stop_error("startFrame called twice without endFrame")
         return
@@ -260,7 +262,8 @@ local function on_end(_cpu)
     if pairs_done >= CAPTURE_PAIRS then
         finished = true
         local done, err = pcall(finish)
-        if not done then stop_error(err) end
+        if not done then return stop_error(err) end
+        if spritemineReplayComplete then spritemineReplayComplete() end
     end
 end
 
