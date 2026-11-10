@@ -324,3 +324,14 @@ explorer.exe $out
 ~~~
 
 Expected: component previews for OAM #10 and #11 plus an **explicit** hardware group PNG with 16x16 transparent-index shape. Do not commit exported PNGs to GitHub. If a previous output directory already contains these filenames, this command intentionally refuses to overwrite any files; select a new empty output directory. This is a research diagnostic, **not** a final Mario animation or pixel-perfect original.
+
+
+## Next experiment: verify actual rendered RGB against the Mario candidate
+
+Source: docs/research/RENDER_RGB_CORRESPONDENCE.md.
+
+The research branch now contains spritemine_render_probe.lua and analyze_render_capture.py. Unlike the earlier pure phase probe, this records the MesenCE endFrame RGB screen image alongside two known pre-render CHR/OAM/palette snapshots and the MMC3 register trace. It will not overwrite previous captures. The new script and mocked capture pipeline are CI-tested, but **not yet validated on real MesenCE**.
+
+Update F:\Dev\ROMMAGE\TOOLS\SpriteMine-research from research/smb3-emulator-feasibility; stop the old script in MesenCE, use File > Open to select spritemine_render_probe.lua (not mock_mesence_render.lua), and press F5 during unpaused World 1-1 gameplay with small Mario standing still. Once it prints RENDER CAPTURE COMPLETE, follow the exact PowerShell instructions in docs/research/RENDER_RGB_CORRESPONDENCE.md to generate screencheck_render_*.json. That report is metadata-only and safe to share; raw screen pixels and ROM bytes remain in local FIXTURE.
+
+MesenCE's RGB video filter, possible geometry changes, hardware priority and actual visible scanline behavior prevent any claim of original NES pixel-perfect RGB before a real comparison is reviewed.
