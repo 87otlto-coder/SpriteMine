@@ -159,3 +159,12 @@ Runbook: docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md. Never put source
 ## 2026-11-10 — Slot-1 graphics replay validated on Windows
 
 The private MesenCE 2.2.1 slot was located, copied and restored independently in nine final processes. The neutral, Right and A plans each passed a 16×16 A/B/A comparison on frame 448385, including exact palette RGB, every transparent position, surrounding controls, and repeated enabled frames. Actual CPU controller reads distinguished effective inputs from a failed Lua-only override. See [observations, build, hashes and reproduction](research/SMB3_GRAPHICS_HARNESS.md). Issue #2 remains open for broader timing, sprite interaction and audio gates.
+
+
+## 2026-11-10 — Phase 4 prerequisite: contiguous Mario frame timeline (synthetic test stage)
+
+PR #5 (graphics harness) remains a separate, open research PR. Its owner-supplied real SMB3 slot-1 results cover three distinct 16x16 poses (standing 138/118, walking-right 138/118, rising-jump 194/62 opaque/transparent pixels, all 256/256), deterministic enabled/disabled/enabled replay, CPU controller input reads and repeatable full-screen hashes from a second Windows checkout. These are **real sampled-pose gates**, not a complete walking or jumping animation.
+
+The stacked research/smb3-animation-timeline branch adds read-only revalidation and assembly of **one verified target frame per A/B/A replay window**, with consecutive warmup values and actual frame IDs. It exports one 16x16 transparent PNG per accepted frame, a private spritesheet, and timeline.json containing frame numbers, exact PPU master clocks, ROM/OAM/CHR source offsets and checksums. Identical RGBA frames remain separate frame events, preserving holds. A bounded Windows launcher can repeat the existing proven slot-1 A/B/A harness with warmups 8/9/10 to *attempt* a three-frame walking sequence. It leaves all prior evidence immutable and new outputs exclusively in FIXTURE. Synthetic regression tests check timing/source identity, pixel fidelity, retained holds, stale archives, failure cases and output paths.
+
+**Not yet observed on the owner's MesenCE:** new *contiguous* multi-frame animation run, complete SMB3 animation cycles, millisecond timing calibration, loop segmentation, animation UI, GIF/APNG export, sprite priority/scanline limits and enemy animations. A success in synthetic CI is not a real SMB3 sequence. Full next procedure: docs/research/SMB3_ANIMATION_TIMELINE.md.
