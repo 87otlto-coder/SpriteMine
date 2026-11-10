@@ -169,3 +169,12 @@ See docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md; save-state replay and
 ## 2026-11-10 — Slot 1, controller latch and full-region RGB
 
 Neutral, walking and rising jump samples passed the real MesenCE A/B/A experiment. An earlier inputPolled-only trial failed the movement gate despite successful pad readback. Reassertion at controller strobe was verified from CPU-bus reads. [Runbook and proof limits](research/SMB3_GRAPHICS_HARNESS.md).
+
+
+## 2026-11-10 — Animation timeline over overlapping verified slot-1 A/B/A windows
+
+**Hypothesis:** Consecutive emulator video frames can be reconstructed, provenance-matched and exported using a series of independent already-verified A/B/A captures taken from the *same* original MesenCE slot-1 save state but incrementing the existing warmup by exactly one frame. Only each run's **second** startFrame is independently mapped from same-session MMC3 writes; first-frame mapping is unknown until writes are observed. This avoids extrapolating initial CHR mapping and avoids inventing sprite pixels.
+
+**Implementation (research/smb3-animation-timeline):** graphics_report.validate now supports write_visuals=False for full-source revalidation without modifying the original run. animation_timeline.py requires matching saved state, ROM, emulator version/hash, probe hash, controller plan, restore timestamp, consecutively observed frame identifiers, increasing PPU clocks and passed A/B/A opaque/background gates. It emits alpha-preserving 16x16 PNGs, a private spritesheet and per-frame raw SHA/ROM offset/tile/clock provenance. Matching images remain separate one-emulator-frame entries. animation_windows.py drives the proven A/B/A harness with 2–12 consecutive warmups and refuses changing slot-1 source bytes or partial failed runs.
+
+**Not proven:** accurate playback milliseconds, completed walking/jump cycles or native standalone animations. A first **three-frame right-input experiment** is needed on Windows before marking this timeline gate passed. Tests are synthetic; runbook docs/research/SMB3_ANIMATION_TIMELINE.md. Source ROMs, captures, states and exported images remain private under FIXTURE.
