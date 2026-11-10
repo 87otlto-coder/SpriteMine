@@ -143,3 +143,99 @@ def test_unsupported_native_geometry_and_malformed_buffers():
             bytes(normal)[:-3], bytes(bg), 256, 240,
             indexed, palette, bbox=(100, 160, 104, 164)
         )
+
+
+def test_pair_analyzer_requires_matching_replay_state_and_reads_real_rgb(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    from research.mesence import verify_background_composite as module
+    from research.mesence.sprite_components import decode_component
+    from research.mesence.analyze_render_capture import index_layer
+    from research.mesence.nes_palette_reference import sprite_rgba_from_default_reference
+
+    oam = bytearray([0] * 256)
+    for i in range(64):
+        oam[4 * i] = 248
+    oam[40:44] = bytes((159, 7, 0, 100))
+    oam[44:48] = bytes((159, 5, 0, 108))
+    ppu = bytearray(8192)
+    ppu[0x1060] = 0x80
+    ppu[0x1040] = 0x80
+    palette = bytearray(32)
+    palette[0x11:0x14] = bytes((0x16, 0x36, 0x0F))
+    offsets = [262160 + 1024 * i for i in range(8)]
+    comps = [
+        decode_component(bytes(oam), bytes(ppu), bytes(palette), i,
+                         physical_rom_offsets=offsets)
+        for i in (10, 11)
+    ]
+    indexed = index_layer(comps)
+    normal_rgb = bytearray(bytes.fromhex("223344") * (256 * 240))
+    bg_rgb = bytearray(normal_rgb)
+    for (x, y), (slot, idx) in indexed.items():
+        rgb = sprite_rgba_from_default_reference(bytes(palette), slot, idx)
+        off = (y * 256 + x) * 3
+        normal_rgb[off:off + 3] = bytes(rgb[:3])
+
+    files = []
+    fake_reports = {}
+    for variant, rgb in (("visible", bytes(normal_rgb)), ("hidden", bytes(bg_rgb))):
+        folder = tmp_path / variant
+        folder.mkdir()
+        manifest_path = folder / f"render_0000000500_123456789{0 if variant == 'visible' else 1}.json"
+        names = {"oam": "oam.bin", "ppu_pattern": "ppu.bin", "palette": "palette.bin"}
+        for name, blob in (("oam", bytes(oam)), ("ppu", bytes(ppu)), ("palette", bytes(palette))):
+            (folder / f"{name}.bin").write_bytes(blob)
+        (folder / "rgb.bin").write_bytes(rgb)
+        manifest_path.write_text(json.dumps({
+            "phase_captures": [{}, {}, {"files": names},
+                               {"files": {"screen_rgb": "rgb.bin"}}]
+        }), encoding="utf-8")
+        start = {
+            "event": "startFrame", "frame_count": 500, "master_clock": 100,
+            "ppu_scanline": -1, "ppu_cycle": 0,
+            "sprite_height": 16,
+            "sha256": {
+                "oam": hashlib.sha256(bytes(oam)).hexdigest(),
+                "ppu_pattern": hashlib.sha256(bytes(ppu)).hexdigest(),
+                "palette": hashlib.sha256(bytes(palette)).hexdigest(),
+            },
+            "model": {"matches_full_8k_ppu": True,
+                      "source_rom_offsets_per_ppu_slot": offsets},
+        }
+        end = {
+            "event": "endFrame", "frame_count": 500, "master_clock": 200,
+            "ppu_scanline": 240, "ppu_cycle": 0,
+            "sha256": {
+                **start["sha256"],
+                "screen_rgb": hashlib.sha256(rgb).hexdigest(),
+            },
+            "screen_width": 256, "screen_height": 240,
+        }
+        fake_reports[manifest_path.resolve()] = {
+            "capture_tool": "spritemine-mesence-render-capture-v1",
+            "mapper_model_status": "matches_known_boundaries",
+            "rom_sha256": "a" * 64,
+            "snapshots": [{}, {}, start, end],
+            "session_id": manifest_path.stem,
+        }
+        files.append(manifest_path)
+
+    monkeypatch.setattr(module, "verify_phase_session", lambda path, *args, **kwargs:
+                        fake_reports[Path(path).resolve()])
+    report = module.analyze_two_renders(files[0], files[1], tmp_path / "rom.ne s")
+    assert report["comparison"]["status"] == (
+        "region_exact_conditional_on_sprites_disabled_reference"
+    )
+    assert report["matched_source_ppu_oam_palette_and_frame_clock"] is True
+    assert report["comparison"]["opaque_expected"] == 2
+    assert report["comparison"]["transparent_expected"] == 254
+    assert report["comparison"]["transparent_screen_equals_background"] == 254
+    assert report["comparison"]["sprite_visible_rgb_diff_from_reference"] == 2
+    assert report["frame_count"] == 500
+    assert report["foreground_rgb_sha256"] != report["background_reference_rgb_sha256"]
+
+    # A nearby-looking but different frame may NOT be called a matched replay.
+    fake_reports[files[1].resolve()]["snapshots"][2]["frame_count"] = 501
+    with pytest.raises(ValueError, match="frame/clock-aligned"):
+        module.analyze_two_renders(files[0], files[1], tmp_path / "unused-rom")
