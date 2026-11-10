@@ -111,7 +111,8 @@ def _early_chr_changes(manifest: dict[str, Any], start: dict[str, Any],
         scanline = event["ppu_scanline"]
         if addr % 2 == 0:
             select_mode = value & 0x80
-            if select_mode != current_chr_mode and scanline < max_sprite_y:
+            if (current_chr_mode is not None and select_mode != current_chr_mode
+                    and scanline < max_sprite_y):
                 changes.append({"scanline": scanline, "cycle": event["ppu_cycle"],
                                 "register": -1, "value": value})
             selected = value & 7
