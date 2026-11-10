@@ -20,3 +20,8 @@ The emulator adapter is the highest architectural risk: test it before tying UI 
 ## Coverage
 
 Maintain independent counts for raw discovered resources, captured occurrences and validated game-specific decoded assets. Unknowns are not silently counted as completed assets.
+
+
+## Animation timeline research gate — 2026-11-10
+
+The sample-based Phase 3 proof (three Mario poses, 256/256 per image, slot-1 A/B/A replay) now supports Phase 4 experimentation. The staged next gate is **contiguous multi-frame Mario capture** with exact emulated frame identifiers, reference RGB, PPU/CHR/OAM source provenance, alpha and held-frame preservation. The stacked branch research/smb3-animation-timeline offers a bounded 3-frame first run and private spritesheet/JSON export, **synthetically tested but not yet real-emulator validated**. Millisecond playback timing, completed cycles, APNG/GIF and an enemy animation remain Phase 4 acceptance criteria, not completed work. See docs/research/SMB3_ANIMATION_TIMELINE.md.
