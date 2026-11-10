@@ -89,6 +89,12 @@ def test_timeline_exports_preserve_every_frame_and_provenance(tmp_path, monkeypa
     result = animation_timeline.assemble_timeline(paths[::-1], target)
     assert result["result"] == "contiguous_verified_OAM_frame_timeline"
     assert result["frame_count"] == 3
+    assert result["unique_visual_frame_count"] == 2
+    assert result["visual_hold_count"] == 2
+    assert [(h["first_emulator_frame"], h["last_emulator_frame"], h["duration_frames"])
+            for h in result["visual_holds"]] == [
+                (448385, 448385, 1), (448386, 448387, 2)
+            ]
     assert result["first_emulator_frame"] == 448385
     assert result["last_emulator_frame"] == 448387
     assert [f["duration_frames"] for f in result["frames"]] == [1, 1, 1]
@@ -120,6 +126,11 @@ def test_identical_held_frames_remain_distinct_events(tmp_path, monkeypatch):
         paths, root / "Animations" / "hold", write=False
     )
     assert result["frame_count"] == 3
+    assert result["unique_visual_frame_count"] == 1
+    assert result["visual_hold_count"] == 1
+    assert result["visual_holds"][0]["duration_frames"] == 3
+    assert result["visual_holds"][0]["first_emulator_frame"] == 448385
+    assert result["visual_holds"][0]["last_emulator_frame"] == 448387
     assert [f["identical_to_previous_frame"] for f in result["frames"]] == [
         False, True, True
     ]
