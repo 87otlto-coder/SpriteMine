@@ -62,3 +62,10 @@ Adjust the original ROM location if needed; the CLI refuses overwriting any exis
 **Not verified:** full composited-screen pixel agreement, the exact emulator display RGB palette, per-scanline hardware sprite evaluation and priority, actor classification or animation completeness, or save-state/input replay. Complete Phase 3 Sprite Inspector status remains **open**.
 
 **Next:** capture a screen RGB buffer at a known frame boundary while also retaining corresponding PPU/OAM/CHR provenance; compare actual sprite pixels and colors at the recorded coordinates. A simple screenshot alone is not sufficient evidence without phase alignment.
+
+
+## Next validation: rendered RGB screen from same emulator frame
+
+The new rendered-pixel research script pairs a completed MesenCE endFrame RGB24 buffer with same-session startFrame OAM/PPU/palette, tracked MMC3 bank writes and independent ROM-backed bank verification. The analyzer checks color-index consistency at the two Mario candidate OAM component positions (10 and 11) and reports neighboring one-pixel shifts without automatically fixing alignment. See docs/research/RENDER_RGB_CORRESPONDENCE.md for the Windows procedure.
+
+This experiment has **not yet run on the owner's actual MesenCE screen**. Its fitted RGB classes are statistical descriptors of the capture, not a independently verified palette or final sprite/priority renderer.
