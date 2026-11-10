@@ -93,6 +93,116 @@ def compare_color_groups(
     }
 
 
+
+# Only the *three* default MesenCE 2C02 codes observed in the existing SMB3
+# small-Mario experiment. Do not copy the full GPLv3 emulator palette table.
+# Source: MesenCE Core/NES/NesDefaultVideoFilter.cpp, revision:
+# 4b8a196e299b3de297b204fd1208d2981562c89b
+# These are reference RGBs for unmodified default color settings only.
+MESEN_2C02_DEFAULT_MARIO_REFERENCE = {
+    0x0F: bytes.fromhex("000000"),
+    0x16: bytes.fromhex("B53120"),
+    0x36: bytes.fromhex("FECCC5"),
+}
+MESEN_REFERENCE_URL = (
+    "https://github.com/nesdev-org/MesenCE/blob/"
+    "4b8a196e299b3de297b204fd1208d2981562c89b/"
+    "Core/NES/NesDefaultVideoFilter.cpp"
+)
+
+
+def compare_independent_reference_palette(
+    rgb: bytes, width: int, height: int,
+    indexed: dict[tuple[int, int], tuple[int, int]],
+    palette_ram: bytes,
+) -> dict[str, Any]:
+    """Compare pixels to fixed upstream default palette, never fitted RGB.
+
+    This comparison does not independently prove background transparency,
+    mapper fetch phase, or emulator color configuration. Codes outside the
+    three previously researched SMB3 colors are explicitly unsupported.
+    """
+    if len(rgb) != width * height * 3:
+        raise ValueError("RGB24 buffer does not match screen dimensions")
+    if len(palette_ram) != 32:
+        raise ValueError("NES palette RAM must be exactly 32 bytes")
+
+    classes = sorted(set(indexed.values()))
+    looked_up = []
+    unknown = []
+    for slot, index in classes:
+        if not 0 <= slot <= 3 or not 1 <= index <= 3:
+            raise ValueError("Invalid sprite palette slot/index")
+        address = 0x10 + slot * 4 + index
+        code = palette_ram[address] & 0x3F
+        entry = {
+            "sprite_palette_slot": slot,
+            "pixel_index": index,
+            "palette_ram_offset": address,
+            "nes_color_code": f"0x{code:02X}",
+            "reference_rgb": (
+                "#" + MESEN_2C02_DEFAULT_MARIO_REFERENCE[code].hex().upper()
+                if code in MESEN_2C02_DEFAULT_MARIO_REFERENCE else None
+            ),
+        }
+        looked_up.append(entry)
+        if code not in MESEN_2C02_DEFAULT_MARIO_REFERENCE:
+            unknown.append(f"0x{code:02X}")
+
+    result: dict[str, Any] = {
+        "reference": "MesenCE 2C02 default palette, 3 researched SMB3 codes only",
+        "source_url": MESEN_REFERENCE_URL,
+        "assumptions": [
+            "PPU model 2C02; default palette with no custom/user colors",
+            "no grayscale, color-emphasis or video hue/brightness/contrast changes",
+            "256x240 native-size video with no spatial or blending filter",
+            "OAM entry visibility, clipping and background priority not emulated",
+        ],
+        "sprite_palette_entries": looked_up,
+        "unrecognized_codes": sorted(set(unknown)),
+        "pixels_expected": len(indexed),
+        "pixels_compared": 0,
+        "pixels_exact": 0,
+        "pixels_mismatched": 0,
+        "pixels_out_of_bounds": 0,
+        "exact_fraction": None,
+        "sample_mismatch_positions": [],
+        "status": None,
+    }
+    if unknown:
+        result["status"] = "unsupported_palette_codes_for_restricted_reference"
+        return result
+
+    by_class = {
+        (entry["sprite_palette_slot"], entry["pixel_index"]):
+        MESEN_2C02_DEFAULT_MARIO_REFERENCE[int(entry["nes_color_code"], 16)]
+        for entry in looked_up
+    }
+    for (x, y), group in indexed.items():
+        if not (0 <= x < width and 0 <= y < height):
+            result["pixels_out_of_bounds"] += 1
+            continue
+        offset = (y * width + x) * 3
+        result["pixels_compared"] += 1
+        if rgb[offset:offset + 3] == by_class[group]:
+            result["pixels_exact"] += 1
+        else:
+            result["pixels_mismatched"] += 1
+            if len(result["sample_mismatch_positions"]) < 8:
+                result["sample_mismatch_positions"].append({"x": x, "y": y})
+    if result["pixels_compared"]:
+        result["exact_fraction"] = round(
+            result["pixels_exact"] / result["pixels_compared"], 6
+        )
+    result["status"] = (
+        "reference_opaque_pixels_exact"
+        if result["pixels_exact"] == result["pixels_expected"]
+        and result["pixels_out_of_bounds"] == 0
+        else "reference_opaque_pixels_mismatch"
+    )
+    return result
+
+
 def _early_chr_changes(manifest: dict[str, Any], start: dict[str, Any],
                        end: dict[str, Any], max_sprite_y: int) -> list[dict[str, int]]:
     """Flag pre-write CHR register updates in the sample's visible sprite span."""
@@ -204,14 +314,38 @@ def analyze_render_capture(
         "chr_bank_changes_before_object_bottom": events,
         "geometry_supported": width == 256 and height == 240,
         "rgb_color_comparison": None,
+        "independent_default_palette_check": None,
+        "sprite_group_region": {
+            "left": min(component.x for component in comps),
+            "top": min(component.y for component in comps),
+            "right_exclusive": max(component.x + 8 for component in comps),
+            "bottom_exclusive": max(component.y + 16 for component in comps),
+            "opaque_sprite_pixels": len(indexed),
+            "transparent_background_pixels_not_verified": (
+                (
+                    max(component.x + 8 for component in comps)
+                    - min(component.x for component in comps)
+                ) * (
+                    max(component.y + 16 for component in comps)
+                    - min(component.y for component in comps)
+                ) - len(indexed)
+            ),
+            "background_reference_status": (
+                "unavailable_no_independent_background_or_sprite_disabled_capture"
+            ),
+        },
         "not_proven": [
-            "RGB values are inferred from the same screen, not from a calibrated NES palette",
+            "legacy modal RGB statistics are fitted to the screen itself",
+            "independent default 2C02 palette applies only if emulator options match",
             "NES sprite scanline limits, background priority, clipping and edge masking",
             "screen-frame/PPU sprite fetch timing independent of the event callback",
             "a recognized 16x16 shape is a complete or universally correct Mario pose",
         ],
     }
     if width == 256 and height == 240:
+        result["independent_default_palette_check"] = compare_independent_reference_palette(
+            screen, width, height, indexed, palette
+        )
         result["rgb_color_comparison"] = {
             "registered_oam_coordinates": compare_color_groups(
                 screen, width, height, indexed
