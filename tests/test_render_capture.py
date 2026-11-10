@@ -70,7 +70,9 @@ def test_two_palette_slots_are_not_merged():
 
 
 def test_registered_shift_more_consistent_than_one_pixel_offset():
-    comp = component(pixels=bytes([1, 2, 3, 0] * 32))
+    import random
+    rng = random.Random(121)
+    comp = component(pixels=bytes(rng.randrange(4) for _ in range(128)))
     layer = index_layer([comp])
     screen = rgb_test_screen(layer)
     registered = compare_color_groups(screen, 256, 240, layer)
