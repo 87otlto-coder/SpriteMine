@@ -335,3 +335,14 @@ The research branch now contains spritemine_render_probe.lua and analyze_render_
 Update F:\Dev\ROMMAGE\TOOLS\SpriteMine-research from research/smb3-emulator-feasibility; stop the old script in MesenCE, use File > Open to select spritemine_render_probe.lua (not mock_mesence_render.lua), and press F5 during unpaused World 1-1 gameplay with small Mario standing still. Once it prints RENDER CAPTURE COMPLETE, follow the exact PowerShell instructions in docs/research/RENDER_RGB_CORRESPONDENCE.md to generate screencheck_render_*.json. That report is metadata-only and safe to share; raw screen pixels and ROM bytes remain in local FIXTURE.
 
 MesenCE's RGB video filter, possible geometry changes, hardware priority and actual visible scanline behavior prevent any claim of original NES pixel-perfect RGB before a real comparison is reviewed.
+
+
+## Current next step — independently check Mario's exact RGB (2026-11-10)
+
+No new MesenCE capture is necessary. The original render session render_0000450823_1794339466 from frame 450824 already produced a 138/138 **self-fitted** palette-index color consistency. MesenCE's upstream default 2C02 colors for NES codes 0x16,0x36,0x0F exactly equal those three observed colors. The same-session **actual palette RAM bytes** still need to be validated.
+
+After pulling the latest research branch, use analyze_render_capture.py on the existing private 15-file render session and the verified original SMB3 PRG1 ROM. Its new independent_default_palette_check reads the captured palette RAM codes, looks up only the three documented MesenCE default 2C02 references and compares every opaque 16×16 Mario candidate pixel directly against the observed RGB24. It does not fit RGB from the screen. A pass requires pixels_exact=138, pixels_mismatched=0 and status=reference_opaque_pixels_exact; these are **expected, not yet validated** on this session's local captured bytes.
+
+Optionally use sprite_components.py --group-oam "10,11" --sample 3 --reference-colors to export separate synthetic grayscale and documented default 2C02 reference-color previews into a new local FIXTURE folder. It retains index-zero transparency, refuses unknown palette codes and never overwrites existing files.
+
+Detailed Windows steps and evidence boundaries: docs/research/SMB3_MARIO_INDEPENDENT_PALETTE.md. The 118 source-transparent/background pixels remain a separate acceptance gate requiring a background reference; do not infer them from a fitted RGB score.
