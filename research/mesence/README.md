@@ -246,3 +246,44 @@ See docs/research/MMC3_CHR_MAPPING_VERIFICATION.md for the source table and comp
 The owner has run the integrated capture and local ROM-backed validator successfully. Report for `phase_0000265171_1794292304` shows **3 fully matching 8 KiB pattern hashes, 0 mismatches, and 1 unknown initial mapping**. This closes the *boundary-mapping integrity* gate; there is no reason to repeat the same capture for that check.
 
 Next is research-only hardware sprite-component decoding. We should use the **startFrame** PPU/OAM buffer from the same event as input. A hardware sprite is an 8x16 OAM component, **not** automatically a complete Mario character or necessarily visible on the rendered screen. NES color lookup, background priority, per-scanline sprite limits and scroll/rendering phase are still separate concerns.
+
+## Next research stage: inspect actual 8x16 OAM hardware components locally
+
+With independently verified PPU frame-boundary patterns available, research/mesence/sprite_components.py now decodes **individual 8×16 OAM hardware entries** from the verified startFrame sample 3 of session phase_0000265171_1794292304. It retains physical source-ROM offsets, OAM positions, palette RAM values, palette selection, flip flags and priority attributes. Palette index zero is transparent.
+
+These are **synthetic grayscale diagnostic previews**, not authentic game palette colors, proven Mario parts or final visible game pixels. Background priority, the eight-sprites-per-scanline limit, clipping and render phase are not modeled.
+
+Run under Windows PowerShell, keeping all generated graphics under FIXTURE:
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+
+$capture = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\phase_0000265171_1794292304.json"
+$roms = @(Get-ChildItem -Path "F:\Dev\ROMMAGE\FIXTURE" -File -Recurse |
+    Where-Object { $_.Name -in @("Super Mario Bros. 3.zip", "Super Mario Bros. 3.nes") })
+if ($roms.Count -ne 1) { throw "Expected one SMB3 ROM under FIXTURE; found $($roms.Count)." }
+if (-not (Test-Path -LiteralPath $capture)) { throw "Missing phase manifest: $capture" }
+
+$out = "F:\Dev\ROMMAGE\FIXTURE\SMB3\SpriteComponents\phase_0000265171_1794292304"
+$raw = py -3.12 ".\research\mesence\sprite_components.py" $capture 
+    --rom $roms[0].FullName --sample 3 --output-dir $out
+
+if ($LASTEXITCODE -ne 0) {
+    $raw
+    throw "Sprite-component diagnostic failed; inspect the error above."
+}
+
+$report = ($raw -join "\`n") | ConvertFrom-Json
+$report | Select-Object result, frame_count, potentially_on_screen_count | Format-List
+$report.components | Select-Object oam_index, x, y, tile_id, sprite_palette_slot |
+    Format-Table -AutoSize
+
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText((Join-Path $out "component_report.json"), ($raw -join "\`n"), $utf8)
+explorer.exe $out
+~~~
+
+Expected: PNG files named hardware_oam_NN_frame_265172.png and a metadata-only component_report.json. This operation refuses output under a Git checkout or overwriting previous previews. Choose a new output folder if repeating it.
+
+The preview script requires verified source-to-PPU mapping and rejects the first startFrame sample, whose earlier mapper configuration was not observed. Share the JSON metadata report and optionally private previews for visual interpretation; never put captured graphics in GitHub.
