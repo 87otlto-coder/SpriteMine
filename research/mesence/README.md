@@ -240,3 +240,9 @@ Two related research utilities serve different purposes:
 **Verified result:** modeled endFrame 8 KiB PPU SHA-256 = 0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918, exactly matching the private captures for frames 29276 and 29277. The predicted startFrame PPU SHA-256 = ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5; a byte-for-byte independent startFrame capture still needs to be performed.
 
 See docs/research/MMC3_CHR_MAPPING_VERIFICATION.md for the source table and complete evidence. Full provenance is confined to local FIXTURE paths.
+
+## Result — phase-capture bank model verified on SMB3 (2026-11-10)
+
+The owner has run the integrated capture and local ROM-backed validator successfully. Report for `phase_0000265171_1794292304` shows **3 fully matching 8 KiB pattern hashes, 0 mismatches, and 1 unknown initial mapping**. This closes the *boundary-mapping integrity* gate; there is no reason to repeat the same capture for that check.
+
+Next is research-only hardware sprite-component decoding. We should use the **startFrame** PPU/OAM buffer from the same event as input. A hardware sprite is an 8x16 OAM component, **not** automatically a complete Mario character or necessarily visible on the rendered screen. NES color lookup, background priority, per-scanline sprite limits and scroll/rendering phase are still separate concerns.
