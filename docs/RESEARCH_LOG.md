@@ -130,3 +130,12 @@ The results represent **hardware OAM entries, not automatically characters, visi
 **Independent assembly:** Decode two tiles per component, flip horizontally and preserve pixel-index-0 transparency. Placed side by side at their actual OAM positions, they yield an unmistakable *small Mario-shaped* 16x16 candidate, with 138 nontransparent pixels. The CHR mapper write stream shows no CHR bank register changes before scanline 193, later than the sprite's rows 162–177; this makes pre-render CHR mapping a credible source for that object in this frame, although actual PPU fetches have not been traced.
 
 **Follow-up implementation:** Added explicit hardware OAM group composer with diagnostic grayscale RGBA output; it never automatically infers actor identity and retains original component provenance. The complete user fixture remains private. Full-screen pixel, RGB palette, priority and save-state replay verification remain incomplete.
+
+
+## 2026-11-10 — Screen RGB synchronization experiment prepared
+
+Source-level observation: MesenCE NES PPU SendFrame() triggers EndFrame before dispatching the completed current output buffer; Lua GetRenderedFrame() passes current PPU frame data through the video filter and getScreenBuffer() exposes RGB values. References: Core/NES/NesPpu.cpp and Core/Debugger/LuaApi.cpp at revision 4b8a196e299b3de297b204fd1208d2981562c89b.
+
+Implemented a distinct render_... local capture producing two 24-bit RGB screen buffers and the existing four phase-boundary OAM/PPU/palette snapshots, with bounded MMC3 writes. The read-only verify_phase_capture.py now supports versioned rendered capture manifests while retaining original phase-only semantics. analyze_render_capture.py compares indexed pixels from explicit candidate hardware OAM entries against observed screen pixel RGB at the recorded coordinates, separately for each sprite palette slot and 2bpp pixel index. It reports modal color consistency and ±1-pixel controls, does not adjust alignment, and flags possible bank changes before the hardware sprite's lower scanline.
+
+Caution: RGB modes inferred from that same rendered image are not independent NES palette calibration and high consistency alone does not establish pixel-perfect OAM visibility. Filter resampling, background priority, sprite evaluation/limits and exact fetch phase remain uncertain. Synthetic mocks/CI can check the pipeline, but the actual owner-run MesenCE experiment has not occurred yet. Runbook: docs/research/RENDER_RGB_CORRESPONDENCE.md.
