@@ -259,6 +259,14 @@ Run under Windows PowerShell, keeping all generated graphics under FIXTURE:
 Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
 git pull --ff-only origin research/smb3-emulator-feasibility
 
+$app = "F:\Dev\ROMMAGE\SOURCE\SpriteMine"
+$python = Join-Path $app ".venv\Scripts\python.exe"
+if (-not (Test-Path -LiteralPath $python)) {
+    py -3.12 -m venv (Join-Path $app ".venv")
+}
+& $python -m pip install -e $app
+if ($LASTEXITCODE -ne 0) { throw "SpriteMine Python installation failed" }
+
 $capture = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\phase_0000265171_1794292304.json"
 $roms = @(Get-ChildItem -Path "F:\Dev\ROMMAGE\FIXTURE" -File -Recurse |
     Where-Object { $_.Name -in @("Super Mario Bros. 3.zip", "Super Mario Bros. 3.nes") })
@@ -266,7 +274,7 @@ if ($roms.Count -ne 1) { throw "Expected one SMB3 ROM under FIXTURE; found $($ro
 if (-not (Test-Path -LiteralPath $capture)) { throw "Missing phase manifest: $capture" }
 
 $out = "F:\Dev\ROMMAGE\FIXTURE\SMB3\SpriteComponents\phase_0000265171_1794292304"
-$raw = py -3.12 ".\research\mesence\sprite_components.py" $capture --rom $roms[0].FullName --sample 3 --output-dir $out
+$raw = & $python ".\research\mesence\sprite_components.py" $capture --rom $roms[0].FullName --sample 3 --output-dir $out
 
 if ($LASTEXITCODE -ne 0) {
     $raw
