@@ -217,22 +217,31 @@ def inspect_session(
     }
 
     if output_dir is not None:
-        target = Path(output_dir)
-        if target.resolve() == folder.resolve():
+        target = Path(output_dir).resolve()
+        if target == folder.resolve():
             raise ValueError("Export to a separate FIXTURE output directory")
-        target.mkdir(parents=True, exist_ok=True)
-        exports = []
-        for component in components:
-            name = (
-                f"hardware_oam_{component.oam_index:02d}"
-                f"_frame_{sample['frame_count']}.png"
+        if any((parent / ".git").exists() for parent in (target, *target.parents)):
+            raise ValueError("Do not export captured game graphics inside a Git checkout")
+        # Check every path before writing anything to avoid a partial re-export.
+        destinations = [
+            (
+                component,
+                target / (
+                    f"hardware_oam_{component.oam_index:02d}"
+                    f"_frame_{sample['frame_count']}.png"
+                ),
             )
-            dest = target / name
+            for component in components
+        ]
+        for _, dest in destinations:
             if dest.exists():
                 raise FileExistsError(f"Refusing to overwrite existing preview: {dest}")
+        target.mkdir(parents=True, exist_ok=True)
+        exports = []
+        for component, dest in destinations:
             preview_image(component).save(dest)
             exports.append({
-                "file": name, "oam_index": component.oam_index,
+                "file": dest.name, "oam_index": component.oam_index,
                 "png_sha256": hashlib.sha256(dest.read_bytes()).hexdigest(),
             })
         report["local_preview_exports"] = exports
