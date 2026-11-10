@@ -25,8 +25,14 @@ from spritemine.chr import decode_tile
 
 try:
     from .verify_phase_capture import verify_phase_session
+    from .nes_palette_reference import (
+        MESEN_REFERENCE_URL, sprite_rgba_from_default_reference,
+    )
 except ImportError:
     from verify_phase_capture import verify_phase_session
+    from nes_palette_reference import (
+        MESEN_REFERENCE_URL, sprite_rgba_from_default_reference,
+    )
 
 
 DIAGNOSTIC_COLORS = (
@@ -162,8 +168,27 @@ def preview_image(component: SpriteComponent) -> Image.Image:
     return image
 
 
+def default_2c02_reference_preview(
+    component: SpriteComponent, palette_ram: bytes
+) -> Image.Image:
+    """Render small-Mario subset using MesenCE default colors, index 0 alpha.
+
+    This is a documented upstream reference, *not* a claim that the emulator
+    was configured with this palette or had no emphasis/filter modifiers.
+    """
+    image = Image.new("RGBA", (8, 16))
+    image.putdata([
+        sprite_rgba_from_default_reference(
+            palette_ram, component.sprite_palette_slot, pixel_index
+        )
+        for pixel_index in component.pixels
+    ])
+    return image
+
+
 def compose_explicit_oam_group(
     components: list[SpriteComponent],
+    *, reference_palette_ram: bytes | None = None,
 ) -> tuple[Image.Image, dict[str, Any]]:
     """Arrange explicitly selected OAM components without identifying a character.
 
@@ -182,9 +207,12 @@ def compose_explicit_oam_group(
     bottom = max(component.y + 16 for component in components)
     image = Image.new("RGBA", (right - left, bottom - top), (0, 0, 0, 0))
     for component in sorted(components, key=lambda item: item.oam_index, reverse=True):
-        image.alpha_composite(
-            preview_image(component), dest=(component.x - left, component.y - top)
+        preview = (
+            preview_image(component)
+            if reference_palette_ram is None
+            else default_2c02_reference_preview(component, reference_palette_ram)
         )
+        image.alpha_composite(preview, dest=(component.x - left, component.y - top))
     transparent = sum(color[3] == 0 for color in image.getdata())
     summary = {
         "evidence": "explicit_OAM_group_not_proven_character_or_visible_pixels",
@@ -192,7 +220,11 @@ def compose_explicit_oam_group(
         "left": left, "top": top, "width": image.width, "height": image.height,
         "transparent_pixel_count": transparent,
         "nontransparent_pixel_count": image.width * image.height - transparent,
-        "rendering": "synthetic_grayscale_alpha_index0_transparent",
+        "rendering": (
+            "synthetic_grayscale_alpha_index0_transparent"
+            if reference_palette_ram is None
+            else "MesenCE_2C02_default_reference_3_codes_alpha_index0_transparent"
+        ),
         "overlap_rule": "lower_OAM_index_overlay_diagnostic_only",
         "not_proven": [
             "semantic character identity or completeness",
@@ -209,6 +241,7 @@ def inspect_session(
     sample_number: int = 3,
     output_dir: Path | None = None,
     group_indices: tuple[int, ...] | None = None,
+    reference_colors: bool = False,
 ) -> dict[str, Any]:
     """Read one verified startFrame capture; optionally export local PNG previews."""
     verified = verify_phase_session(manifest_path, rom_path)
@@ -260,6 +293,7 @@ def inspect_session(
     }
 
     group_image: Image.Image | None = None
+    reference_group_image: Image.Image | None = None
     if group_indices is not None:
         available = {component.oam_index: component for component in components}
         if not group_indices or len(set(group_indices)) != len(group_indices):
@@ -274,6 +308,11 @@ def inspect_session(
             [available[index] for index in group_indices]
         )
         report["explicit_oam_group"] = group_metadata
+        if reference_colors:
+            reference_group_image, _ = compose_explicit_oam_group(
+                [available[index] for index in group_indices],
+                reference_palette_ram=palette,
+            )
 
     if output_dir is not None:
         target = Path(output_dir).resolve()
@@ -300,7 +339,33 @@ def inspect_session(
                 ) + f"_frame_{sample['frame_count']}.png"
             )
             group_dest = target / group_file
-        for dest in [*(path for _, path in destinations), group_dest]:
+        reference_destinations = []
+        reference_group_dest = None
+        if reference_colors:
+            # Resolve every color before creating any output files.
+            reference_destinations = [
+                (
+                    component,
+                    target / (
+                        f"hardware_oam_{component.oam_index:02d}"
+                        f"_frame_{sample['frame_count']}_mesen2c02ref.png"
+                    ),
+                    default_2c02_reference_preview(component, palette),
+                )
+                for component in components
+            ]
+            if reference_group_image is not None:
+                reference_group_dest = target / (
+                    "hardware_group_oam_" + "_".join(
+                        f"{index:02d}" for index in sorted(group_indices or ())
+                    ) + f"_frame_{sample['frame_count']}_mesen2c02ref.png"
+                )
+        all_destinations = (
+            [dest for _, dest in destinations]
+            + [dest for _, dest, _ in reference_destinations]
+            + [group_dest, reference_group_dest]
+        )
+        for dest in all_destinations:
             if dest is not None and dest.exists():
                 raise FileExistsError(f"Refusing to overwrite existing preview: {dest}")
         target.mkdir(parents=True, exist_ok=True)
@@ -318,6 +383,28 @@ def inspect_session(
                 "file": group_dest.name,
                 "png_sha256": hashlib.sha256(group_dest.read_bytes()).hexdigest(),
             }
+        if reference_colors:
+            reference_exports = []
+            for component, dest, image in reference_destinations:
+                image.save(dest)
+                reference_exports.append({
+                    "file": dest.name,
+                    "oam_index": component.oam_index,
+                    "png_sha256": hashlib.sha256(dest.read_bytes()).hexdigest(),
+                })
+            report["default_2c02_reference_previews"] = {
+                "source_url": MESEN_REFERENCE_URL,
+                "assumption": "MesenCE unmodified 2C02 palette without emphasis/filter changes",
+                "local_exports": reference_exports,
+            }
+            if reference_group_image is not None and reference_group_dest is not None:
+                reference_group_image.save(reference_group_dest)
+                report["default_2c02_reference_previews"]["local_group_preview"] = {
+                    "file": reference_group_dest.name,
+                    "png_sha256": hashlib.sha256(
+                        reference_group_dest.read_bytes()
+                    ).hexdigest(),
+                }
     return report
 
 
@@ -332,6 +419,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--group-oam", help="Explicit OAM indices to group (e.g. 10,11); never auto-identifies"
     )
+    parser.add_argument(
+        "--reference-colors", action="store_true",
+        help="Also render narrow MesenCE default 2C02 RGB reference previews",
+    )
     args = parser.parse_args(argv)
     try:
         group_indices = None
@@ -340,6 +431,7 @@ def main(argv: list[str] | None = None) -> int:
         report = inspect_session(
             args.manifest, args.rom, sample_number=args.sample,
             output_dir=args.output_dir, group_indices=group_indices,
+            reference_colors=args.reference_colors,
         )
     except (OSError, ValueError, KeyError, TypeError, IndexError, json.JSONDecodeError) as exc:
         print(f"Sprite component inspection failed: {exc}", file=sys.stderr)
