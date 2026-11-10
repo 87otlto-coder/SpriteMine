@@ -22,6 +22,8 @@ jobs:
           luac5.4 -p research/mesence/spritemine_frame_probe.lua
           luac5.4 -p research/mesence/spritemine_mapping_probe.lua
           luac5.4 -p research/mesence/spritemine_mmc3_trace.lua
+          luac5.4 -p research/mesence/spritemine_phase_capture.lua
+          luac5.4 -p research/mesence/mock_mesence_phase.lua
       - name: Execute Lua probe with synthetic emulator API
         run: |
           mkdir -p "$SPRITEMINE_TEST_OUTPUT"
@@ -34,8 +36,44 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e ".[dev]"
+      - name: Generate synthetic MMC3 ROM test bytes and identify SHA-1
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          folder = Path(os.environ["SPRITEMINE_TEST_OUTPUT"])
+          chr_data = bytes((bank * 3 + i) % 256 for bank in range(128) for i in range(1024))
+          image = b"NES\\x1a" + bytes((1, 16, 0x40, 0)) + bytes(8) + bytes(16384) + chr_data
+          (folder / "synthetic.nes").write_bytes(image)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as out:
+              out.write("SPRITEMINE_TEST_ROM_SHA1=" + hashlib.sha1(image).hexdigest().upper() + "\\n")
+          PY
+      - name: Execute same-session phase recorder against synthetic MesenCE
+        run: lua5.4 research/mesence/mock_mesence_phase.lua research/mesence/spritemine_phase_capture.lua
+      - name: Verify Lua-emitted full 8KiB phase samples against synthetic ROM
+        run: |
+          python - <<'PY'
+          import glob
+          import os
+          from pathlib import Path
+          from research.mesence.verify_phase_capture import verify_phase_session
+          folder = Path(os.environ["SPRITEMINE_TEST_OUTPUT"])
+          paths = glob.glob(str(folder / "phase_*.json"))
+          assert len(paths) == 1, paths
+          report = verify_phase_session(
+              Path(paths[0]), folder / "synthetic.nes", allow_synthetic_rom=True
+          )
+          assert report["capture_count"] == 4
+          assert report["blob_count"] == 12
+          assert report["mapper_model_status"] == "matches_known_boundaries", report
+          assert report["model_matches"] == 3
+          assert report["model_unknown_snapshots"] == 1
+          assert report["model_mismatches"] == 0
+          print("Four mock snapshots with 3 independently ROM-matched PPU mappings")
+          PY
       - name: Test synthetic capture schema and safety checks
-        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py
+        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py tests/test_phase_capture.py
       - name: Validate actual binary files from mocked Lua probe
         run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
       - name: Diagnose mock OAM and PPU pattern mapping
