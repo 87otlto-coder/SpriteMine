@@ -24,6 +24,8 @@ jobs:
           luac5.4 -p research/mesence/spritemine_mmc3_trace.lua
           luac5.4 -p research/mesence/spritemine_phase_capture.lua
           luac5.4 -p research/mesence/mock_mesence_phase.lua
+          luac5.4 -p research/mesence/spritemine_render_probe.lua
+          luac5.4 -p research/mesence/mock_mesence_render.lua
       - name: Execute Lua probe with synthetic emulator API
         run: |
           mkdir -p "$SPRITEMINE_TEST_OUTPUT"
@@ -72,8 +74,36 @@ jobs:
           assert report["model_mismatches"] == 0
           print("Four mock snapshots with 3 independently ROM-matched PPU mappings")
           PY
+      - name: Execute screen RGB + phase capture against synthetic MesenCE
+        run: lua5.4 research/mesence/mock_mesence_render.lua research/mesence/spritemine_render_probe.lua
+      - name: Validate rendered RGB + ROM-backed sprite comparison from Lua mock
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import glob, os
+          from research.mesence.verify_phase_capture import verify_phase_session
+          from research.mesence.analyze_render_capture import analyze_render_capture
+          folder = Path(os.environ["SPRITEMINE_TEST_OUTPUT"])
+          files = glob.glob(str(folder / "render_*.json"))
+          assert len(files) == 1, files
+          manifest = Path(files[0])
+          rom = folder / "synthetic.nes"
+          phase = verify_phase_session(manifest, rom, allow_synthetic_rom=True)
+          assert phase["capture_count"] == 4, phase
+          assert phase["blob_count"] == 14
+          assert phase["model_matches"] == 3
+          assert phase["model_mismatches"] == 0
+          assert phase["snapshots"][3]["screen_width"] == 256
+          assert phase["snapshots"][3]["screen_height"] == 240
+          report = analyze_render_capture(manifest, rom, allow_synthetic_rom=True)
+          assert report["geometry_supported"] is True
+          assert report["ppu_mapping_verified"] is True
+          assert report["chr_bank_changes_before_object_bottom"] == []
+          assert report["rgb_color_comparison"]["registered_oam_coordinates"]["modal_agreement_fraction"] == 1.0, report
+          print("Synthetic rendered RGB frame corresponds to verified pre-render OAM and CHR mapping")
+          PY
       - name: Test synthetic capture schema and safety checks
-        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py tests/test_phase_capture.py tests/test_sprite_components.py
+        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py tests/test_phase_capture.py tests/test_sprite_components.py tests/test_render_capture.py
       - name: Validate actual binary files from mocked Lua probe
         run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
       - name: Diagnose mock OAM and PPU pattern mapping
