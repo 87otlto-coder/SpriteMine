@@ -36,44 +36,6 @@ def _rgb(rgb: bytes, width: int, x: int, y: int) -> bytes:
     return rgb[i:i + 3]
 
 
-def compare_sprite_background_region(
-    foreground: bytes,
-    background_only: bytes,
-    width: int,
-    height: int,
-    indexed: dict[tuple[int, int], tuple[int, int]],
-    palette_ram: bytes,
-    *,
-    margin: int = 8,
-) -> dict[str, Any]:
-    """Match expected sprite RGB and transparency against a separate BG render.
-
-    For opaque sprite indices: normal screen must equal upstream default RGB.
-    For zero indices: normal screen must equal the separately captured background.
-    An 8px surrounding background ring is used as a same-scene control.
-    """
-    if not indexed:
-        raise ValueError("No opaque candidate sprite pixels")
-    if len(palette_ram) != 32:
-        raise ValueError("NES palette RAM must contain 32 bytes")
-    if width != 256 or height != 240:
-        raise ValueError("Native 256x240 capture is required")
-    if len(foreground) != width * height * 3 or len(background_only) != len(foreground):
-        raise ValueError("RGB24 buffers do not match the declared dimensions")
-    if type(margin) is not int or margin < 1 or margin > 32:
-        raise ValueError("Ring margin must be 1 through 32 pixels")
-
-    xs = [p[0] for p in indexed]
-    ys = [p[1] for p in indexed]
-    # Caller-selected 8x16 hardware sprites are permitted to be transparent
-    # at the extremes; require explicit union bounds separately in the CLI.
-    bbox = (min(xs), min(ys), max(xs) + 1, max(ys) + 1)
-    return compare_region_with_bounds(
-        foreground, background_only, width, height,
-        indexed, palette_ram, bbox=bbox, margin=margin,
-    )
-
-
 def compare_region_with_bounds(
     foreground: bytes,
     background_only: bytes,
