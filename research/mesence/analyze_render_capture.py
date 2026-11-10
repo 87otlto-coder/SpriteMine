@@ -127,9 +127,13 @@ def analyze_render_capture(
     rom_path: Path,
     *,
     oam_indices: tuple[int, ...] = (10, 11),
+    allow_synthetic_rom: bool = False,
 ) -> dict[str, Any]:
     manifest_path = Path(manifest_path)
-    verified = verify_phase_session(manifest_path, rom_path)
+    # Test-only override never exposed on the CLI; actual runs require SMB3 PRG1.
+    verified = verify_phase_session(
+        manifest_path, rom_path, allow_synthetic_rom=allow_synthetic_rom
+    )
     if verified["capture_tool"] != "spritemine-mesence-render-capture-v1":
         raise ValueError("A rendered RGB capture is required, not a phase-only capture")
     if verified["mapper_model_status"] != "matches_known_boundaries":
