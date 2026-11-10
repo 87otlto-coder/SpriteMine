@@ -105,3 +105,9 @@ if ($check.status -eq "reference_opaque_pixels_exact") {
 If the check passes, the new local FIXTURE directory contains grayscale diagnostic previews plus reference-colored 8x16 components and the 16x16 candidate composite PNG with index-0 transparency. This is a MesenCE default 2C02 reference rendering, not proof of other video configurations, background priority or the full visible composite.
 
 Please share only screencheck_independent_render_0000450823_1794339466.json. Original ROMs and all generated game graphics remain in FIXTURE and out of GitHub.
+
+## Result received — 2026-11-10
+
+The owner executed the Windows read-only independent RGB validator on all real private render-session files and uploaded the new metadata-only report plus six reference/grayscale PNG previews. **PASS**: `independent_default_palette_check.status=reference_opaque_pixels_exact`, `pixels_expected=138`, `pixels_compared=138`, `pixels_exact=138`, `pixels_mismatched=0`, `pixels_out_of_bounds=0`. Exact per-code counts: 0x16/#B53120: 37/37, 0x36/#FECCC5: 31/31, 0x0F/#000000: 70/70. The colored 16x16 PNG contains exactly 138 pixels of alpha 255 and 118 alpha-zero pixels, matching the grayscale reference's mask.
+
+This closes the **single-pose opaque-pixel RGB** test using an independently documented upstream default MesenCE 2C02 reference, under its stated no-custom-filter assumptions. It does **not** close transparency/background composition because a source-transparent pixel must reveal the correct background RGB, which was not independently reconstructed. See `docs/research/SMB3_MARIO_OPAQUE_RGB_VERIFIED.md` for image hashes, provenance and limitations. Continue with controlled sprites-disabled background reference / scroll verification.
