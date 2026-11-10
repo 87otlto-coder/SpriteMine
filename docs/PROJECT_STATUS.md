@@ -120,3 +120,10 @@ Received second private actual SMB3 phase capture `phase_0000442741_1794295259.j
 Implemented an explicit-index `--group-oam 10,11` diagnostic composition option with synthetic CI tests. Human inspection of the composite is evidence for the visual identity, but the code does not auto-label actors. See `docs/research/SMB3_FIRST_MARIO_COMPONENTS.md`.
 
 **Still open:** actual framebuffer match, MesenCE RGB palette values, background priority/clipping, scanline sprite-limit behavior, reproducible save state / input history and Phase 3 UI integration.
+
+
+## 2026-11-10 — Rendered RGB comparison prototype implemented; real runtime pending
+
+New experimental Lua capture (research/mesence/spritemine_render_probe.lua) records 2 complete screen RGB24 buffers at MesenCE endFrame along with four PPU/OAM/palette boundary observations and same-session MMC3 register writes. Original phase capture format remains intact; the read-only verify_phase_capture.py accepts the separately versioned render schema with screen buffer size and SHA-256 checks. New analyze_render_capture.py uses independently matched ROM-backed CHR mapping, an explicit 8x16 OAM group, documented palette-index transparency and a real 256x240 MesenCE screen to report per-index observed RGB consistency. It reports geometry incompatibility and CHR updates before sprite rows rather than assuming pixel-perfect agreement.
+
+Synthetic MesenCE mock tests deliberately change MMC3 banks late in a frame while retaining the correctly rendered pre-switch sprite in the screen RGB buffer. This establishes the tooling/test pipeline, not real Windows end-to-end correspondence. Next owner input: a screencheck_render_*.json report from the new on-device Lua recorder. Implementation and runbook: docs/research/RENDER_RGB_CORRESPONDENCE.md. Do not mark pixel-perfect Mario reconstruction complete without independent rendered-pixel and calibrated color evidence.
