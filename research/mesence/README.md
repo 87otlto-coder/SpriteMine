@@ -300,3 +300,27 @@ The preview script requires verified source-to-PPU mapping and rejects the first
 The first on-device 8x16 component decoder run produced five transparent grayscale OAM sprites in OAM order that visibly read **P A U S E**. The accompanying metadata report gives indices 0–4, Y=89 and X=96/112/128/144/160, all using palette slot 3. This establishes the utility can decode recognizable original pattern shapes from a verified **frame-boundary** snapshot. It does NOT establish final visible screen pixels, and these are **not Mario's sprite components**. The evidence strongly suggests the original capture was made while the game was paused **inside SMB3**.
 
 **Next capture:** Keep MesenCE's emulator execution running, press the game's configured **Start** button once to dismiss SMB3's in-game PAUSE overlay, and verify Mario is visible and the scene is progressing before starting the Lua recorder. In **Debug → Script Window**, stop the previous script with the square Stop control, reload `F:\Dev\ROMMAGE\TOOLS\SpriteMine-research\research\mesence\spritemine_phase_capture.lua`, and press F5. The recorder uses a new local session prefix and will not overwrite the previous evidence. Then run `verify_phase_capture.py` on that session with the verified SMB3 ROM, and inspect its verified startFrame sample #3 using `sprite_components.py` with a **new** FIXTURE preview output directory. Do not assume OAM sprites at the top of the list represent Mario; inspect their positions and decoded shapes as evidence.
+
+## First candidate Mario hardware sprite composition (2026-11-10)
+
+The owner supplied the new gameplay phase session `phase_0000442741_1794295259.json` and a ZIP with all 12 binary buffers. Independent ROM-backed MMC3 modeling matches all three known full 8KiB PPU patterns (no mismatches). At frame **442742** startFrame, two 8x16 OAM entries (#10 at X=87 and #11 at X=95, both Y=162 and H-flipped) form a visually recognizable **16x16 small Mario candidate** when decoded and placed at their recorded coordinates. Palette RGB and display-pixel fidelity are not proven.
+
+New `--group-oam 10,11` support explicitly groups **only the requested** hardware OAM indices, without automatic character identification. Use the original ROM in FIXTURE, existing verified manifest and an **empty** preview folder:
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+$python = "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe"
+$capture = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE\phase_0000442741_1794295259.json"
+$roms = @(Get-ChildItem "F:\Dev\ROMMAGE\FIXTURE" -File -Recurse |
+    Where-Object { $_.Name -in @("Super Mario Bros. 3.zip","Super Mario Bros. 3.nes") })
+if ($roms.Count -ne 1) { throw "Expected one SMB3 ROM under FIXTURE; found $($roms.Count)." }
+$out = "F:\Dev\ROMMAGE\FIXTURE\SMB3\SpriteComponents\phase_0000442741_1794295259"
+$raw = & $python ".\research\mesence\sprite_components.py" $capture --rom $roms[0].FullName --sample 3 --group-oam "10,11" --output-dir $out
+if ($LASTEXITCODE -ne 0) { $raw; throw "Group preview failed." }
+$report = ($raw -join [Environment]::NewLine) | ConvertFrom-Json
+$report.explicit_oam_group | Format-List
+explorer.exe $out
+~~~
+
+Expected: component previews for OAM #10 and #11 plus an **explicit** hardware group PNG with 16x16 transparent-index shape. Do not commit exported PNGs to GitHub. If a previous output directory already contains these filenames, this command intentionally refuses to overwrite any files; select a new empty output directory. This is a research diagnostic, **not** a final Mario animation or pixel-perfect original.
