@@ -83,7 +83,9 @@ def load_verified_window(run_dir: Path) -> tuple[dict[str, Any], Image.Image]:
         raise ValueError("Archived report was never marked verified")
     for key in ("provenance", "restore", "timing_sha256",
                 "controller_bus_sha256", "input_history_sha256",
-                "context_sha256", "mmc3_trace_sha256", "screens_sha256_A_B_A2"):
+                "context_sha256", "mmc3_trace_sha256", "screens_sha256_A_B_A2",
+                "boundaries", "components", "pixels", "palette_check",
+                "motion_observation", "statuses"):
         if archived.get(key) != live.get(key):
             raise ValueError(f"Archived A/B/A evidence changed: {key}")
 
