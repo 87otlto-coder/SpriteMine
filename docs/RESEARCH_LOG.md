@@ -82,3 +82,15 @@ A read-only bank decoder rebuilt the entire endFrame 8,192-byte PPU pattern from
 **Acceptance:** Confirm full second startFrame PPU SHA-256 matches its ROM-based model from writes observed between first endFrame and second startFrame. The first pre-render mapping may be legitimately unknown until all six bank registers have been observed. Full matching endFrame SHA-256 is a secondary check.
 
 **Unproven:** physical graphics bytes fetched on each visible scanline, actual sprite visibility, save-state replay and pixel-perfect Mario rendering. Captures remain under FIXTURE.
+
+## 2026-11-10 — Same-session MMC3 trace prediction, awaiting actual PPU bytes
+
+**Evidence:** Private owner-uploaded `phase_0000265171_1794292304.json`, from `spritemine-mesence-phase-capture-v1`, contains four PPU boundary event records (start/end at frame 265171, start/end at frame 265172), 62 timestamped $8000/$8001 writes and zero dropped writes. The MesenCE-reported source SHA-1 `6BD518E85EB46A4252AF07910F61036E84B020D1` matches the verified SMB3 ROM. All four boundary clocks progress monotonically.
+
+Using the recorded writes *and the owner's previously verified SMB3 ROM*:
+- First startFrame: physical mapper state unknown; no writes before the observation.
+- First endFrame: PPU slots `[92,93,94,95,126,126,126,126]`, expected SHA-256 `0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918`.
+- Second startFrame: PPU slots `[8,9,102,103,83,4,34,50]`, expected SHA-256 `ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5`.
+- Second endFrame: same PPU slots and expected SHA-256 as first endFrame.
+
+**Crucial evidence boundary:** This upload supplied **only the JSON manifest**, not the four raw 8,192-byte PPU snapshots or eight OAM/palette buffers. These expected checksums are ROM-backed model predictions, **not yet compared to same-session captured bytes**. Await the local validator report before clearing the full PPU byte-match gate. Actual Mario screen pixel identity, per-scanline rendering, and deterministic replay remain separate unresolved goals.
