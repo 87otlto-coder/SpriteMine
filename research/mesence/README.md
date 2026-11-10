@@ -346,3 +346,9 @@ After pulling the latest research branch, use analyze_render_capture.py on the e
 Optionally use sprite_components.py --group-oam "10,11" --sample 3 --reference-colors to export separate synthetic grayscale and documented default 2C02 reference-color previews into a new local FIXTURE folder. It retains index-zero transparency, refuses unknown palette codes and never overwrites existing files.
 
 Detailed Windows steps and evidence boundaries: docs/research/SMB3_MARIO_INDEPENDENT_PALETTE.md. The 118 source-transparent/background pixels remain a separate acceptance gate requiring a background reference; do not infer them from a fitted RGB score.
+
+## PASS — Independently verified default-palette opaque pixels, frame 450824
+
+The real owner-supplied `screencheck_independent_render_0000450823_1794339466.json` reports **reference_opaque_pixels_exact: 138/138**, mismatches 0. Independent fixed MesenCE built-in 2C02 colors were selected using the same session's actual captured NES palette RAM codes (0x16/0x36/0x0F), not by fitting the rendered image. The two OAM component previews and combined 16x16 colored sprite were visually and programmatically inspected; all RGB values and index-zero alpha masks agree. Evidence and six PNG SHA-256 values: `docs/research/SMB3_MARIO_OPAQUE_RGB_VERIFIED.md`.
+
+**Do not repeat this validation unnecessarily.** The 118 source-transparent pixels are correctly exported with alpha zero, but a full rendered-background composite still requires independent background-only reference data. Next evaluate a non-ROM-mutating MesenCE sprites-disabled output setting with deterministic saved-state/input replay; avoid assuming that simply erasing Mario from an already composited framebuffer proves background pixel correctness.
