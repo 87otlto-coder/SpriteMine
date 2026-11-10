@@ -1,7 +1,7 @@
 """Synthetic background-reference verifier tests; no SMB3 game pixels."""
 from __future__ import annotations
 
-from types import SimpleNamespace
+from pathlib import Path
 
 import pytest
 
@@ -223,7 +223,7 @@ def test_pair_analyzer_requires_matching_replay_state_and_reads_real_rgb(tmp_pat
 
     monkeypatch.setattr(module, "verify_phase_session", lambda path, *args, **kwargs:
                         fake_reports[Path(path).resolve()])
-    report = module.analyze_two_renders(files[0], files[1], tmp_path / "rom.ne s")
+    report = module.analyze_two_renders(files[0], files[1], tmp_path / "unused-rom")
     assert report["comparison"]["status"] == (
         "region_exact_conditional_on_sprites_disabled_reference"
     )
