@@ -79,3 +79,9 @@ To compare against a private capture archive without extracting or emitting game
 4. Record emulator build/version, savestate and input replay identifiers.
 
 **Verified:** phase-dependent PPU mapping, ROM-backed physical bank assignments at sampled boundaries, and exact endFrame PPU bytes. **Not verified:** pixel-perfect Mario rendering, same-frame reconstruction, or full game asset coverage.
+
+## Controlled next validation (2026-11-10)
+
+The integrated research recorder spritemine_phase_capture.lua and verifier verify_phase_capture.py now permit the predicted *full* startFrame 8 KiB PPU SHA-256 to be tested using registers and PPU snapshots from one emulator session. Unlike previous cross-session evidence, the second startFrame can be mapped from the observed intervening MMC3 register writes; the first startFrame may have unknown pre-existing state.
+
+This integrated experiment is **not yet validated in MesenCE on Windows**. If the second pre-render snapshot hash matches, it strengthens the physical-bank reconstruction evidence but still does not prove the sprite render phase, palette fidelity or screen-pixel correspondence.

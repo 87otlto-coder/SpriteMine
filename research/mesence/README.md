@@ -1,5 +1,62 @@
 # SpriteMine — MesenCE frame capture experiment
 
+## Current next step (2026-11-10): Same-session pre-render PPU capture
+
+**Goal:** Capture two startFrame/endFrame pairs with a complete 8,192-byte PPU pattern snapshot, 256 bytes OAM and 32 bytes palette data at each phase. Record MMC3 writes in the same session and compare reconstructed ROM-backed patterns to the *full* captured 8 KiB hash. The script produces 13 local files (four snapshots × three buffers, plus one metadata JSON) and refuses to overwrite existing evidence. This does not prove visible-scanline sprite rendering.
+
+### A. Update the research checkout (PowerShell)
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+git pull --ff-only origin research/smb3-emulator-feasibility
+New-Item -ItemType Directory -Path "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE" -Force | Out-Null
+Test-Path -LiteralPath "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research\research\mesence\spritemine_phase_capture.lua"
+~~~
+
+Expected: True.
+
+### B. Run the recorder in MesenCE
+
+1. Load the verified SMB3 US PRG1 ROM, ideally with Mario visible in World 1-1.
+2. In **Debug → Script Window**, stop the previous script with the square Stop button.
+3. Select **File → Open** and open F:\Dev\ROMMAGE\TOOLS\SpriteMine-research\research\mesence\spritemine_phase_capture.lua (not any mock_ file).
+4. In Script Window settings, enable **Allow access to I/O and OS functions** for this trusted script; leave network disabled.
+5. Press **F5**, then let emulation advance two frames.
+
+Expected log: **SpriteMine PHASE CAPTURE COMPLETE:** followed by the full JSON path and counts of four snapshots and MMC3 writes. If it says FAILED, preserve the log for diagnosis.
+
+### C. Validate the precise new capture session
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+
+$captureDir = "F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE"
+$manifest = Get-ChildItem -LiteralPath $captureDir -Filter "phase_*.json" -File |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1 -ExpandProperty FullName
+
+if (-not $manifest) { throw "No phase capture report found in $captureDir" }
+
+py -3.12 ".\research\mesence\verify_phase_capture.py" $manifest
+~~~
+
+Expected: pass_structural_phase_capture_validation, four snapshots, twelve binary files, and SHA-256 hashes. The ROM-backed model remains **not attempted** without the ROM.
+
+For independent same-session MMC3 model verification, supply the actual path of the original ROM under FIXTURE:
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\TOOLS\SpriteMine-research"
+$romPath = "F:\Dev\ROMMAGE\FIXTURE\SMB3\Super Mario Bros. 3.zip"
+# Change this example to the existing ROM's actual path if needed.
+py -3.12 ".\research\mesence\verify_phase_capture.py" $manifest --rom $romPath
+~~~
+
+Expected if the mappings agree: mapper_model_status = matches_known_boundaries; the **first** startFrame may correctly have unknown mapping because its earlier register state was not observed. The **second** startFrame should be independently predictable from writes between the captured frames, if all six CHR bank registers were updated. A mismatch is a research finding, not a reason to replace the data.
+
+Only share the resulting metadata JSON or Script Window log. Never commit the local ROM or binary captures to GitHub.
+
+---
+
 This is a **research toolkit, not a completed emulator adapter**. Real MesenCE/SMB3 endFrame capture, start/endFrame mapping comparison, and MMC3 register-write trace have now been observed and validated structurally. Exact rendering-scanline sprite reconstruction remains unproven. GitHub CI also validates synthetic file writing and modeling.
 
 ## Local organization

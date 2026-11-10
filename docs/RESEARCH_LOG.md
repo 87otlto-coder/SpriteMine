@@ -72,3 +72,13 @@ Archive SHA-256 (provenance only): `27e43e5dbf681ab402f27e6b61e7846b298a52ae4399
 ## 2026-11-09 — Complete 8 KiB PPU SHA verification
 
 A read-only bank decoder rebuilt the entire endFrame 8,192-byte PPU pattern from source ROM and traced MMC3 R0–R5 values. SHA-256 `0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918` matches both private frame 29276 and 29277 PPU snapshots byte for byte. At the second observed startFrame, predicted PPU SHA-256 is `ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5`, still lacking full raw startFrame confirmation. See [MMC3 mapping verification](research/MMC3_CHR_MAPPING_VERIFICATION.md). This confirms boundary physical bank content, not render-time sprite visibility.
+
+## 2026-11-10 — Full start/end PPU capture experiment prepared
+
+**Question:** Can the ROM-backed MMC3 model predict a later startFrame 8 KiB PPU pattern *byte for byte* from bank writes observed in the **same** MesenCE session?
+
+**Implemented, pending on-device validation:** spritemine_phase_capture.lua captures two complete startFrame/endFrame pairs, each with a PPU 8 KiB buffer, 256-byte OAM and 32-byte palette RAM, plus timing, source identity and bounded pre-write bank-register history. Files use a distinct session prefix and refuse overwrites. verify_phase_capture.py validates filenames, sizes, frames, SHA-256, source ROM identity and the predicted mapper slots/hashes when a verified SMB3 ROM is provided.
+
+**Acceptance:** Confirm full second startFrame PPU SHA-256 matches its ROM-based model from writes observed between first endFrame and second startFrame. The first pre-render mapping may be legitimately unknown until all six bank registers have been observed. Full matching endFrame SHA-256 is a secondary check.
+
+**Unproven:** physical graphics bytes fetched on each visible scanline, actual sprite visibility, save-state replay and pixel-perfect Mario rendering. Captures remain under FIXTURE.
