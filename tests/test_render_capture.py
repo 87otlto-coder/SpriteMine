@@ -127,3 +127,69 @@ def test_mmc3_bit7_inversion_mode_switch_is_flagged():
         manifest, {"master_clock": 100}, {"master_clock": 200}, 177
     )
     assert [(row["register"], row["value"]) for row in flagged] == [(-1, 0xC6)]
+
+
+def test_independent_mesen_default_2c02_reference_exact_rgb_without_fitting():
+    from research.mesence.analyze_render_capture import compare_independent_reference_palette
+    palette = bytearray(32)
+    palette[0x11:0x14] = bytes((0x16, 0x36, 0x0F))
+    indexed = {
+        (2, 3): (0, 1), (3, 3): (0, 2), (4, 3): (0, 3),
+        (4, 4): (0, 1),
+    }
+    screen = bytearray(bytes(8 * 8 * 3))
+    for (x, y), color in {
+        (2, 3): "B53120",
+        (3, 3): "FECCC5",
+        (4, 3): "000000",
+        (4, 4): "B53120",
+    }.items():
+        start = (y * 8 + x) * 3
+        screen[start:start + 3] = bytes.fromhex(color)
+    actual = compare_independent_reference_palette(
+        bytes(screen), 8, 8, indexed, bytes(palette)
+    )
+    assert actual["status"] == "reference_opaque_pixels_exact"
+    assert actual["pixels_expected"] == 4
+    assert actual["pixels_exact"] == 4
+    assert actual["exact_fraction"] == 1.0
+    assert [r["reference_rgb"] for r in actual["sprite_palette_entries"]] == [
+        "#B53120", "#FECCC5", "#000000"
+    ]
+    # One incorrect observed pixel must fail, not be absorbed by modal fitting.
+    wrong = bytearray(screen)
+    start = (3 * 8 + 3) * 3
+    wrong[start:start + 3] = bytes.fromhex("111111")
+    result = compare_independent_reference_palette(
+        bytes(wrong), 8, 8, indexed, bytes(palette)
+    )
+    assert result["status"] == "reference_opaque_pixels_mismatch"
+    assert result["pixels_exact"] == 3
+    assert result["pixels_mismatched"] == 1
+    assert result["sample_mismatch_positions"] == [{"x": 3, "y": 3}]
+
+
+def test_independent_default_palette_unavailable_for_unresearched_nes_codes():
+    from research.mesence.analyze_render_capture import compare_independent_reference_palette
+    palette = bytearray(32)
+    palette[0x11:0x14] = bytes((0x12, 0x36, 0x0F))
+    result = compare_independent_reference_palette(
+        bytes(4 * 4 * 3), 4, 4, {(1, 1): (0, 1)}, bytes(palette)
+    )
+    assert result["status"] == "unsupported_palette_codes_for_restricted_reference"
+    assert result["unrecognized_codes"] == ["0x12"]
+    assert result["exact_fraction"] is None
+    assert result["pixels_compared"] == 0
+    assert not result["pixels_exact"]
+
+
+def test_independent_palette_rejects_partial_buffers_and_invalid_slots():
+    from research.mesence.analyze_render_capture import compare_independent_reference_palette
+    with pytest.raises(ValueError, match="screen dimensions"):
+        compare_independent_reference_palette(bytes(2), 4, 4, {}, bytes(32))
+    with pytest.raises(ValueError, match="exactly 32"):
+        compare_independent_reference_palette(bytes(48), 4, 4, {}, bytes(31))
+    with pytest.raises(ValueError, match="palette slot/index"):
+        compare_independent_reference_palette(
+            bytes(48), 4, 4, {(1, 1): (4, 1)}, bytes(32)
+        )
