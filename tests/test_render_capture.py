@@ -153,6 +153,9 @@ def test_independent_mesen_default_2c02_reference_exact_rgb_without_fitting():
     assert actual["pixels_expected"] == 4
     assert actual["pixels_exact"] == 4
     assert actual["exact_fraction"] == 1.0
+    assert [entry["pixels_exact"] for entry in actual["sprite_palette_entries"]] == [
+        2, 1, 1
+    ]
     assert [r["reference_rgb"] for r in actual["sprite_palette_entries"]] == [
         "#B53120", "#FECCC5", "#000000"
     ]
@@ -193,3 +196,13 @@ def test_independent_palette_rejects_partial_buffers_and_invalid_slots():
         compare_independent_reference_palette(
             bytes(48), 4, 4, {(1, 1): (4, 1)}, bytes(32)
         )
+
+
+def test_zero_sprite_pixels_is_not_an_independent_rgb_pass():
+    from research.mesence.analyze_render_capture import compare_independent_reference_palette
+    result = compare_independent_reference_palette(
+        bytes(8 * 8 * 3), 8, 8, {}, bytes(32)
+    )
+    assert result["status"] == "unavailable_no_opaque_sprite_pixels"
+    assert result["exact_fraction"] is None
+    assert result["pixels_exact"] == 0
