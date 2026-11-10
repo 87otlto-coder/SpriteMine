@@ -111,3 +111,94 @@ def test_invalid_ppu_palette_and_mapping_rejected():
         decode_component(oam, ppu[:-1], palette, 10)
     with pytest.raises(ValueError, match="eight nonnegative"):
         decode_component(oam, ppu, palette, 10, physical_rom_offsets=[0] * 7)
+
+
+def test_research_cli_session_preview_and_metadata(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    from research.mesence import sprite_components as component_module
+
+    session = "phase_0000265171_1794292304"
+    manifest = tmp_path / f"{session}.json"
+    oam, ppu, palette = fixture()
+    files = {}
+    for key, data in (("oam", oam), ("ppu_pattern", ppu), ("palette", palette)):
+        name = f"{session}_3_startFrame_{key}.bin"
+        (tmp_path / name).write_bytes(data)
+        files[key] = name
+    manifest.write_text(json.dumps({
+        "phase_captures": [{}, {}, {"files": files}, {}]
+    }), encoding="utf-8")
+    offsets = [262160 + 1024 * index for index in range(8)]
+    snapshot = {
+        "frame_count": 265172, "event": "startFrame", "sprite_height": 16,
+        "sha256": {
+            "oam": hashlib.sha256(oam).hexdigest(),
+            "ppu_pattern": hashlib.sha256(ppu).hexdigest(),
+            "palette": hashlib.sha256(palette).hexdigest(),
+        },
+        "model": {
+            "matches_full_8k_ppu": True,
+            "source_rom_offsets_per_ppu_slot": offsets,
+        },
+    }
+    monkeypatch.setattr(
+        component_module, "verify_phase_session",
+        lambda *args: {
+            "mapper_model_status": "matches_known_boundaries",
+            "session_id": session,
+            "snapshots": [None, None, snapshot, None],
+            "rom_sha256": "a" * 64,
+        },
+    )
+    target = tmp_path / "private_previews"
+    result = component_module.inspect_session(
+        manifest, tmp_path / "unused-rom.nes", sample_number=3, output_dir=target
+    )
+    assert result["result"] == "captured_8x16_hardware_components_only"
+    assert result["potentially_on_screen_count"] == 1
+    assert result["components"][0]["oam_index"] == 10
+    assert result["components"][0]["source_rom_tile_offsets"][0] == offsets[4] + 0x60
+    assert result["local_preview_exports"][0]["file"] == "hardware_oam_10_frame_265172.png"
+    from PIL import Image
+    with Image.open(target / "hardware_oam_10_frame_265172.png") as image:
+        assert image.mode == "RGBA"
+        assert image.size == (8, 16)
+        assert image.getpixel((1, 0))[3] == 0
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        component_module.inspect_session(
+            manifest, tmp_path / "unused-rom.nes", output_dir=target
+        )
+
+
+def test_preview_output_inside_git_repo_is_blocked(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    from research.mesence import sprite_components as module
+
+    oam, ppu, palette = fixture()
+    session = "phase_0000265171_1794292304"
+    manifest = tmp_path / f"{session}.json"
+    names = {}
+    for key, data in (("oam", oam), ("ppu_pattern", ppu), ("palette", palette)):
+        name = f"{session}_3_startFrame_{key}.bin"
+        (tmp_path / name).write_bytes(data)
+        names[key] = name
+    manifest.write_text(json.dumps({
+        "phase_captures": [{}, {}, {"files": names}, {}]
+    }), encoding="utf-8")
+    dummy = {"frame_count": 12, "event": "startFrame", "sprite_height": 16,
+             "sha256": {name: hashlib.sha256(data).hexdigest() for name, data in
+                        (("oam", oam), ("ppu_pattern", ppu), ("palette", palette))},
+             "model": {"matches_full_8k_ppu": True,
+                       "source_rom_offsets_per_ppu_slot": [1234] * 8}}
+    monkeypatch.setattr(module, "verify_phase_session", lambda *args: {
+        "mapper_model_status": "matches_known_boundaries",
+        "session_id": session, "snapshots": [None, None, dummy, None],
+        "rom_sha256": "a" * 64,
+    })
+    checkout = tmp_path / "repo"
+    checkout.mkdir()
+    (checkout / ".git").mkdir()
+    with pytest.raises(ValueError, match="inside a Git checkout"):
+        module.inspect_session(manifest, tmp_path / "unused", output_dir=checkout / "art")
