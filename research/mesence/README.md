@@ -266,21 +266,20 @@ if ($roms.Count -ne 1) { throw "Expected one SMB3 ROM under FIXTURE; found $($ro
 if (-not (Test-Path -LiteralPath $capture)) { throw "Missing phase manifest: $capture" }
 
 $out = "F:\Dev\ROMMAGE\FIXTURE\SMB3\SpriteComponents\phase_0000265171_1794292304"
-$raw = py -3.12 ".\research\mesence\sprite_components.py" $capture 
-    --rom $roms[0].FullName --sample 3 --output-dir $out
+$raw = py -3.12 ".\research\mesence\sprite_components.py" $capture --rom $roms[0].FullName --sample 3 --output-dir $out
 
 if ($LASTEXITCODE -ne 0) {
     $raw
     throw "Sprite-component diagnostic failed; inspect the error above."
 }
 
-$report = ($raw -join "\`n") | ConvertFrom-Json
+$report = ($raw -join [Environment]::NewLine) | ConvertFrom-Json
 $report | Select-Object result, frame_count, potentially_on_screen_count | Format-List
 $report.components | Select-Object oam_index, x, y, tile_id, sprite_palette_slot |
     Format-Table -AutoSize
 
 $utf8 = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText((Join-Path $out "component_report.json"), ($raw -join "\`n"), $utf8)
+[System.IO.File]::WriteAllText((Join-Path $out "component_report.json"), ($raw -join [Environment]::NewLine), $utf8)
 explorer.exe $out
 ~~~
 
