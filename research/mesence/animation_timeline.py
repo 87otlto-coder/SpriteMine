@@ -222,6 +222,23 @@ def assemble_timeline(
         f["png_file"] = f"frame_{index:03d}_{f['frame_count']}.png"
         frames.append(f)
 
+    holds = []
+    for f in frames:
+        if holds and holds[-1]["rgba_sha256"] == f["rgba_sha256"]:
+            hold = holds[-1]
+            hold["last_emulator_frame"] = f["frame_count"]
+            hold["last_timeline_index"] = f["timeline_index"]
+            hold["duration_frames"] += 1
+        else:
+            holds.append({
+                "first_timeline_index": f["timeline_index"],
+                "last_timeline_index": f["timeline_index"],
+                "first_emulator_frame": f["frame_count"],
+                "last_emulator_frame": f["frame_count"],
+                "duration_frames": 1,
+                "rgba_sha256": f["rgba_sha256"],
+            })
+
     count = len(ordered)
     columns = min(8, count)
     rows = math.ceil(count / columns)
@@ -241,6 +258,9 @@ def assemble_timeline(
         "input_plan": references[0]["plan"],
         "restored_state": next(iter(restored)),
         "frame_count": count,
+        "unique_visual_frame_count": len({f["rgba_sha256"] for f in frames}),
+        "visual_hold_count": len(holds),
+        "visual_holds": holds,
         "first_emulator_frame": frame_counts[0],
         "last_emulator_frame": frame_counts[-1],
         "timing": {
@@ -250,6 +270,7 @@ def assemble_timeline(
             "ms_per_frame": None,
             "reason": "No wall-clock timing inferred from isolated captures",
             "repeated_rgba_frames_retained": True,
+            "visual_holds_are_contiguous_runs_not_animation_loops": True,
         },
         "sheet": {
             "filename": "spritesheet.png",
