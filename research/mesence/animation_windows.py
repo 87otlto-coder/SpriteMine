@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from . import graphics_harness, graphics_report
-from .animation_timeline import assemble_timeline
+from .animation_timeline import assemble_timeline, load_verified_window
 
 
 def capture_animation(args: Namespace) -> dict[str, Any]:
@@ -50,7 +50,40 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     runs_parent.mkdir(parents=True, exist_ok=True)
     animation_parent.mkdir(parents=True, exist_ok=True)
 
-    accepted = []
+    reuse_paths = [
+        graphics_harness.private_folder(Path(path)).resolve(strict=True)
+        for path in (getattr(args, "reuse_run", None) or [])
+    ]
+    if len({str(path) for path in reuse_paths}) != len(reuse_paths):
+        raise ValueError("Duplicate reused A/B/A runs")
+    if len(reuse_paths) + count > 12:
+        raise ValueError("At most 12 total source frames per bounded experiment")
+    if any(runs_parent not in path.parents for path in reuse_paths):
+        raise ValueError("Reuse must refer to previous local GraphicsValidation runs")
+
+    reused_windows = [load_verified_window(path)[0] for path in reuse_paths]
+    reused_windows.sort(key=lambda item: item["frame"]["warmup"])
+    if reused_windows:
+        warmups = [r["frame"]["warmup"] for r in reused_windows]
+        expected = list(range(first - len(warmups), first))
+        if warmups != expected:
+            raise ValueError(
+                "Reused capture warmups must be consecutive and directly precede "
+                f"the new first warmup {first}; received {warmups}"
+            )
+        if any(
+            r["source"]["slot_sha256"] != original_slot_sha
+            for r in reused_windows
+        ):
+            raise ValueError("Reused runs reference a different slot-1 state")
+        if any(r["source"]["plan"] != args.plan for r in reused_windows):
+            raise ValueError("Reused runs have a different controller input plan")
+        prior_frames = [r["frame"]["frame_count"] for r in reused_windows]
+        if any(b - a != 1 for a, b in zip(prior_frames, prior_frames[1:])):
+            raise ValueError("Reused runs are not consecutive emulator frames")
+
+    accepted = [Path(r["frame"]["run_dir"]) for r in reused_windows]
+    new_runs = []
     for warmup in range(first, first + count):
         if graphics_harness.digest(source_slot) != original_slot_sha:
             raise ValueError("Original slot backing file changed during sequence capture")
@@ -73,11 +106,13 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
                 f"Private evidence preserved in {run}"
             )
         accepted.append(run)
+        new_runs.append(run)
 
     if graphics_harness.digest(source_slot) != original_slot_sha:
         raise ValueError("Original slot backing file changed during sequence capture")
+    first_timeline_warmup = first - len(reused_windows)
     export = animation_parent / (
-        f"{args.plan}-{first}-{first+count-1}-{uuid.uuid4().hex[:10]}"
+        f"{args.plan}-{first_timeline_warmup}-{first+count-1}-{uuid.uuid4().hex[:10]}"
     )
     result = assemble_timeline(accepted, export)
     if result["source_slot_sha256"] != original_slot_sha:
@@ -94,6 +129,8 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
         "spritesheet_png": str(export / "spritesheet.png"),
         "original_slot_unchanged": True,
         "input_run_dirs": [str(p) for p in accepted],
+        "reused_run_dirs": [str(p) for p in accepted[:len(reused_windows)]],
+        "new_run_dirs": [str(p) for p in new_runs],
     }
 
 
@@ -106,8 +143,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--slot", type=Path, required=True,
                    help="EXISTING MesenCE slot 1 backing file, never overwritten")
     p.add_argument("--plan", choices=("neutral", "right", "jump"), default="right")
-    p.add_argument("--first-warmup", type=int, default=8)
-    p.add_argument("--count", type=int, default=3)
+    p.add_argument("--first-warmup", type=int, default=8,
+                   help="First NEW frame warmup; reused frames must directly precede it")
+    p.add_argument("--count", type=int, default=3,
+                   help="Number of NEW frames to capture (2–12)")
+    p.add_argument("--reuse-run", type=Path, action="append", default=[],
+                   help="Existing fully verified GraphicsValidation A/B/A directory; "
+                        "repeat for previous consecutive frames")
     p.add_argument("--start-pulse", action="store_true")
     args = p.parse_args(argv)
     try:
