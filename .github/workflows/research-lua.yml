@@ -104,7 +104,7 @@ jobs:
           print("Synthetic rendered RGB frame corresponds to verified pre-render OAM and CHR mapping")
           PY
       - name: Test synthetic capture schema and safety checks
-        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py tests/test_phase_capture.py tests/test_sprite_components.py tests/test_render_capture.py tests/test_verify_background_composite.py
+        run: python -m pytest -q tests/test_research_capture.py tests/test_diagnose_capture.py tests/test_decode_mmc3_trace.py tests/test_chr_bank_correlation.py tests/test_phase_capture.py tests/test_sprite_components.py tests/test_render_capture.py tests/test_verify_background_composite.py tests/test_graphics_harness.py tests/test_animation_timeline.py tests/test_animation_windows.py
       - name: Validate actual binary files from mocked Lua probe
         run: python research/mesence/verify_capture.py "$SPRITEMINE_TEST_OUTPUT"
       - name: Diagnose mock OAM and PPU pattern mapping
