@@ -39,7 +39,7 @@ def test_archive_metadata_change_is_rejected(generated_run):
     info = json.loads(source.read_text())
     info["provenance"]["probe_sha256"] = "f" * 64
     source.write_text(json.dumps(info))
-    with pytest.raises(ValueError, match="archived A/B/A evidence changed"):
+    with pytest.raises(ValueError, match="Archived A/B/A evidence changed"):
         animation_timeline.load_verified_window(generated_run)
 
 
