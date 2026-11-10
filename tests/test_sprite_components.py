@@ -202,3 +202,38 @@ def test_preview_output_inside_git_repo_is_blocked(tmp_path, monkeypatch):
     (checkout / ".git").mkdir()
     with pytest.raises(ValueError, match="inside a Git checkout"):
         module.inspect_session(manifest, tmp_path / "unused", output_dir=checkout / "art")
+
+
+def test_explicit_two_component_group_reconstructs_16x16_without_identity_claim():
+    from dataclasses import replace
+    from research.mesence.sprite_components import compose_explicit_oam_group
+
+    oam, ppu, palette = fixture()
+    first = decode_component(oam, ppu, palette, 10)
+    second = replace(first, oam_index=11, x=108)
+    composed, info = compose_explicit_oam_group([second, first])
+    assert composed.size == (16, 16)
+    assert info["oam_indices"] == [10, 11]
+    assert (info["left"], info["top"]) == (100, 161)
+    assert info["nontransparent_pixel_count"] == 4
+    assert info["evidence"] == "explicit_OAM_group_not_proven_character_or_visible_pixels"
+    assert "semantic character" in info["not_proven"][0]
+
+
+def test_explicit_group_overlap_preserves_earlier_hardware_oam_priority():
+    from dataclasses import replace
+    from research.mesence.sprite_components import compose_explicit_oam_group
+
+    oam, ppu, palette = fixture()
+    first = decode_component(oam, ppu, palette, 10)
+    second = replace(
+        first, oam_index=11, pixels=bytes([3 if value else 0 for value in first.pixels])
+    )
+    composed, info = compose_explicit_oam_group([first, second])
+    assert composed.size == (8, 16)
+    assert composed.getpixel((0, 0)) == (85, 85, 85, 255)
+    assert info["overlap_rule"] == "lower_OAM_index_overlay_diagnostic_only"
+    with pytest.raises(ValueError, match="duplicate"):
+        compose_explicit_oam_group([first, first])
+    with pytest.raises(ValueError, match="at least one"):
+        compose_explicit_oam_group([])
