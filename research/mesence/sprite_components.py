@@ -162,10 +162,53 @@ def preview_image(component: SpriteComponent) -> Image.Image:
     return image
 
 
+def compose_explicit_oam_group(
+    components: list[SpriteComponent],
+) -> tuple[Image.Image, dict[str, Any]]:
+    """Arrange explicitly selected OAM components without identifying a character.
+
+    Diagnostic OAM overlap order is approximated by drawing higher-index entries
+    before lower-index entries. This does not model per-scanline sprite evaluation,
+    background priority, clipping or actual final composited screen pixels.
+    """
+    if not components:
+        raise ValueError("Select at least one OAM hardware component")
+    indices = [component.oam_index for component in components]
+    if len(set(indices)) != len(indices):
+        raise ValueError("OAM group contains duplicate hardware indices")
+    left = min(component.x for component in components)
+    top = min(component.y for component in components)
+    right = max(component.x + 8 for component in components)
+    bottom = max(component.y + 16 for component in components)
+    image = Image.new("RGBA", (right - left, bottom - top), (0, 0, 0, 0))
+    for component in sorted(components, key=lambda item: item.oam_index, reverse=True):
+        image.alpha_composite(
+            preview_image(component), dest=(component.x - left, component.y - top)
+        )
+    transparent = sum(color[3] == 0 for color in image.getdata())
+    summary = {
+        "evidence": "explicit_OAM_group_not_proven_character_or_visible_pixels",
+        "oam_indices": sorted(indices),
+        "left": left, "top": top, "width": image.width, "height": image.height,
+        "transparent_pixel_count": transparent,
+        "nontransparent_pixel_count": image.width * image.height - transparent,
+        "rendering": "synthetic_grayscale_alpha_index0_transparent",
+        "overlap_rule": "lower_OAM_index_overlay_diagnostic_only",
+        "not_proven": [
+            "semantic character identity or completeness",
+            "final displayed RGB or background priority",
+            "eight-sprites-per-scanline limit, clipping, sprite evaluation",
+            "same-scanline PPU fetches and final framebuffer correspondence",
+        ],
+    }
+    return image, summary
+
+
 def inspect_session(
     manifest_path: Path, rom_path: Path, *,
     sample_number: int = 3,
     output_dir: Path | None = None,
+    group_indices: tuple[int, ...] | None = None,
 ) -> dict[str, Any]:
     """Read one verified startFrame capture; optionally export local PNG previews."""
     verified = verify_phase_session(manifest_path, rom_path)
@@ -216,6 +259,22 @@ def inspect_session(
         ],
     }
 
+    group_image: Image.Image | None = None
+    if group_indices is not None:
+        available = {component.oam_index: component for component in components}
+        if not group_indices or len(set(group_indices)) != len(group_indices):
+            raise ValueError("OAM group must contain distinct selected indices")
+        absent = [index for index in group_indices if index not in available]
+        if absent:
+            raise ValueError(
+                "OAM indices not among the potentially on-screen entries: "
+                + ", ".join(map(str, absent))
+            )
+        group_image, group_metadata = compose_explicit_oam_group(
+            [available[index] for index in group_indices]
+        )
+        report["explicit_oam_group"] = group_metadata
+
     if output_dir is not None:
         target = Path(output_dir).resolve()
         if target == folder.resolve():
@@ -233,8 +292,16 @@ def inspect_session(
             )
             for component in components
         ]
-        for _, dest in destinations:
-            if dest.exists():
+        group_dest: Path | None = None
+        if group_image is not None:
+            group_file = (
+                "hardware_group_oam_" + "_".join(
+                    f"{index:02d}" for index in sorted(group_indices or ())
+                ) + f"_frame_{sample['frame_count']}.png"
+            )
+            group_dest = target / group_file
+        for dest in [*(path for _, path in destinations), group_dest]:
+            if dest is not None and dest.exists():
                 raise FileExistsError(f"Refusing to overwrite existing preview: {dest}")
         target.mkdir(parents=True, exist_ok=True)
         exports = []
@@ -245,6 +312,12 @@ def inspect_session(
                 "png_sha256": hashlib.sha256(dest.read_bytes()).hexdigest(),
             })
         report["local_preview_exports"] = exports
+        if group_image is not None and group_dest is not None:
+            group_image.save(group_dest)
+            report["explicit_oam_group"]["local_preview"] = {
+                "file": group_dest.name,
+                "png_sha256": hashlib.sha256(group_dest.read_bytes()).hexdigest(),
+            }
     return report
 
 
@@ -256,11 +329,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--rom", type=Path, required=True, help="Local verified SMB3 NES/ZIP")
     parser.add_argument("--sample", type=int, default=3, help="1-based startFrame sample; default 3")
     parser.add_argument("--output-dir", type=Path, help="Optional local FIXTURE preview output")
+    parser.add_argument(
+        "--group-oam", help="Explicit OAM indices to group (e.g. 10,11); never auto-identifies"
+    )
     args = parser.parse_args(argv)
     try:
+        group_indices = None
+        if args.group_oam is not None:
+            group_indices = tuple(int(part.strip()) for part in args.group_oam.split(","))
         report = inspect_session(
             args.manifest, args.rom, sample_number=args.sample,
-            output_dir=args.output_dir,
+            output_dir=args.output_dir, group_indices=group_indices,
         )
     except (OSError, ValueError, KeyError, TypeError, IndexError, json.JSONDecodeError) as exc:
         print(f"Sprite component inspection failed: {exc}", file=sys.stderr)
