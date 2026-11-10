@@ -352,3 +352,12 @@ Detailed Windows steps and evidence boundaries: docs/research/SMB3_MARIO_INDEPEN
 The real owner-supplied `screencheck_independent_render_0000450823_1794339466.json` reports **reference_opaque_pixels_exact: 138/138**, mismatches 0. Independent fixed MesenCE built-in 2C02 colors were selected using the same session's actual captured NES palette RAM codes (0x16/0x36/0x0F), not by fitting the rendered image. The two OAM component previews and combined 16x16 colored sprite were visually and programmatically inspected; all RGB values and index-zero alpha masks agree. Evidence and six PNG SHA-256 values: `docs/research/SMB3_MARIO_OPAQUE_RGB_VERIFIED.md`.
 
 **Do not repeat this validation unnecessarily.** The 118 source-transparent pixels are correctly exported with alpha zero, but a full rendered-background composite still requires independent background-only reference data. Next evaluate a non-ROM-mutating MesenCE sprites-disabled output setting with deterministic saved-state/input replay; avoid assuming that simply erasing Mario from an already composited framebuffer proves background pixel correctness.
+
+
+## Next research gate — source-transparent Mario pixels over the real background
+
+Frame 450824 has independently verified all 138 default 2C02 opaque Mario RGB pixels, but the 118 alpha-zero positions are not validated against a separate background-only reference. Source review confirmed MesenCE NES configuration Video > Miscellaneous > Disable Sprites is a display option distinct from editing ROMs or the PPU $2001 mask.
+
+The new metadata-only research/mesence/verify_background_composite.py compares a **matched pair** of rendered captures made from the same MesenCE save state and controller inputs, with sprites enabled and then disabled. It requires matching frame/clock/PPU/OAM/palette, fixed NES default RGB opaque pixels, exact transparent/background pixels and unchanged neighboring background ring. It will reject even a one-frame replay discrepancy; a GUI setting checkbox remains manual evidence, not machine-attested. Real Windows owner validation is still pending.
+
+Before starting the pair, obtain a save-state under F:\Dev\ROMMAGE\FIXTURE\SMB3\MesenCE and verify MesenCE NES Video / Disable Sprites option in the owner's installed UI. Do not assert unverified menu navigation, and restore sprite display after the test. Exact procedure and placeholders: docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md. No need to repeat frame 450824's opaque-pixel verification.
