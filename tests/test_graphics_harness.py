@@ -1,6 +1,5 @@
 """Exercise the complete A/B/A verifier using generated CHR, palettes and screens."""
 import json
-from pathlib import Path
 import shutil
 
 import pytest
@@ -62,10 +61,10 @@ def run(tmp_path, monkeypatch):
                       emulator_sha256="0" * 64, rom_sha256=digest(rom), start_pulse=False, plan="neutral", warmup=2)
         (folder / "launch.json").write_text(json.dumps(launch))
         buttons = ",".join(k + "=false" for k in "a b down left right select start up".split())
-        log = ["restore 437 0"]
+        log = ["restore 438 0"]
         bus = []
         for n in range(1, 65):
-            log.extend(["oam 80,5,0,80,80,7,0,88", f"poll {n} {n} {buttons}|{buttons}"])
+            log.extend(["oam 80,5,0,80,80,7,0,88", f"poll {n} {300 if n == 64 else n} {buttons}|{buttons}"])
             for addr in ("4016", "4017"):
                 bus.extend([f"{n} {addr} 0"] * 16)
         (folder / "replay.log").write_text("\n".join(log + ["complete"]))
@@ -110,3 +109,29 @@ def test_mismatched_return_leg_fails_closed(run, kind):
     assert report.publish(run) == 3
     assert json.loads((run / "report.json").read_text())["statuses"]["replay"] == "failed"
     assert not (run / "RGB-difference.png").exists()
+
+
+@pytest.mark.parametrize("plan", ["right", "jump"])
+def test_motion_requires_displacement_and_tile_change(plan):
+    start = [97, 5, 0, 127, 97, 7, 0, 135]
+    poses = [start] * 70
+    assert not report.observed_motion(plan, poses)
+    moved = start.copy()
+    if plan == "right":
+        moved[3] += 1
+        moved[7] += 1
+    else:
+        moved[0] -= 8
+        moved[4] -= 8
+    poses[-1] = moved
+    assert not report.observed_motion(plan, poses)
+    moved[1] = 25
+    assert report.observed_motion(plan, poses)
+
+
+def test_identical_but_unrelated_restore_rejected(run):
+    for leg, _ in LEGS:
+        p = run / leg / "replay.log"
+        p.write_text(p.read_text().replace("restore 438", "restore 10"))
+    assert report.publish(run) == 3
+    assert "detached" in json.loads((run / "report.json").read_text())["reason"]

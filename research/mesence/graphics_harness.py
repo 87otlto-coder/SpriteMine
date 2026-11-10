@@ -31,16 +31,12 @@ def private_folder(path):
     return path
 
 
-def capture(args):
+def capture(args, run):
     fixture = (args.root / "FIXTURE").resolve(strict=True)
     rom = args.rom or fixture / "Super Mario Bros. 3.zip"
     exe = (args.root / "TOOLS/Mesence/Mesen.exe").resolve(strict=True)
     state = args.slot.resolve(strict=True)
     load_chr(rom)
-    parent = private_folder(fixture / "SMB3/GraphicsValidation")
-    parent.mkdir(parents=True, exist_ok=True)
-    run = Path(tempfile.mkdtemp(prefix=args.plan + "-", dir=parent))
-    print(run, flush=True)
     copy = run / "slot-copy.mss"
     shutil.copyfile(state, copy)
     initial = digest(copy)
@@ -81,7 +77,6 @@ def capture(args):
             raise ValueError(f"{leg} emulator exit {result.returncode}. Inspect {folder}")
     if digest(state) != initial or digest(copy) != initial:
         raise ValueError("Slot bytes changed during experiment")
-    return run
 
 
 def main():
@@ -93,8 +88,15 @@ def main():
     parser.add_argument("--warmup", type=int, default=8, choices=range(2, 121), metavar="2..120")
     parser.add_argument("--start-pulse", action="store_true", help="Press Start on poll 4 for a paused game")
     args = parser.parse_args()
-    run = capture(args)
+    parent = private_folder(args.root / "FIXTURE" / "SMB3/GraphicsValidation")
+    parent.mkdir(parents=True, exist_ok=True)
+    run = Path(tempfile.mkdtemp(prefix=args.plan + "-", dir=parent))
+    print(run, flush=True)
     from .graphics_report import publish
+    try:
+        capture(args, run)
+    except (OSError, ValueError, subprocess.SubprocessError, zipfile.BadZipFile) as exc:
+        return publish(run, str(exc))
     return publish(run)
 
 

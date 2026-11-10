@@ -154,12 +154,23 @@ def validate(run, report):
             states.append(snap)
         same(states, f"Boundary {i + 1}")
     report["boundaries"] = phases[0]["snapshots"]
+    restored_frame = int(history[0].split()[1])
+    polls = [int(line.split()[2]) for line in history if line.startswith("poll ")]
+    for i in (0, 1):
+        start, end = report["boundaries"][2*i:2*i+2]
+        if (start["frame_count"] != restored_frame + len(polls) - 2 + i
+                or not polls[-2+i] < start["master_clock"] < end["master_clock"]
+                or (i == 0 and end["master_clock"] >= polls[-1])):
+            raise ValueError("Capture boundary is detached from the restored frame or input clock")
     report["timing_sha256"] = fingerprint([[s[k] for k in ("frame_count", "master_clock",
                                          "ppu_scanline", "ppu_cycle")] for s in report["boundaries"]])
     for i in (1, 3):
         same([phases[j]["snapshots"][i]["sha256"]["screen_rgb"] for j in (0, 2)],
              "Enabled full-screen RGB")
     report["statuses"]["replay"] = "verified"
+    if any((s["screen_width"], s["screen_height"]) != (256, 240)
+           for phase in phases for s in phase["snapshots"][1::2]):
+        raise NotImplementedError("Native 256x240 framebuffer required")
     paths = [p.parent / s["phase_captures"][3]["files"]["screen_rgb"] for p, s in zip(files, sources)]
     report["screens_sha256_A_B_A2"] = [digest(p) for p in paths]
     images = [Image.frombytes("RGB", (256, 240), p.read_bytes()) for p in paths]
@@ -167,6 +178,9 @@ def validate(run, report):
         img.save(run / (name + ".png"))
     if phases[0]["mapper_model_status"] != "matches_known_boundaries":
         raise ValueError("MMC3 reconstruction failed")
+    target = phases[0]["snapshots"][2]
+    if not target["model"] or target["sprite_height"] != 16:
+        raise NotImplementedError("Target requires a known mapping and 8x16 hardware sprites")
     diagnostic = analyze_render_capture(files[0], rom)
     report["components"] = diagnostic["sprite_positions"]
     report["palette_reference"] = MESEN_REFERENCE_URL
@@ -175,6 +189,12 @@ def validate(run, report):
             or not diagnostic["oam_unchanged_between_start_and_end"]
             or not diagnostic["palette_ram_unchanged_between_start_and_end"]):
         raise NotImplementedError("OAM, palette or CHR changed during the sampled span")
+    if diagnostic["independent_default_palette_check"]["status"] == "unsupported_palette_codes_for_restricted_reference":
+        raise NotImplementedError("Unsupported NES palette code")
+    oam_file = sources[0]["phase_captures"][2]["files"]["oam"]
+    oam = (files[0].parent / oam_file).read_bytes()
+    if any(oam[4*i + 2] & 0x20 for i in (10, 11)):
+        raise NotImplementedError("Behind-background priority needs another model")
     pair = analyze_two_renders(files[0], files[1], rom)["comparison"]
     report["pixels"] = pair
     x, y, right, bottom = pair["bounds_xyxy_exclusive"]
@@ -182,6 +202,12 @@ def validate(run, report):
         raise NotImplementedError("Target OAM pair does not cover the supported 16x16 geometry")
     if pair["status"] != "region_exact_conditional_on_sprites_disabled_reference":
         raise ValueError(pair["status"])
+    crops = [img.crop((x, y, right, bottom)) for img in images]
+    crops.append(ImageChops.difference(*crops[:2]))
+    strip = Image.new("RGB", (64, 16))
+    for i, crop in enumerate(crops):
+        strip.paste(crop, (16*i, 0))
+    strip.resize((512, 128), Image.Resampling.NEAREST).save(run / "region.png")
     report["statuses"]["pixels"] = "verified"
     plan = identities[0]["plan"]
     report["motion_observation"] = {"before_input": poses[59], "final_poll": poses[-1]}
@@ -190,12 +216,14 @@ def validate(run, report):
     report["statuses"][gate] = "verified" if observed_motion(plan, poses) else "failed"
 
 
-def publish(run):
+def publish(run, capture_error=None):
     run = private_folder(run)
     report = {"schema": 1, "statuses": {"replay": "not tested", "pixels": "not tested",
               "stationary OAM pair": "not tested", "walking": "not tested", "jumping": "not tested",
               "behind-background priority": "unsupported", "scanline sprite limit": "not tested"}}
     try:
+        if capture_error is not None:
+            raise ValueError(capture_error)
         validate(run, report)
     except (ValueError, OSError, KeyError, IndexError, TypeError, NotImplementedError) as exc:
         gate = "pixels" if report["statuses"]["replay"] == "verified" else "replay"
@@ -206,6 +234,8 @@ def publish(run):
     figures = "".join(f'<figure><img src="{name}.png" alt="{name}"><figcaption>{name}</figcaption></figure>'
                       for name in ("A", "B", "A2", "RGB-difference") if (run / (name + ".png")).exists()
                       and report["statuses"]["replay"] == "verified")
+    if report["statuses"]["pixels"] == "verified":
+        figures += '<figure><img src="region.png" alt="Four enlarged 16 by 16 regions"><figcaption>Target at 8×: A, B, A2, absolute RGB difference</figcaption></figure>'
     rows = "".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in report["statuses"].items())
     (run / "report.html").write_text(
         '<!doctype html><meta charset="utf-8"><title>SMB3 graphics validation</title>'

@@ -24,6 +24,7 @@ jobs:
           luac5.4 -p research/mesence/spritemine_mmc3_trace.lua
           luac5.4 -p research/mesence/spritemine_phase_capture.lua
           luac5.4 -p research/mesence/mock_mesence_phase.lua
+          luac5.4 -p research/mesence/graphics_replay.lua
           luac5.4 -p research/mesence/spritemine_render_probe.lua
           luac5.4 -p research/mesence/mock_mesence_render.lua
       - name: Execute Lua probe with synthetic emulator API
