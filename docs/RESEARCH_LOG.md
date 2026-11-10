@@ -104,3 +104,9 @@ User supplied the **locally generated** metadata-only `phase_verification.json` 
 **Unknown, not a failed test:** first startFrame's previous MMC3 state cannot be proven from an already-started trace. Its captured SHA-256 is equal to the second startFrame but that equality is not evidence of an independently observed initial mapping.
 
 **Now confirmed:** physical CHR mapping at these sampled frame boundaries. **Not confirmed:** PPU fetches over the whole visible frame, hardware OAM component grouping into a character, proper sprite priority/clipping, authentic rendered colors, saved-state/input replay. Treat next sprite work as a separate evidence/acceptance gate. Captured binaries remain exclusively in local FIXTURE.
+
+## 2026-11-10 — 8x16 hardware component reconstruction prototype
+
+Following the real 3/3 frame-boundary SHA comparison, implemented research/mesence/sprite_components.py as a read-only OAM/PPU component decoder. It selects a full 8 KiB capture with independently validated physical MMC3 bank mapping, processes 8x16 tile-index table-selection bit, horizontal/vertical flip, palette-slot indices, behind-background attributes and index-0 transparency, and can emit tiny synthetic grayscale RGBA previews under local FIXTURE only. Absolute ROM offsets are computed from the verified eight PPU slot mappings.
+
+The results represent **hardware OAM entries, not automatically characters, visible sprite pixels or faithful game RGB**. Hardware sprite evaluation, scanline timing, priority, partial clipping and original display color remain separate research gates. Unit tests use synthetic bytes, not copyrighted game assets. Next step is local owner validation of the actual 265172 startFrame component previews.
