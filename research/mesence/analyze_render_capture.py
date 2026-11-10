@@ -135,6 +135,9 @@ def compare_independent_reference_palette(
                 "#" + MESEN_2C02_DEFAULT_MARIO_REFERENCE[code].hex().upper()
                 if code in MESEN_2C02_DEFAULT_MARIO_REFERENCE else None
             ),
+            "pixels_compared": 0,
+            "pixels_exact": 0,
+            "pixels_mismatched": 0,
         }
         looked_up.append(entry)
         if code not in MESEN_2C02_DEFAULT_MARIO_REFERENCE:
@@ -163,7 +166,14 @@ def compare_independent_reference_palette(
     if unknown:
         result["status"] = "unsupported_palette_codes_for_restricted_reference"
         return result
+    if not indexed:
+        result["status"] = "unavailable_no_opaque_sprite_pixels"
+        return result
 
+    class_stats = {
+        (entry["sprite_palette_slot"], entry["pixel_index"]): entry
+        for entry in looked_up
+    }
     by_class = {
         (entry["sprite_palette_slot"], entry["pixel_index"]):
         MESEN_2C02_DEFAULT_MARIO_REFERENCE[int(entry["nes_color_code"], 16)]
@@ -175,10 +185,13 @@ def compare_independent_reference_palette(
             continue
         offset = (y * width + x) * 3
         result["pixels_compared"] += 1
+        class_stats[group]["pixels_compared"] += 1
         if rgb[offset:offset + 3] == by_class[group]:
             result["pixels_exact"] += 1
+            class_stats[group]["pixels_exact"] += 1
         else:
             result["pixels_mismatched"] += 1
+            class_stats[group]["pixels_mismatched"] += 1
             if len(result["sample_mismatch_positions"]) < 8:
                 result["sample_mismatch_positions"].append({"x": x, "y": y})
     if result["pixels_compared"]:
