@@ -18,8 +18,12 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .sprite_components import decode_component
-from .verify_phase_capture import verify_phase_session
+try:
+    from .sprite_components import decode_component
+    from .verify_phase_capture import verify_phase_session
+except ImportError:
+    from sprite_components import decode_component
+    from verify_phase_capture import verify_phase_session
 
 
 def index_layer(components: list[Any]) -> dict[tuple[int, int], tuple[int, int]]:
