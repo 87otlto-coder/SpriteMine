@@ -82,3 +82,11 @@ Research branch contains `research/mesence/spritemine_mmc3_trace.lua`, a bounded
 Independent private-ROM byte comparison identified all 8 earlier endFrame PPU windows exactly as physical 1-KiB CHR banks `[92,93,94,95,126,126,126,126]`. Bank 126 is genuinely blank. The real MMC3 register trace from a separate gameplay interval repeatedly writes that same configuration at scanline 193 (R0=92, R1=94, R2..R5=126). VBlank register values predict `[8,9,102,103,83,4,34,50]` whose nonzero counts exactly agree with the independently captured pre-render mapping phase. This is a high-confidence **cross-session configuration explanation**, not a verified same-scanline Mario sprite reconstruction.
 
 Implemented reproducible metadata-only correlation tool `research/mesence/correlate_chr_banks.py` with synthetic regression tests. Further evidence needed: same-session rendering-scanline capture and independent visible-sprite pixel reconstruction. See `docs/RESEARCH_LOG.md`.
+
+## 2026-11-10 — Actual paired-phase MesenCE metadata received; binary verification pending
+
+Owner supplied private `phase_0000265171_1794292304.json` for frames 265171 and 265172. Manifest has the four expected startFrame/endFrame observations, 62 MMC3 register writes and zero drops. Mesen-reported source SHA-1 matches independently verified SMB3 US PRG1. The event clock sequence is coherent, and physical CHR mappings can be modeled at 3 of the 4 boundary events from this **same session**.
+
+With the verified ROM and register-write model, the *predicted* second startFrame bank sequence is `[8,9,102,103,83,4,34,50]`, full 8 KiB SHA-256 `ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5`. Both endFrame configurations model `[92,93,94,95,126,126,126,126]`, full 8 KiB SHA-256 `0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918`. The first startFrame state is not reconstructable because its earlier writes were not observed.
+
+**Unresolved:** The owner uploaded the JSON manifest only; none of its 12 referenced binary snapshots were available in this review. Therefore do **not** label any *same-session full 8 KiB* capture hash as verified. Next run `research/mesence/verify_phase_capture.py` locally against the exact 13-file session and verified ROM, and share only its JSON metadata report. No ROM, raw captured binaries or visuals were committed.
