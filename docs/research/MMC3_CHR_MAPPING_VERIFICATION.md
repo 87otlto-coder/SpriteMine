@@ -85,3 +85,9 @@ To compare against a private capture archive without extracting or emitting game
 The integrated research recorder spritemine_phase_capture.lua and verifier verify_phase_capture.py now permit the predicted *full* startFrame 8 KiB PPU SHA-256 to be tested using registers and PPU snapshots from one emulator session. Unlike previous cross-session evidence, the second startFrame can be mapped from the observed intervening MMC3 register writes; the first startFrame may have unknown pre-existing state.
 
 This integrated experiment is **not yet validated in MesenCE on Windows**. If the second pre-render snapshot hash matches, it strengthens the physical-bank reconstruction evidence but still does not prove the sprite render phase, palette fidelity or screen-pixel correspondence.
+
+## 2026-11-10: Actual integrated session, modeled mappings pending binary comparison
+
+The owner supplied manifest `phase_0000265171_1794292304.json` with startFrame/endFrame observations at frames 265171/265172. It includes 62 bank-register writes, no drops and a known verified ROM SHA-1. These writes **independently predict** the full startFrame second-pair 8KiB pattern SHA-256 `ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5`, and both endFrame pattern SHA-256 `0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918`. The first startFrame remains unknown because initial bank registers predate the trace.
+
+**Do not claim a same-session byte match yet**: the uploaded manifest references 12 private capture `.bin` files that were not uploaded with the report. Run the research verifier on the local FIXTURE folder with the verified original ROM. The resulting metadata report will state `model_matches`, `model_mismatches` and `model_unknown_snapshots` explicitly. Save binary files locally, not in GitHub.
