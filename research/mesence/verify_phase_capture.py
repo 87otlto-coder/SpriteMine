@@ -22,8 +22,9 @@ except ImportError:  # Direct Python execution inside research/mesence.
     from decode_mmc3_trace import analyze_trace, load_chr
 
 TOOL = "spritemine-mesence-phase-capture-v1"
+RENDER_TOOL = "spritemine-mesence-render-capture-v1"
 EXPECTED_EVENTS = ("startFrame", "endFrame", "startFrame", "endFrame")
-SESSION_NAME = re.compile(r"^phase_\d{10}_\d{9,}$")
+SESSION_NAME = re.compile(r"^(?:phase|render)_\d{10}_\d{9,}$")
 ROM_SHA1 = re.compile(r"^[0-9a-fA-F]{40}$")
 SIZES = {"oam": 256, "palette": 32, "ppu_pattern": 8192}
 
@@ -55,12 +56,16 @@ def verify_phase_session(
     source = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(source, dict):
         raise ValueError("Capture manifest must be a JSON object")
-    if source.get("schema_version") != 1 or source.get("capture_tool") != TOOL:
+    capture_tool = source.get("capture_tool")
+    if source.get("schema_version") != 1 or capture_tool not in (TOOL, RENDER_TOOL):
         raise ValueError("Unsupported phase capture tool or schema")
+    is_render = capture_tool == RENDER_TOOL
     if source.get("evidence") != "captured":
         raise ValueError("Capture provenance is not labeled captured")
     session = source.get("session_id")
-    if not isinstance(session, str) or not SESSION_NAME.fullmatch(session):
+    if (not isinstance(session, str) or not SESSION_NAME.fullmatch(session)
+            or (is_render and not session.startswith("render_"))
+            or (not is_render and not session.startswith("phase_"))):
         raise ValueError("Invalid session identity")
     if path.name != f"{session}.json":
         raise ValueError("Manifest filename differs from session identity")
@@ -103,6 +108,11 @@ def verify_phase_session(
         expected_names = {
             kind: f"{session}_{i + 1}_{snap['event']}_{kind}.bin" for kind in SIZES
         }
+        if is_render:
+            expected_names["screen_rgb"] = (
+                f"{session}_{i + 1}_{snap['event']}_screen_rgb.bin"
+                if i % 2 == 1 else None
+            )
         filenames = snap.get("files")
         if not isinstance(filenames, dict) or filenames != expected_names:
             raise ValueError(f"Snapshot {i + 1}: mismatched file references")
@@ -118,10 +128,28 @@ def verify_phase_session(
             if kind == "ppu_pattern":
                 ppu_data = blob
         assert ppu_data is not None
+        width = None
+        height = None
+        if is_render:
+            width = snap.get("screen_width")
+            height = snap.get("screen_height")
+            if i % 2 == 0:
+                if width is not None or height is not None:
+                    raise ValueError("startFrame must not claim rendered screen dimensions")
+            else:
+                if (type(width) is not int or type(height) is not int
+                        or not 0 < width <= 512 or not 0 < height <= 512):
+                    raise ValueError("Invalid rendered screen dimensions")
+                screen_path = path.parent / expected_names["screen_rgb"]
+                screen_data = screen_path.read_bytes()
+                if len(screen_data) != width * height * 3:
+                    raise ValueError("Rendered RGB24 buffer dimensions/size mismatch")
+                checksums["screen_rgb"] = hashlib.sha256(screen_data).hexdigest()
         output.append({
             "event": snap["event"], "frame_count": frame, "master_clock": clock,
             "ppu_scanline": scanline, "ppu_cycle": cycle,
             "sprite_height": snap["sprite_height"],
+            "screen_width": width, "screen_height": height,
             "sha256": checksums,
             "lower_nonzero": sum(v != 0 for v in ppu_data[:4096]),
             "upper_nonzero": sum(v != 0 for v in ppu_data[4096:]),
@@ -154,9 +182,10 @@ def verify_phase_session(
         "session_id": session,
         "verified_smb3_rom_provided": False,
         "rom_sha1_reported_by_mesen": mesen_rom_sha1,
+        "capture_tool": capture_tool,
         "capture_count": len(output),
         "captured_frames": [frames[0], frames[2]],
-        "blob_count": len(output) * len(SIZES),
+        "blob_count": len(output) * len(SIZES) + (2 if is_render else 0),
         "mmc3_writes": len(clean_writes),
         "dropped_writes": dropped,
         "snapshots": output,
