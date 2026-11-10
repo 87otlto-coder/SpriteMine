@@ -21,9 +21,17 @@ from typing import Any
 try:
     from .sprite_components import decode_component
     from .verify_phase_capture import verify_phase_session
+    from .nes_palette_reference import (
+        MESEN_2C02_DEFAULT_MARIO_REFERENCE,
+        MESEN_REFERENCE_URL,
+    )
 except ImportError:
     from sprite_components import decode_component
     from verify_phase_capture import verify_phase_session
+    from nes_palette_reference import (
+        MESEN_2C02_DEFAULT_MARIO_REFERENCE,
+        MESEN_REFERENCE_URL,
+    )
 
 
 def index_layer(components: list[Any]) -> dict[tuple[int, int], tuple[int, int]]:
@@ -92,23 +100,6 @@ def compare_color_groups(
         "inferred_color_classes": per_class,
     }
 
-
-
-# Only the *three* default MesenCE 2C02 codes observed in the existing SMB3
-# small-Mario experiment. Do not copy the full GPLv3 emulator palette table.
-# Source: MesenCE Core/NES/NesDefaultVideoFilter.cpp, revision:
-# 4b8a196e299b3de297b204fd1208d2981562c89b
-# These are reference RGBs for unmodified default color settings only.
-MESEN_2C02_DEFAULT_MARIO_REFERENCE = {
-    0x0F: bytes.fromhex("000000"),
-    0x16: bytes.fromhex("B53120"),
-    0x36: bytes.fromhex("FECCC5"),
-}
-MESEN_REFERENCE_URL = (
-    "https://github.com/nesdev-org/MesenCE/blob/"
-    "4b8a196e299b3de297b204fd1208d2981562c89b/"
-    "Core/NES/NesDefaultVideoFilter.cpp"
-)
 
 
 def compare_independent_reference_palette(
