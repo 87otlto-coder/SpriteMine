@@ -276,8 +276,8 @@ def assemble_timeline(
             raise FileExistsError(f"Refusing to overwrite existing animation output: {target}")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.mkdir()
-        for info, image in ordered:
-            f = frames[ordered.index((info, image))]
+        for index, (_, image) in enumerate(ordered):
+            f = frames[index]
             image.save(target / f["png_file"])
             f["png_sha256"] = _sha((target / f["png_file"]).read_bytes())
         sheet.save(target / "spritesheet.png")
