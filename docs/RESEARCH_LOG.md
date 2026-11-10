@@ -94,3 +94,13 @@ Using the recorded writes *and the owner's previously verified SMB3 ROM*:
 - Second endFrame: same PPU slots and expected SHA-256 as first endFrame.
 
 **Crucial evidence boundary:** This upload supplied **only the JSON manifest**, not the four raw 8,192-byte PPU snapshots or eight OAM/palette buffers. These expected checksums are ROM-backed model predictions, **not yet compared to same-session captured bytes**. Await the local validator report before clearing the full PPU byte-match gate. Actual Mario screen pixel identity, per-scanline rendering, and deterministic replay remain separate unresolved goals.
+
+## 2026-11-10 — Phase-capture validator confirms exact same-session 8 KiB patterns
+
+User supplied the **locally generated** metadata-only `phase_verification.json` from session `phase_0000265171_1794292304`. It verifies verified PRG1 whole-ROM SHA-256 `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`, four snapshot events in frames 265171/265172, 12 binary blobs and 62 timed MMC3 writes with zero drops.
+
+**PASS:** `model_matches=3`, `model_mismatches=0`, `model_unknown_snapshots=1`; `mapper_model_status=matches_known_boundaries`. The *second* startFrame observed 8,192-byte PPU SHA-256 `ff1fed9ebea0ff45c17ae1ddb93bf3205ee591438cc8d45af83167a80d4f69b5` matches the ROM-based model from same-session prior writes. Both endFrame captured PPU SHA-256 values also match the ROM model: `0596b1b2055a68f9bf2af5c6aad9954f32821ad85deb6294eedeefba44346918`.
+
+**Unknown, not a failed test:** first startFrame's previous MMC3 state cannot be proven from an already-started trace. Its captured SHA-256 is equal to the second startFrame but that equality is not evidence of an independently observed initial mapping.
+
+**Now confirmed:** physical CHR mapping at these sampled frame boundaries. **Not confirmed:** PPU fetches over the whole visible frame, hardware OAM component grouping into a character, proper sprite priority/clipping, authentic rendered colors, saved-state/input replay. Treat next sprite work as a separate evidence/acceptance gate. Captured binaries remain exclusively in local FIXTURE.
