@@ -156,7 +156,12 @@ Implemented research/mesence/verify_background_composite.py: metadata-only stric
 
 Runbook: docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md. Never put source ROMs, savestates or raw screens in GitHub. Do not label the entire sprite compositor verified.
 
+## 2026-11-10 — Slot-1 graphics replay validated on Windows
+
+The private MesenCE 2.2.1 slot was located, copied and restored independently in nine final processes. The neutral, Right and A plans each passed a 16×16 A/B/A comparison on frame 448385, including exact palette RGB, every transparent position, surrounding controls, and repeated enabled frames. Actual CPU controller reads distinguished effective inputs from a failed Lua-only override. See [observations, build, hashes and reproduction](research/SMB3_GRAPHICS_HARNESS.md). Issue #2 remains open for broader timing, sprite interaction and audio gates.
+
+
 
 ## 2026-11-12 — Windows-only CI research migration prepared
 
-Research CI previously used Ubuntu for Lua and a Windows/Ubuntu four-job Python matrix, contrary to the 2026-11-11 incident policy on `main`. The dedicated maintenance branch `ci/windows-research-harmonization` migrates Python to Windows 3.11/3.12 and Lua 5.4 synthetic probes to Windows with an explicit portable validator. Duplicate push/PR executions and unnecessary full pytest runs are removed; source ROM and capture evidence remain private. **Hosted Windows CI acceptance remains pending at this commit**. This is CI/governance work, not a new SMB3 graphics reconstruction. See `docs/CI_WINDOWS_RESEARCH.md` and the incident report.
+Research CI previously used Ubuntu for Lua and a Windows/Ubuntu four-job Python matrix, contrary to the 2026-11-11 incident policy on `main`. The dedicated maintenance branch `ci/windows-research-harmonization` migrates Python to Windows 3.11/3.12 and Lua 5.4 synthetic probes to Windows with an explicit portable validator. Duplicate push/PR executions and unnecessary full pytest runs are removed; source ROM and capture evidence remain private. **Hosted Windows CI accepted: Python 3.11/3.12 and stock Lua 5.4.8 synthetic emulator probes passed in Actions runs 43110543370 and 43110543397; subsequent syntax-coverage PR #12 passed in runs 43111805087 and 43111805097**. This is CI/governance work, not a new SMB3 graphics reconstruction. See `docs/CI_WINDOWS_RESEARCH.md` and the incident report.

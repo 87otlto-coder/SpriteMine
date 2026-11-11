@@ -165,3 +165,7 @@ Source review: nesdev-org/MesenCE at commit 4b8a196e299b3de297b204fd1208d2981562
 Implemented research/mesence/verify_background_composite.py: two-session verifier for exactly replayed sprite-visible vs sprite-hidden frames. Verifies ROM/PPU/OAM/palette SHA, same second frame/clock/scanline/cycle, 256x240 unfiltered RGB, fixed NES RGB opaque pixels, all 118 source-transparent positions and an 8px scene-control ring. Must see at least one opaque pixel disappear in the reference. Cannot independently read GUI setting from current capture, so even success is labeled conditional on user-provided sprites-disabled reference. Tested synthetic exact matches, changed transparent pixels, mismatched opaque colors, displaced scene ring, identical ambiguous renders and misaligned frame IDs; cross-platform CI pass. No real sprites-disabled image yet.
 
 See docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md; save-state replay and observed source background remain next critical gates.
+
+## 2026-11-10 — Slot 1, controller latch and full-region RGB
+
+Neutral, walking and rising jump samples passed the real MesenCE A/B/A experiment. An earlier inputPolled-only trial failed the movement gate despite successful pad readback. Reassertion at controller strobe was verified from CPU-bus reads. [Runbook and proof limits](research/SMB3_GRAPHICS_HARNESS.md).
