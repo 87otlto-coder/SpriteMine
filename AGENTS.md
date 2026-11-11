@@ -44,3 +44,7 @@ Run each expensive check once per required event and platform. Reuse existing jo
 Before cleanup, inventory artifact IDs, names, sizes, digests and producing runs. Inspect the contents and confirm how to recover source and evidence. Delete only identified disposable artifacts. Record decisions and reasons, then re-list the inventory and reconcile deleted IDs, bytes and protected artifacts. Keep the ledger outside the expiring build.
 
 For SMB3 research, preserve ROM fingerprints, mapper state, timing and input provenance in shareable records. Keep captures and save states local. Use synthetic data in the Windows and Ubuntu matrix.
+
+## Mandatory GitHub Actions incident guidance
+
+Before editing or running CI, read [docs/ACTIONS_INCIDENT_2026-11-11.md](docs/ACTIONS_INCIDENT_2026-11-11.md). This project is **Windows-only for GitHub Actions**: use `windows-latest`, no Ubuntu/Linux/macOS jobs or OS matrices unless the owner authorizes them. Avoid redundant branch-push builds and unnecessary version combinations. Keep synthetic tests; never upload ROMs or captures. A previous statement above refers to the historical Windows/Ubuntu matrix: that matrix was intentionally retired in the incident follow-up. Do not reintroduce it.
