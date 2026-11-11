@@ -6,5 +6,9 @@ Use [../AGENTS.md](../AGENTS.md) as the canonical, continually maintained engine
 
 **Synchronization rule:** When changing how the project is built or managed, update `AGENTS.md` and this summary together. GitHub cannot directly edit the ChatGPT Project Settings field; paste the updated summary into settings when it changes.
 
+Follow the storage and cleanup rules in AGENTS.md. Preserve reproducibility records, keep game data private, and keep the three newest successful disposable builds across branches. After a successful new upload and run, prune the oldest eligible builds. Set a three-day expiry as backup.
+
+**GitHub Actions rule (2026-11-11):** Read [the incident report](ACTIONS_INCIDENT_2026-11-11.md) and AGENTS.md. Hosted CI must use Windows-only runners; do not reintroduce Ubuntu/Linux/macOS jobs or cross-platform OS matrices without the owner's approval. Retain important synthetic tests while minimizing duplicate runs.
+
 
 **Local folder convention (2026-11-09):** Root `F:\Dev\ROMMAGE`. `SOURCE` for production code and Git; `TOOLS` for emulators and the existing research checkout; `FIXTURE` for immutable ROMs, save states, captures and validation data. Use absolute PowerShell paths and avoid home-folder clones. Update the ChatGPT Project Settings text manually if this summary changes.
