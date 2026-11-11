@@ -1,36 +1,45 @@
-# Project status
+# SpriteMine project status
 
-Updated: 2026-11-08. Source of truth: GitHub code and checks; this snapshot is refreshed with major work.
+**Updated: 2026-11-12.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
 
-## Active milestone
+## Merged baseline — main
 
-**SMB3 PRG1 Phase 0 — foundation.** Feature branch `feature/foundation-rom-chr` contains the initial implementation. Merge requires PR review and any pending CI verification.
+**Phase 0 foundation: implemented, tested and merged via PR #1 (2026-11-09).**
 
-## Implemented in foundation branch
+- Read-only iNES 1.0 .nes and single-ROM ZIP parsing, mapper and PRG/CHR checks.
+- ROM SHA-256, PRG/CHR offsets, deterministic manifests, raw 2bpp 8x8 tiles and 8 KiB CHR bank exports.
+- Synthetic Python tests and an opt-in user-local SMB3 PRG1 ROM integration test.
+- GitHub Actions main Tests workflow is Windows-only (Python 3.11/3.12), most recently passing in run 43105552063. No copyrighted game data is present.
 
-- Legacy iNES ROM/ZIP read-only parser; checksums, mapper, bank boundaries, trainer offsets and explicit errors.
-- CHR-ROM 2bpp tile decoder and synthetic grayscale tile/bank PNG exporter with deterministic manifest.
-- Automated synthetic parsing, bitplane, ZIP safety, provenance and CLI tests.
-- GitHub Actions matrix for Windows and Ubuntu, Python 3.11/3.12; **all four PR CI jobs passed** on 2026-11-08.
-- Project governance and engineering docs.
+Verified private ROM ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579. Mapper 4, 256 KiB PRG / 128 KiB CHR, 16 CHR banks / 8,192 raw tiles. Raw tiles do not automatically identify game actors.
 
-## Validated locally on 2026-11-08
+**Not on main yet:** desktop browser, live emulator adapter, character/sprite inspector, animation workspace, reconstructed level or audio catalog.
 
-- 12 synthetic Python unit tests passed; the optional SMB3 integration test passes when supplied with the ROM (13 total).
-- User-provided SMB3 ZIP: iNES, mapper 4, PRG 256 KiB, CHR 128 KiB, whole-ROM SHA-256 `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`.
-- PRG/CHR CRC32 `A0ED7D20`/`C2928C49`; combined CRC32 `2E6301ED`.
-- 16 exported 8 KiB CHR bank PNGs represent 8,192 tiles. Grayscale values are synthetic.
+## Unmerged code and independently reported evidence
 
-## Not yet implemented / verified
+| Work | Where it lives | Evidence and remaining limit |
+|---|---|---|
+| Static CHR explorer | [PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) -> main | PySide6 ROM/CHR bank/tile browser and export; native UI validation is not fully recorded in the PR |
+| Emulator capture feasibility | research/smb3-emulator-feasibility (research base) | Real PRG1 CHR/OAM/palette/MMC3 phase probes, RGB reference tests; no stable production adapter |
+| Three-pose A/B/A graphics proof | [PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) -> research base | On owner's Windows MesenCE slot 1: standing 138+118, walking-right 138+118, rising-jump 194+62 out of 256 pixels per pose; repeated enabled RGB and CPU input verification |
+| Contiguous short timeline | [Draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) -> PR #5 branch | Three real consecutive frames 448385–448387, same 16x16 Mario RGBA pose held for three frames. A complete walk/jump cycle is not yet proven |
 
-- No PySide6 interface or user-facing installer.
-- No MesenCE integration, OAM/palette capture, animations, decoded levels or audio.
-- No emulator state synchronization experiment or tested native Windows desktop UI.
-- Coverage beyond raw CHR tile count has not been assessed.
-- GitHub CI passed on the feature PR; native Windows desktop/emulator validation has not occurred.
+The real graphics observations are supported by locally held source state, captures, comparison reports and hashes and are **not reproduced in public GitHub CI**. They should be preserved outside this public repository. Do not claim all sprites, all animations, hardware priority/overflow, level decoding or audio are complete.
 
-## Next steps
+## Repository health and CI policy
 
-1. Review foundation PR #1 (CI passed) and merge when approved.
-2. Work issue #2 on `research/smb3-emulator-feasibility` to prove synchronized capture of OAM, palettes, CHR mapping and rendered pixels at known frame boundaries.
-3. Implement issue #3: the static PySide6 explorer. Gate live features on the emulator proof.
+- [PR #7](https://github.com/87otlto-coder/SpriteMine/pull/7) merged 2026-11-11: storage/evidence retention guidance and removal of redundant feature/research push test triggers.
+- [PR #8](https://github.com/87otlto-coder/SpriteMine/pull/8) merged 2026-11-11: Actions incident record and **Windows-only** hosted CI policy.
+- Incident source was primarily accumulated browser-build artifacts in another repository (mk-dos-archive); SpriteMine main Tests currently has no artifact upload.
+- Research branches and open PR #4 still carry older Ubuntu-based workflow files. Reconcile them to Windows before integrating into main. [Research migration PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) is open and requires hosted Windows validation.
+- An old duplicate artifact-policy workflow run is queued even though later authoritative main runs succeeded; do not conflate the stale queue with current main CI failure.
+
+## Next engineering decisions
+
+1. Finish Windows Lua/PPU synthetic research CI migration and verify hosted runners; no Ubuntu job or unnecessary duplicate triggers.
+2. Update PR #4, #5 and stacked #6 to avoid reintroducing retired CI configurations. Resolve the branch dependency chain with review; do not rewrite history or automatically merge all research to main.
+3. Merge the accepted static GUI and research features through reviewable PRs, recording the exact production integration contract.
+4. Continue Phase 4 with a longer deterministic Mario sequence to observe a real pose transition and its held-frame durations; the verified three-frame hold is not a full animation.
+5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.
+
+See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
