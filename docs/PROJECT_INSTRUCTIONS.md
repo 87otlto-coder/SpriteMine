@@ -6,4 +6,4 @@ Use [../AGENTS.md](../AGENTS.md) as the canonical, continually maintained engine
 
 **Synchronization rule:** When changing how the project is built or managed, update `AGENTS.md` and this summary together. GitHub cannot directly edit the ChatGPT Project Settings field; paste the updated summary into settings when it changes.
 
-Follow the storage and cleanup rules in AGENTS.md. Preserve reproducibility records, keep game data private, and retain at most five successful disposable builds for three days.
+Follow the storage and cleanup rules in AGENTS.md. Preserve reproducibility records, keep game data private, and keep the three newest successful disposable builds across branches. After a successful new upload and run, prune the oldest eligible builds. Set a three-day expiry as backup.
