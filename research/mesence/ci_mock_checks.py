@@ -132,9 +132,13 @@ def main() -> None:
             "SPRITEMINE_CAPTURE_DIR": str(folder),
             "SPRITEMINE_TEST_ROM_SHA1": create_fixture(folder),
         })
-        for name in SCRIPTS:
-            path = MESENCE / name
+        required = [MESENCE / name for name in SCRIPTS]
+        for path in required:
             require(path.is_file(), f"Missing Lua file: {path}")
+        # Include later graphics_replay.lua / animation probes without requiring
+        # extra workflow jobs or silently dropping old Lua syntax coverage.
+        all_lua = sorted(set(required) | set(MESENCE.glob("*.lua")))
+        for path in all_lua:
             execute(env, luac, "-p", str(path))
         for mock, probe in (
             ("mock_mesence.lua", "spritemine_frame_probe.lua"),
