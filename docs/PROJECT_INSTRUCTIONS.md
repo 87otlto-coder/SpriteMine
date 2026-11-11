@@ -9,3 +9,6 @@ Use [../AGENTS.md](../AGENTS.md) as the canonical, continually maintained engine
 Follow the storage and cleanup rules in AGENTS.md. Preserve reproducibility records, keep game data private, and keep the three newest successful disposable builds across branches. After a successful new upload and run, prune the oldest eligible builds. Set a three-day expiry as backup.
 
 **GitHub Actions rule (2026-11-11):** Read [the incident report](ACTIONS_INCIDENT_2026-11-11.md) and AGENTS.md. Hosted CI must use Windows-only runners; do not reintroduce Ubuntu/Linux/macOS jobs or cross-platform OS matrices without the owner's approval. Retain important synthetic tests while minimizing duplicate runs.
+
+
+**Local folder convention:** Root F:\Dev\ROMMAGE. SOURCE is for Git/code/docs; TOOLS is for MesenCE and supporting utilities; FIXTURE is for immutable ROMs, save states, captures, and extracted graphics. Use explicit absolute PowerShell paths and avoid home-folder clones. Keep this instruction synchronized with AGENTS.md.
