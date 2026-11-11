@@ -32,3 +32,15 @@ Be SpriteMine's technical lead. Build a Windows-first local NES asset explorer a
 7. Integrated, validated SMB3 Windows release and evidence-based coverage reporting.
 
 **Prioritize a working, accurate SMB3 tool over a generalized NES ripper.**
+
+## GitHub Actions storage and repository governance
+
+Git is authoritative for source, build recipes, lockfiles, synthetic tests and shareable research records. Use review branches and pull requests. Preserve source history and repository visibility.
+
+Keep the inputs, tool versions, commands, observations and provenance needed to reproduce a finding. Before expiring a sole copy of evidence, identify the files and their owner and pause for approval. Verify any durable, authorized copy by checksum. Keep proprietary ROMs, game files, derived assets, private fixtures and secrets out of commits, CI logs, caches and uploads. Record hashes and local reproduction instructions where appropriate.
+
+Run each expensive check once per required event and platform. Reuse existing jobs, avoid repeated uploads and restrict upload paths to the intended deliverable. Give disposable generated builds a three-day expiry as a backup. After a new upload and its producing run both succeed, retain the newest three successful disposable builds across all repository branches. Upload first even at capacity, then serialize cleanup and delete the oldest eligible builds by exact artifact name and ID. A changed hash, commit, branch or milestone alone does not justify retention.
+
+Before cleanup, inventory artifact IDs, names, sizes, digests and producing runs. Inspect the contents and confirm how to recover source and evidence. Delete only identified disposable artifacts. Record decisions and reasons, then re-list the inventory and reconcile deleted IDs, bytes and protected artifacts. Keep the ledger outside the expiring build.
+
+For SMB3 research, preserve ROM fingerprints, mapper state, timing and input provenance in shareable records. Keep captures and save states local. Use synthetic data in the Windows and Ubuntu matrix.
