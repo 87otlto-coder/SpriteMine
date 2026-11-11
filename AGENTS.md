@@ -43,7 +43,7 @@ Run each expensive check once per required event and platform. Reuse existing jo
 
 Before cleanup, inventory artifact IDs, names, sizes, digests and producing runs. Inspect the contents and confirm how to recover source and evidence. Delete only identified disposable artifacts. Record decisions and reasons, then re-list the inventory and reconcile deleted IDs, bytes and protected artifacts. Keep the ledger outside the expiring build.
 
-For SMB3 research, preserve ROM fingerprints, mapper state, timing and input provenance in shareable records. Keep captures and save states local. Use synthetic data in the Windows and Ubuntu matrix.
+For SMB3 research, preserve ROM fingerprints, mapper state, timing and input provenance in shareable records. Keep captures and save states local. Use synthetic data in Windows-only CI; do not reintroduce an Ubuntu OS matrix.
 
 ## Mandatory GitHub Actions incident guidance
 
