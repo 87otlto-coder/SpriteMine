@@ -1,54 +1,69 @@
-# Project status
+# SpriteMine project status
 
-Updated: 2026-11-09. GitHub implementation and test results take precedence over conversations.
+**Updated: 2026-11-12.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
 
-## Foundation: merged
+## Merged baseline — main
 
-PR #1 merged into `main` (commit `117362e447bf2555c990898dc135b80032328835`).
+**Phase 0 foundation: implemented, tested and merged via PR #1 (2026-11-09).**
 
-- Read-only legacy iNES ROM/ZIP loader, checksums, mapper/bank/trainer inspection and explicit unsupported-format errors.
-- Deterministic CHR-ROM 2bpp decoding, grayscale bank/tile PNG exports and JSON provenance.
-- Synthetic tests and optional private SMB3 PRG1 validation.
-- Four foundation CI jobs passed: Python 3.11/3.12, Windows and Ubuntu.
-- Previously verified supplied SMB3 ZIP: mapper 4, PRG 256 KiB, CHR 128 KiB, 16 CHR banks / 8,192 raw 8×8 tiles; known ROM SHA-256 and PRG/CHR CRCs in README.
+- Read-only iNES 1.0 .nes and single-ROM ZIP parsing, mapper and PRG/CHR checks.
+- ROM SHA-256, PRG/CHR offsets, deterministic manifests, raw 2bpp 8x8 tiles and 8 KiB CHR bank exports.
+- Synthetic Python tests and an opt-in user-local SMB3 PRG1 ROM integration test.
+- GitHub Actions main Tests workflow is Windows-only (Python 3.11/3.12), most recently passing in run 43105552063. No copyrighted game data is present.
 
-## Active work: Phase 2 prototype (PR pending)
+Verified private ROM ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579. Mapper 4, 256 KiB PRG / 128 KiB CHR, 16 CHR banks / 8,192 raw tiles. Raw tiles do not automatically identify game actors.
 
-Branch `feature/static-chr-explorer` implements a **static-only PySide6 CHR browser**:
+**Not on main yet:** desktop browser, live emulator adapter, character/sprite inspector, animation workspace, reconstructed level or audio catalog.
 
-- ROM import and verification notice.
-- Select any 8 KiB CHR bank, inspect and zoom its 512 raw tiles.
-- Select tiles; show global index, bank coordinates, ROM and CHR byte offsets.
-- Choose synthetic grayscale, green or amber palette previews. These are **not** authentic SMB3 palettes.
-- Export selected tile, bank or all banks in grayscale with deterministic manifest.
-- Synthetic rendering tests and offscreen Qt smoke tests; **all six CI jobs passed** on Windows and Ubuntu (Python 3.11/3.12 core matrix plus two Qt smoke jobs). The GUI export regression test also passed in the latest six-job CI run (PR #4, commit `537e446e6dfc142004e0259d352c6f1a3d9e8108`).
+## Unmerged code and independently reported evidence
 
-### Native Windows observation — partial acceptance (2026-11-09)
+| Work | Where it lives | Evidence and remaining limit |
+|---|---|---|
+| Static CHR explorer | [PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) -> main | PySide6 ROM/CHR bank/tile browser and export; native UI validation is not fully recorded in the PR |
+| Emulator capture feasibility | research/smb3-emulator-feasibility (research base) | Real PRG1 CHR/OAM/palette/MMC3 phase probes, RGB reference tests; no stable production adapter |
+| Three-pose A/B/A graphics proof | [PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) -> research base | On owner's Windows MesenCE slot 1: standing 138+118, walking-right 138+118, rising-jump 194+62 out of 256 pixels per pose; repeated enabled RGB and CPU input verification |
+| Contiguous short timeline | [Draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) -> PR #5 branch | Three real consecutive frames 448385–448387, same 16x16 Mario RGBA pose held for three frames. A complete walk/jump cycle is not yet proven |
 
-The project owner supplied screenshots of the actual SpriteMine Windows desktop application. These show:
-- The application launches and renders its empty-ROM state without an apparent startup error.
-- Loading `Super Mario Bros. 3.zip` displays **Verified SMB3 US PRG1 / Revision A**.
-- Bank 0 renders as a scrollable grayscale CHR atlas; the status bar reports **16 CHR-ROM banks / 8,192 raw tiles**.
-- Selecting tile **19** displays bank **0**, coordinates **(3, 1)**, CHR offset **0x00130**, ROM offset **0x40140**, and source length **16 bytes**. This is consistent with the expected offset math.
-- Both screenshots were supplied in the ChatGPT conversation and are intentionally **not committed** (copyrighted graphical content).
+The real graphics observations are supported by locally held source state, captures, comparison reports and hashes and are **not reproduced in public GitHub CI**. They should be preserved outside this public repository. Do not claim all sprites, all animations, hardware priority/overflow, level decoding or audio are complete.
 
-**Not yet observed interactively:** switching to bank 15, changing preview palettes, exporting tiles/banks and checking manifests, handling a malformed ROM, or resizing/zooming behavior. Native Windows testing is therefore **partially passed, not complete**.
+## Repository health and CI policy
 
-This phase can progress independently while the MesenCE adapter feasibility is investigated.
+- [PR #7](https://github.com/87otlto-coder/SpriteMine/pull/7) merged 2026-11-11: storage/evidence retention guidance and removal of redundant feature/research push test triggers.
+- [PR #8](https://github.com/87otlto-coder/SpriteMine/pull/8) merged 2026-11-11: Actions incident record and **Windows-only** hosted CI policy.
+- Incident source was primarily accumulated browser-build artifacts in another repository (mk-dos-archive); SpriteMine main Tests currently has no artifact upload.
+- Research branches and open PR #4 still carry older Ubuntu-based workflow files. Reconcile them to Windows before integrating into main. [Research migration PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) passed hosted Windows Python/Lua checks and was merged into the research base. GUI CI compatibility PR #11 likewise passed Windows/Qt and was merged into the GUI branch.
+- An old duplicate artifact-policy workflow run is queued even though later authoritative main runs succeeded; do not conflate the stale queue with current main CI failure.
 
-## Runtime research: unproven
+## Next engineering decisions
 
-Branch `research/smb3-emulator-feasibility` has an experiment plan for synchronized OAM, palette, MMC3 CHR mapping, frame/scanline, screenshot, state replay and audio capture. **No emulator integration has been demonstrated.** Issue #2 tracks this gate.
+1. Finish Windows Lua/PPU synthetic research CI migration and verify hosted runners; no Ubuntu job or unnecessary duplicate triggers.
+2. Update PR #4, #5 and stacked #6 to avoid reintroducing retired CI configurations. Resolve the branch dependency chain with review; do not rewrite history or automatically merge all research to main.
+3. Merge the accepted static GUI and research features through reviewable PRs, recording the exact production integration contract.
+4. Continue Phase 4 with a longer deterministic Mario sequence to observe a real pose transition and its held-frame durations; the verified three-frame hold is not a full animation.
+5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.
 
-## Pending
+See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
 
-- Desktop CI passed and initial Windows launch/import/tile-selection checks were observed; complete bank switching, preview palette, export and invalid-file checks before declaring PR #4 fully validated.
-- Prove same-frame MesenCE state acquisition before live sprite tools.
-- Correct runtime palettes, transparent sprite reconstruction, animation capture, World 1-1 decoding and audio remain unimplemented.
-- No Windows installer or evidence-based SMB3 decoded asset coverage report yet.
 
-## Next
+## PR #4 static GUI — source and partial native Windows acceptance (2026-11-12)
 
-1. Finish the remaining native Windows acceptance checks in PR #4; the initial launch, SMB3 import, atlas and provenance views have been observed.
-2. Continue MesenCE research issue #2 on research branch; validate synchronization before coupling live UI.
-3. Record user-observed results and acceptance in this file.
+This feature branch implements the first PySide6 ROM and CHR viewer on top
+of main's foundation. The dedicated **Windows-only** Qt offscreen smoke suite
+and the Python 3.11/3.12 suites passed after GUI maintenance PR #11.
+
+The owner previously provided native Windows screenshots confirming the
+application starts, accepts the verified SMB3 US PRG1 ZIP, displays bank 0 of
+the 16 CHR banks / 8,192 raw tiles, and reports tile 19 at bank 0 coordinate
+(3,1), CHR offset 0x00130, absolute ROM offset 0x40140, 16-byte source
+length. The image files remain private.
+
+**Native acceptance still pending:** bank 15 selection, actual palette
+switching behavior, tile/bank/all-bank exports and JSON manifests, malformed
+ROM handling, zoom/resize and packaged Windows release. Qt offscreen CI
+does not replace this manual UI validation.
+
+The runtime SMB3 graphics A/B/A research under PR #5 is now merged to its
+research branch; it is not integrated into this static UI. Draft PR #6
+animation timeline remains separate. This document records code available
+on this feature branch; do not misrepresent it as merged to main until PR #4
+is reviewed and accepted.
