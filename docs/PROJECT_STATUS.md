@@ -155,3 +155,8 @@ After the independent 138/138 opaque-pixel RGB PASS, the remaining single-pose g
 Implemented research/mesence/verify_background_composite.py: metadata-only strict paired-render verifier requiring matching source ROM, frame count and master clock, startFrame PPU/OAM/palette hashes, known physical MMC3 bank mappings, same geometry, exact 138 opaque default palette pixels, exact pixels at *every* transparent location, and stable surrounding 8px control ring. Rejects mismatched replay state, unsupported palette codes and ambiguous unchanged renders. Strict success remains conditional because the Lua manifest cannot attest to the user's GUI Disable Sprites state. Deterministic synthetic regression tests passed all Windows/Ubuntu CI checks. **Real paired foreground and background-only MesenCE capture is pending.**
 
 Runbook: docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md. Never put source ROMs, savestates or raw screens in GitHub. Do not label the entire sprite compositor verified.
+
+
+## 2026-11-12 — Windows-only CI research migration prepared
+
+Research CI previously used Ubuntu for Lua and a Windows/Ubuntu four-job Python matrix, contrary to the 2026-11-11 incident policy on `main`. The dedicated maintenance branch `ci/windows-research-harmonization` migrates Python to Windows 3.11/3.12 and Lua 5.4 synthetic probes to Windows with an explicit portable validator. Duplicate push/PR executions and unnecessary full pytest runs are removed; source ROM and capture evidence remain private. **Hosted Windows CI acceptance remains pending at this commit**. This is CI/governance work, not a new SMB3 graphics reconstruction. See `docs/CI_WINDOWS_RESEARCH.md` and the incident report.
