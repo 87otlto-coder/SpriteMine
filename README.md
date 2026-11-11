@@ -10,7 +10,7 @@ The currently merged foundation provides:
 - NES 2bpp CHR-ROM tile decoding and deterministic grayscale PNG exports for 8x8 tiles and 8 KiB banks.
 - Source provenance, JSON manifests, CLI and synthetic regression tests.
 
-**Not yet integrated into main:** PySide6 static CHR browser (PR #4), MesenCE graphics research harness (PR #5), contiguous animation timeline (draft PR #6), complete Sprite Inspector, level decoding, audio workbench, asset catalog and Windows installer. These features must not be presented as merged merely because they work on research branches.
+**Not yet integrated into main:** PySide6 static CHR browser (PR #4), MesenCE graphics research harness (PR #5, merged into the research base; not integrated into main), contiguous animation timeline (draft PR #6), complete Sprite Inspector, level decoding, audio workbench, asset catalog and Windows installer. These features must not be presented as merged merely because they work on research branches.
 
 ## Research that has already been validated
 
@@ -65,9 +65,9 @@ Expected complete ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f3854
 
 - [Foundation PR #1](https://github.com/87otlto-coder/SpriteMine/pull/1) — merged into main.
 - [Static CHR explorer PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) — open against main.
-- [MesenCE graphics harness PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) — open on research/smb3-emulator-feasibility.
-- [Animation timeline draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) — stacked on PR #5.
-- [Research Windows CI migration PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) — merged into the research base after hosted Windows Python/Lua validation.
+- [MesenCE graphics harness PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) — merged into research/smb3-emulator-feasibility (not main).
+- [Animation timeline draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) — open against the updated research base; a complete walk cycle is not yet verified.
+- [Research Windows CI migration PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) — merged into research base; Windows Python 3.11/3.12 and Lua 5.4.8 probes passed. GUI CI maintenance PR #11 also merged into the GUI branch.
 
 GitHub Actions policy is **Windows-only** following the 11 November incident. New code and workflows should be reviewed with [AGENTS.md](AGENTS.md) and [the incident document](docs/ACTIONS_INCIDENT_2026-11-11.md). The main Tests workflow currently uses Windows with Python 3.11/3.12 and performs no artifact uploads.
 
