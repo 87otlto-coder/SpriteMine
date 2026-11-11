@@ -1,57 +1,81 @@
 # SpriteMine
 
-**SMB3 first.** A local, Windows-first toolkit for investigating, reconstructing and exporting audiovisual assets from NES games. The first milestone targets **Super Mario Bros. 3 (US PRG1 / Revision A)**. This repository is a development workbench, not yet a desktop application.
+**SMB3 first.** SpriteMine is a Windows-first tool for inspecting, reconstructing, and eventually exporting audiovisual resources from **Super Mario Bros. 3 (US PRG1 / Revision A)**. The project is still under active development; the integrated desktop milestone is not finished.
 
-## Current state — Phase 0 foundation
+## What is actually on main
 
-- Read-only `.nes` and single-ROM `.zip` input with iNES 1.0 validation, hashes, mapper, PRG/CHR boundaries and trainer handling.
-- NES CHR-ROM 2bpp decoder; grayscale 8×8 tiles and 8 KiB bank atlas PNG export.
-- Deterministic JSON manifest with ROM fingerprint, bank, tile offsets and PNG checksum.
-- Pure synthetic tests and optional local SMB3 integration validation. ROMs are never checked into GitHub.
-- **Not implemented:** desktop UI, live emulator capture, authentic runtime palettes, semantic sprites, animations, level reconstruction, and audio extraction.
+The currently merged foundation provides:
 
-The grayscale previews are **not authentic game palettes**. NES 2.0 parsing and CHR-RAM graphics capture are explicitly not supported yet.
+- Read-only .nes and single-ROM .zip import with iNES 1.0 parsing, verified fingerprints, mapper and bank offsets.
+- NES 2bpp CHR-ROM tile decoding and deterministic grayscale PNG exports for 8x8 tiles and 8 KiB banks.
+- Source provenance, JSON manifests, CLI and synthetic regression tests.
 
-## Windows setup (PowerShell)
+**Not yet integrated into main:** PySide6 static CHR browser (PR #4), MesenCE graphics research harness (PR #5), contiguous animation timeline (draft PR #6), complete Sprite Inspector, level decoding, audio workbench, asset catalog and Windows installer. These features must not be presented as merged merely because they work on research branches.
 
-Install Python 3.11+ and Git. The commands below clone into `$HOME\SpriteMine`; if you already have a clone, use your existing folder instead.
+## Research that has already been validated
 
-```powershell
-Set-Location -Path $HOME
-git clone https://github.com/87otlto-coder/SpriteMine.git "$HOME\SpriteMine"
-Set-Location -Path "$HOME\SpriteMine"
+Research PR #5 documents three real SMB3 MesenCE slot-1 A/B/A replay samples, each with the complete 16x16 Mario region matched against the default 2C02 palette and an independent sprites-disabled background (256/256 pixels for standing, walking-right and rising jump). These **three sampled poses** are not exhaustive actor coverage.
+
+Draft PR #6 documents a consecutive three-frame capture (emulator frames 448385–448387). All three local sprite images were identical; it verified a three-video-frame **visual hold**, not a completed walking animation cycle. A longer sequence is the next Phase 4 research gate.
+
+These findings require local, licensed game data. Original ROMs, save states, screen buffers and extracted graphics must never be committed to GitHub.
+
+## Windows development workspace
+
+Canonical project root is F:\Dev\ROMMAGE:
+
+- SOURCE — Git repositories, SpriteMine package, development code and documentation.
+- TOOLS — MesenCE emulator and supporting research utilities.
+- FIXTURE — immutable ROMs, save states, frame captures, validation evidence and generated game-asset previews.
+
+Primary production checkout: F:\Dev\ROMMAGE\SOURCE\SpriteMine. The owner also uses separate research checkouts; their branch and path are explicitly documented in the applicable research runbook.
+
+### Install/test the merged foundation (PowerShell)
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\SOURCE\SpriteMine"
 git fetch origin
-git switch feature/foundation-rom-chr
-py -3.11 -m venv .venv
-& ".\.venv\Scripts\python.exe" -m pip install -e ".[dev]"
-& ".\.venv\Scripts\python.exe" -m pytest -q
-```
+git switch main
+git pull --ff-only origin main
 
-The `git switch` line is temporary until the foundation PR is merged into `main`.
+py -3.12 -m venv ".venv"
+& "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe" -m pip install -e ".[dev]"
+& "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe" -m pytest -q
+~~~
 
-To inspect a local, legally obtained ROM (replace the example path):
+The code requires Python 3.11 or newer. If your environment already uses Python 3.11, its supported interpreter can be used instead of 3.12.
 
-```powershell
-Set-Location -Path "$HOME\SpriteMine"
-& ".\.venv\Scripts\python.exe" -m spritemine inspect "C:\Games\Super Mario Bros. 3.zip"
-& ".\.venv\Scripts\python.exe" -m spritemine chr-export "C:\Games\Super Mario Bros. 3.zip" --output "$HOME\SpriteMine-exports\smb3-chr"
-```
+### Inspect the verified local SMB3 ROM
 
-Expected: JSON metadata, then 16 PNG bank images and `manifest.json` in the export folder for the verified SMB3 PRG1 ROM. To export one 8×8 tile: add `--tile 0`; to export a single bank: add `--bank 0`.
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\SOURCE\SpriteMine"
+$python = "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe"
+$rom = "F:\Dev\ROMMAGE\FIXTURE\Super Mario Bros. 3.zip"
+if (-not (Test-Path -LiteralPath $rom)) { throw "ROM ZIP missing at expected FIXTURE path." }
 
-## Source ROM verification
+& $python -m spritemine inspect $rom
+& $python -m spritemine chr-export $rom --output "F:\Dev\ROMMAGE\FIXTURE\SMB3\Exports\CHR"
+~~~
 
-Expected user-supplied SMB3 PRG1 `.nes` SHA-256: `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`; PRG CRC32 `A0ED7D20`, CHR CRC32 `C2928C49`. Never distribute the ROM or generated graphics.
+Expected for the verified SMB3 PRG1 ROM: 256 KiB PRG, 128 KiB CHR, mapper 4; 16 grayscale CHR-bank PNGs comprising 8,192 raw tiles and a manifest with offsets and hashes. This does not reconstruct complete characters automatically.
 
-## Project references
+Expected complete ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579. The tool does not alter the source.
 
-- [Instructions for development agents](AGENTS.md)
-- [ChatGPT project instruction summary](docs/PROJECT_INSTRUCTIONS.md)
-- [Current status](docs/PROJECT_STATUS.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Architecture and provenance](docs/ARCHITECTURE.md)
-- [Technical decisions](docs/DECISIONS.md)
+## Branches and review
+
+- [Foundation PR #1](https://github.com/87otlto-coder/SpriteMine/pull/1) — merged into main.
+- [Static CHR explorer PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) — open against main.
+- [MesenCE graphics harness PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) — open on research/smb3-emulator-feasibility.
+- [Animation timeline draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) — stacked on PR #5.
+- [Research Windows CI migration PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) — pending hosted Windows validation on its own research base.
+
+GitHub Actions policy is **Windows-only** following the 11 November incident. New code and workflows should be reviewed with [AGENTS.md](AGENTS.md) and [the incident document](docs/ACTIONS_INCIDENT_2026-11-11.md). The main Tests workflow currently uses Windows with Python 3.11/3.12 and performs no artifact uploads.
+
+## Further reading
+
+- [Project status](docs/PROJECT_STATUS.md)
+- [Roadmap and acceptance criteria](docs/ROADMAP.md)
+- [Architecture and evidence classes](docs/ARCHITECTURE.md)
+- [Windows testing guidance](docs/TESTING.md)
 - [Research log](docs/RESEARCH_LOG.md)
-- [Validation procedures](docs/TESTING.md)
-
-Development uses `feature/*` branches and PRs to `main`. Use `research/*` for experiments. See [CONTRIBUTING.md](CONTRIBUTING.md).
+- [Engineering instructions](AGENTS.md)
