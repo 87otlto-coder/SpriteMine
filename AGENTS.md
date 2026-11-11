@@ -36,3 +36,19 @@ Use `F:\Dev\ROMMAGE` as the root. Keep code, documentation and Git repositories 
 7. Integrated, validated SMB3 Windows release and evidence-based coverage reporting.
 
 **Prioritize a working, accurate SMB3 tool over a generalized NES ripper.**
+
+## GitHub Actions storage and repository governance
+
+Git is authoritative for source, build recipes, lockfiles, synthetic tests and shareable research records. Use review branches and pull requests. Preserve source history and repository visibility.
+
+Keep the inputs, tool versions, commands, observations and provenance needed to reproduce a finding. Before expiring a sole copy of evidence, identify the files and their owner and pause for approval. Verify any durable, authorized copy by checksum. Keep proprietary ROMs, game files, derived assets, private fixtures and secrets out of commits, CI logs, caches and uploads. Record hashes and local reproduction instructions where appropriate.
+
+Run each expensive check once per required event and platform. Reuse existing jobs, avoid repeated uploads and restrict upload paths to the intended deliverable. Give disposable generated builds a three-day expiry as a backup. After a new upload and its producing run both succeed, retain the newest three successful disposable builds across all repository branches. Upload first even at capacity, then serialize cleanup and delete the oldest eligible builds by exact artifact name and ID. A changed hash, commit, branch or milestone alone does not justify retention.
+
+Before cleanup, inventory artifact IDs, names, sizes, digests and producing runs. Inspect the contents and confirm how to recover source and evidence. Delete only identified disposable artifacts. Record decisions and reasons, then re-list the inventory and reconcile deleted IDs, bytes and protected artifacts. Keep the ledger outside the expiring build.
+
+For SMB3 research, preserve ROM fingerprints, mapper state, timing and input provenance in shareable records. Keep captures and save states local. Use synthetic data in Windows-only CI; do not reintroduce an Ubuntu OS matrix.
+
+## Mandatory GitHub Actions incident guidance
+
+Before editing or running CI, read [docs/ACTIONS_INCIDENT_2026-11-11.md](docs/ACTIONS_INCIDENT_2026-11-11.md). This project is **Windows-only for GitHub Actions**: use `windows-latest`, no Ubuntu/Linux/macOS jobs or OS matrices unless the owner authorizes them. Avoid redundant branch-push builds and unnecessary version combinations. Keep synthetic tests; never upload ROMs or captures. A previous statement above refers to the historical Windows/Ubuntu matrix: that matrix was intentionally retired in the incident follow-up. Do not reintroduce it.
