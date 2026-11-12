@@ -43,3 +43,32 @@ The real graphics observations are supported by locally held source state, captu
 5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.
 
 See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
+
+
+## PR #4 static GUI — source and partial native Windows acceptance (2026-11-12)
+
+This feature branch implements the first PySide6 ROM and CHR viewer on top
+of main's foundation. The dedicated **Windows-only** Qt offscreen smoke suite
+and the Python 3.11/3.12 suites passed after GUI maintenance PR #11.
+
+The owner previously provided native Windows screenshots confirming the
+application starts, accepts the verified SMB3 US PRG1 ZIP, displays bank 0 of
+the 16 CHR banks / 8,192 raw tiles, and reports tile 19 at bank 0 coordinate
+(3,1), CHR offset 0x00130, absolute ROM offset 0x40140, 16-byte source
+length. The image files remain private.
+
+**Native acceptance still pending:** bank 15 selection, actual palette
+switching behavior, tile/bank/all-bank exports and JSON manifests, malformed
+ROM handling, zoom/resize and packaged Windows release. Qt offscreen CI
+does not replace this manual UI validation.
+
+The runtime SMB3 graphics A/B/A research under PR #5 is now merged to its
+research branch; it is not integrated into this static UI. Draft PR #6
+animation timeline remains separate. This document records code available
+on this feature branch; do not misrepresent it as merged to main until PR #4
+is reviewed and accepted.
+
+
+## GUI PR #4 boundary regression follow-up (2026-11-12)
+
+Added deterministic Windows Qt offscreen regression tests for selecting the final SMB3 CHR bank (bank 15 of 16), verifying the displayed tile's physical ROM offset, switching synthetic preview colors without representing them as authentic, exporting only the selected last bank with provenance, and rejecting a malformed ROM without enabling exports. These automated tests strengthen the still-open feature PR; **native Windows interaction, resizing, remaining exports and packaging are not yet signed off**, so the GUI acceptance gate remains open. The earlier roadmap statement that emulator feasibility was wholly unproven is corrected: real SMB3 slot-1 RGB/OAM/CHR A/B/A evidence has passed in research, but a stable production adapter is still absent.

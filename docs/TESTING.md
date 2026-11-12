@@ -48,3 +48,34 @@ The stock Lua 5.4.8 Windows research mock suite and Windows 3.11/3.12 Python job
 Follow docs/ACTIONS_INCIDENT_2026-11-11.md and AGENTS.md before changing or triggering hosted workflows. Never publish ROM data, capture buffers or private assets. Keep source hashes, decoder versions, offsets, MMC3 mapper state, frame/scanline indices, save-state SHA, emulator build and controller input history when evaluating real SMB3 output.
 
 For unresolved cases (sprite priority, per-scanline CHR fetch, sprite limits, transparency behind moving backgrounds, complete animation durations, GUI interaction), mark them not tested or unsupported rather than implicitly passing them.
+
+
+## PR #4 desktop feature — Windows Qt smoke and native acceptance
+
+This branch adds a PySide6 GUI entrypoint and synthetic previews. Use the
+existing canonical production checkout rather than cloning under HOME.
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\SOURCE\SpriteMine"
+git fetch origin
+git switch feature/static-chr-explorer
+git pull --ff-only origin feature/static-chr-explorer
+
+$python = "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe"
+if (-not (Test-Path -LiteralPath $python)) {
+    py -3.12 -m venv ".venv"
+}
+& $python -m pip install -e ".[dev,gui]"
+$env:QT_QPA_PLATFORM = "offscreen"
+& $python -m pytest -q tests/test_preview.py tests/test_desktop.py
+Remove-Item Env:QT_QPA_PLATFORM -ErrorAction SilentlyContinue
+& $python -m spritemine.desktop
+~~~
+
+Expected: the headless Qt smoke tests pass; the last command opens the
+interactive Windows CHR browser. Check bank 0 and 15, scrolling/zoom,
+tile metadata and palette switching (synthetic colors only), tile/bank/all
+export into new local FIXTURE output directories, deterministic manifests,
+and explicit error handling for invalid ROMs. Record observations and
+runtime versions before accepting GUI completion. Never publish screenshots
+containing extracted game art in the public repository.

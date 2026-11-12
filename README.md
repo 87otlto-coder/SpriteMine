@@ -79,3 +79,27 @@ GitHub Actions policy is **Windows-only** following the 11 November incident. Ne
 - [Windows testing guidance](docs/TESTING.md)
 - [Research log](docs/RESEARCH_LOG.md)
 - [Engineering instructions](AGENTS.md)
+
+
+## Static CHR desktop prototype on feature/static-chr-explorer
+
+**This branch adds the pending PySide6 PR #4; it is not the fully integrated release.**
+Its UI offers verified-ROM opening, scrollable 16x32 CHR bank atlas, 1–8x
+pixel-accurate zoom, tile provenance inspection, and explicitly synthetic
+grayscale/green/amber preview palettes. Raw tile and bank exports remain
+grayscale with manifests.
+
+~~~powershell
+Set-Location -Path "F:\Dev\ROMMAGE\SOURCE\SpriteMine"
+git fetch origin
+git switch feature/static-chr-explorer
+git pull --ff-only origin feature/static-chr-explorer
+py -3.12 -m venv ".venv"
+& "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe" -m pip install -e ".[dev,gui]"
+& "F:\Dev\ROMMAGE\SOURCE\SpriteMine\.venv\Scripts\python.exe" -m spritemine.desktop
+~~~
+
+Expected: a PySide6 CHR browser window. No production installer, original
+in-game palette assignments or semantic character labels are claimed.
+The native Windows interactive acceptance still needs bank 15/palette/export/
+invalid-ROM tests; see docs/TESTING.md.
