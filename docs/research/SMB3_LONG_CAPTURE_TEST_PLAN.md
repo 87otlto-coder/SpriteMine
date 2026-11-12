@@ -14,7 +14,7 @@ This change adds:
 
 - `animation_archive.read_verified_timeline`: verify frame records, exact PNG SHA-256s and RGBA hashes, spritesheet pixels and geometry, contiguous emulator frames/warmups/clocks, and held-frame summaries **without emulator execution**.
 - `animation_archive.verified_timeline_runs`: reassemble the referenced prior A/B/A runs read-only and compare all provenance and output metadata before any new emulator session.
-- `animation_windows --reuse-timeline PATH`: source prior runs from a trusted timeline rather than listing all `--reuse-run` paths manually; permit >12 total timeline frames, while still limiting **new** captures to 2–12 per invocation and warmups to 2–120. `--reuse-run` remains available, but cannot be mixed with `--reuse-timeline`.
+- `animation_windows --reuse-timeline PATH`: source prior runs from a trusted timeline rather than listing all `--reuse-run` paths manually; permit >12 total timeline frames, while still limiting **new** captures to 2–12 per invocation and warmups to 2–120. `--reuse-run` may also append previously verified partial runs after `--reuse-timeline`, allowing interrupted batches to resume without recapture.
 - `animation_preview --timeline PATH`: generate a new, private, offline HTML viewer beside the PNGs, with frame stepping, zoom and illustrative playback speed. It refuses to overwrite a previous preview and does not assert verified loop timing.
 - Synthetic regression tests for continuation, archive corruption, state mismatch, no-overwrite, interruption and hold preservation.
 
@@ -135,3 +135,9 @@ Return to the original ChatGPT research conversation: the new `timeline.json`, e
 - Audio, World 1-1 level decoding, a production MesenCE adapter and PySide6 integration are out of scope.
 - A repeated A→B→A pattern **might** indicate periodic behavior but does not by itself establish the game's complete animation-state machine, speed-dependent variants, or an exact wall-clock duration.
 - Document Windows environment, remote refspec issue, checks actually run, exact output folder names, all failures and the next bounded experiment.
+
+## Interrupted-run recovery without duplicate captures
+
+If warmup 20 succeeds but warmup 21 fails, preserve both run directories. **Do not recapture warmup 20.** First verify the warmup-20 A/B/A archive (all replay, pixel and walking gates). A run folder containing only partial files is NOT reusable. Then continue with `--reuse-timeline $old --reuse-run <EXACT_VERIFIED_W20_RUN_FOLDER> --first-warmup 21 --count 2`. The verified partial run is appended to the earlier timeline; all source identities, frame/warmup adjacency and clocks are checked before launching a new emulator. Failed warmup-21 evidence must be preserved but excluded from reuse. Source ROM, save state and original reports must remain unchanged.
+
+Work should first exercise this recovery path synthetically and report any defect to the original ChatGPT thread before modifying implementation.
