@@ -45,6 +45,8 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     settings_path = Path(settings_arg).resolve(strict=True) if settings_arg else None
     settings_sha = graphics_harness.digest(settings_path) if settings_path else None
     prior_timeline = getattr(args, "reuse_timeline", None)
+    prior_timeline_sha = (graphics_harness.digest(Path(prior_timeline).resolve(strict=True))
+                          if prior_timeline else None)
     rehome = bool(getattr(args, "rehome_archive", False))
     if rehome and not prior_timeline:
         raise ValueError("--rehome-archive requires --reuse-timeline")
@@ -152,10 +154,11 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     if result["source_slot_sha256"] != original_slot_sha:
         raise ValueError("Assembled sequence source slot identity disagrees")
     if prior_timeline is not None:
-        prior_sha = graphics_harness.digest(Path(prior_timeline).resolve(strict=True))
+        if graphics_harness.digest(Path(prior_timeline).resolve(strict=True)) != prior_timeline_sha:
+            raise ValueError("Original timeline changed during extended capture")
         receipt = {
             "schema": 1,
-            "source_timeline_sha256": prior_sha,
+            "source_timeline_sha256": prior_timeline_sha,
             "source_timeline_frame_count": len(reuse_paths) - len(manual_reuse),
             "relocated_source_runs": rehome,
             "new_warmup_first": first,
