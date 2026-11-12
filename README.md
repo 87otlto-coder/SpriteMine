@@ -10,13 +10,13 @@ The currently merged foundation provides:
 - NES 2bpp CHR-ROM tile decoding and deterministic grayscale PNG exports for 8x8 tiles and 8 KiB banks.
 - Source provenance, JSON manifests, CLI and synthetic regression tests.
 
-**Not yet integrated into main:** PySide6 static CHR browser (PR #4), MesenCE graphics research harness (PR #5, merged into the research base; not integrated into main), contiguous animation timeline (draft PR #6), complete Sprite Inspector, level decoding, audio workbench, asset catalog and Windows installer. These features must not be presented as merged merely because they work on research branches.
+**Not yet integrated into main:** PySide6 static CHR browser (PR #4), MesenCE graphics research harness (PR #5, merged into the research base; not integrated into main), contiguous animation timeline (PR #6, merged into research; not main), complete Sprite Inspector, level decoding, audio workbench, asset catalog and Windows installer. These features must not be presented as merged merely because they work on research branches.
 
 ## Research that has already been validated
 
 Research PR #5 documents three real SMB3 MesenCE slot-1 A/B/A replay samples, each with the complete 16x16 Mario region matched against the default 2C02 palette and an independent sprites-disabled background (256/256 pixels for standing, walking-right and rising jump). These **three sampled poses** are not exhaustive actor coverage.
 
-Draft PR #6 documents a consecutive three-frame capture (emulator frames 448385–448387). All three local sprite images were identical; it verified a three-video-frame **visual hold**, not a completed walking animation cycle. A longer sequence is the next Phase 4 research gate.
+Research PR #6 documents a consecutive three-frame capture (emulator frames 448385–448387). All three local sprite images were identical; it verified a three-video-frame **visual hold**, not a completed walking animation cycle. A longer sequence is the next Phase 4 research gate.
 
 These findings require local, licensed game data. Original ROMs, save states, screen buffers and extracted graphics must never be committed to GitHub.
 
@@ -66,7 +66,7 @@ Expected complete ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f3854
 - [Foundation PR #1](https://github.com/87otlto-coder/SpriteMine/pull/1) — merged into main.
 - [Static CHR explorer PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) — open against main.
 - [MesenCE graphics harness PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) — merged into research/smb3-emulator-feasibility (not main).
-- [Animation timeline draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) — open against the updated research base; a complete walk cycle is not yet verified.
+- [Animation timeline PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) — merged into research/smb3-emulator-feasibility (not main); the three-frame hold is verified, but a complete walk cycle is not.
 - [Research Windows CI migration PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) — merged into research base; Windows Python 3.11/3.12 and Lua 5.4.8 probes passed. GUI CI maintenance PR #11 also merged into the GUI branch.
 
 GitHub Actions policy is **Windows-only** following the 11 November incident. New code and workflows should be reviewed with [AGENTS.md](AGENTS.md) and [the incident document](docs/ACTIONS_INCIDENT_2026-11-11.md). The main Tests workflow currently uses Windows with Python 3.11/3.12 and performs no artifact uploads.
