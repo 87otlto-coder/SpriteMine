@@ -87,6 +87,15 @@ def read_verified_timeline(timeline_file: Path) -> dict[str, Any]:
             raise ValueError("Frame restore identity differs")
         if frame.get("width") != 16 or frame.get("height") != 16:
             raise ValueError("Only verified 16x16 Mario frames are supported")
+        if "emulator_portable_mode" in frame or "emulator_settings_sha256" in frame:
+            mode = frame.get("emulator_portable_mode")
+            config_sha = frame.get("emulator_settings_sha256")
+            if type(mode) is not bool:
+                raise ValueError("Frame portable emulator mode is invalid")
+            if mode:
+                _require_hash(config_sha, f"frame {index} portable settings")
+            elif config_sha is not None:
+                raise ValueError("Frame has unexpected portable settings hash")
         _require_hash(frame.get("rgba_sha256"), f"frame {index} RGBA")
         _require_hash(frame.get("png_sha256"), f"frame {index} PNG")
         filename = f"frame_{index:03d}_{number}.png"
