@@ -33,7 +33,7 @@ def private_folder(path):
 
 
 def prepare_portable_mesen(source_exe, settings_file, run):
-    """Stage an identical MesenCE build with a private settings.json.
+    """Stage or reuse an identical MesenCE build with private settings.json.
 
     MesenCE 2.2.1 uses the executable folder as HomeFolder when settings.json
     exists next to the executable. This avoids an inaccessible Documents path
@@ -50,15 +50,25 @@ def prepare_portable_mesen(source_exe, settings_file, run):
         raise ValueError("Portable MesenCE settings.json is not valid JSON") from exc
     if not isinstance(value, dict):
         raise ValueError("Portable MesenCE settings.json must contain a JSON object")
-    runtime = private_folder(Path(run) / "mesen-portable")
-    runtime.mkdir()  # refuse to reuse a pre-existing runtime
+    run = private_folder(Path(run)).resolve()
+    if run.parent.name != "GraphicsValidation" or run.parent.parent.name != "SMB3":
+        raise ValueError("MesenCE private runtime requires FIXTURE/SMB3/GraphicsValidation")
+    exe_sha = digest(source_exe)
+    settings_sha = hashlib.sha256(settings_bytes).hexdigest()
+    # A private, content-addressed runtime is shared by sequential warmups.
+    # Avoid copying the large emulator executable once per validated frame.
+    runtime_parent = private_folder(run.parent.parent / "EmulatorRuntime")
+    runtime_parent.mkdir(parents=True, exist_ok=True)
+    runtime = runtime_parent / f"mesence-{exe_sha[:16]}-{settings_sha[:16]}"
+    if not runtime.exists():
+        runtime.mkdir()
+        shutil.copyfile(source_exe, runtime / "Mesen.exe")
+        (runtime / "settings.json").write_bytes(settings_bytes)
     exe_copy = runtime / "Mesen.exe"
     settings_copy = runtime / "settings.json"
-    shutil.copyfile(source_exe, exe_copy)
-    settings_copy.write_bytes(settings_bytes)
-    exe_sha, settings_sha = digest(source_exe), hashlib.sha256(settings_bytes).hexdigest()
-    if digest(exe_copy) != exe_sha or digest(settings_copy) != settings_sha:
-        raise ValueError("Portable MesenCE staging changed executable or settings bytes")
+    if (not exe_copy.is_file() or not settings_copy.is_file()
+            or digest(exe_copy) != exe_sha or digest(settings_copy) != settings_sha):
+        raise ValueError("Existing private MesenCE runtime is incomplete or changed")
     return exe_copy, exe_sha, settings_sha
 
 
