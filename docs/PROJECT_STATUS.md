@@ -22,7 +22,7 @@ Verified private ROM ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f3
 | Static CHR explorer | [PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) -> main | PySide6 ROM/CHR bank/tile browser and export; native UI validation is not fully recorded in the PR |
 | Emulator capture feasibility | research/smb3-emulator-feasibility (research base) | Real PRG1 CHR/OAM/palette/MMC3 phase probes, RGB reference tests; no stable production adapter |
 | Three-pose A/B/A graphics proof | [PR #5](https://github.com/87otlto-coder/SpriteMine/pull/5) merged into research/smb3-emulator-feasibility, **not main** | On owner's Windows MesenCE slot 1: standing 138+118, walking-right 138+118, rising-jump 194+62 out of 256 pixels per pose; repeated enabled RGB and CPU input verification |
-| Contiguous short timeline | [Draft PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6) -> updated research base; still draft | Three real consecutive frames 448385–448387, same 16x16 Mario RGBA pose held for three frames. A complete walk/jump cycle is not yet proven |
+| Contiguous short timeline | [PR #6](https://github.com/87otlto-coder/SpriteMine/pull/6), merged into research/smb3-emulator-feasibility (not main) | Three real consecutive frames 448385–448387, same 16x16 Mario RGBA pose held for three frames. A complete walk/jump cycle is not yet proven |
 
 The real graphics observations are supported by locally held source state, captures, comparison reports and hashes and are **not reproduced in public GitHub CI**. They should be preserved outside this public repository. Do not claim all sprites, all animations, hardware priority/overflow, level decoding or audio are complete.
 
@@ -37,7 +37,7 @@ The real graphics observations are supported by locally held source state, captu
 ## Next engineering decisions
 
 1. Keep the approved Windows-only CI policy across main, GUI and research branches, with no redundant push+PR runs; already verified on hosted Windows runners.
-2. Complete native PySide6 GUI acceptance in PR #4 before merging to main. Retain the A/B/A graphics harness on its now-consolidated research base and keep animation draft PR #6 separate until its next gameplay transition gate.
+2. Complete native PySide6 GUI acceptance in PR #4 before merging to main. The graphics harness and the three-frame animation timeline now share the consolidated research base. Keep the Phase 4 complete walking/jumping-cycle gate open until a real pose transition and full cycle are validated.
 3. Merge the accepted static GUI and research features through reviewable PRs, recording the exact production integration contract.
 4. Continue Phase 4 with a longer deterministic Mario sequence to observe a real pose transition and its held-frame durations; the verified three-frame hold is not a full animation.
 5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.

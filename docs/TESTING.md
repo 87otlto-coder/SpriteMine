@@ -41,7 +41,7 @@ Static GUI PR #4, MesenCE graphics proof PR #5 and stacked animation PR #6 each 
 
 The owner's private MesenCE slot-1 A/B/A harness reports full 16x16 background compositing agreement on three sampled Mario poses (256/256 for each), and the three-frame short timeline has one held pose across frames 448385–448387. These results require immutable private ROM, save state, emulator binary version, controller-latch history, frame/clock and source ROM/CHR mapping hashes. Preserve all raw evidence locally under FIXTURE.
 
-The stock Lua 5.4.8 Windows research mock suite and Windows 3.11/3.12 Python jobs passed after merged research policy PR #9 and syntax follow-up #12. Graphics harness PR #5 is merged into the research base (not main), and draft animation PR #6 remains open. GUI PR #4 has Windows Qt smoke coverage, but its remaining native interaction tests have not been signed off. Synthetic CI cannot substitute for real MesenCE, and real MesenCE screenshots alone cannot establish complete decoded sprites or animations.
+The stock Lua 5.4.8 Windows research mock suite and Windows 3.11/3.12 Python jobs passed after merged research policy PR #9 and syntax follow-up #12. Graphics harness PR #5 and three-frame animation research PR #6 are both merged into the research base (not main). GUI PR #4 has Windows Qt smoke coverage, but its remaining native interaction tests have not been signed off. Synthetic CI cannot substitute for real MesenCE, and real MesenCE screenshots alone cannot establish complete decoded sprites or animations.
 
 ## Policy and acceptance
 
