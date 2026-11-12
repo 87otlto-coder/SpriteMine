@@ -135,3 +135,29 @@ def test_identical_but_unrelated_restore_rejected(run):
         p.write_text(p.read_text().replace("restore 438", "restore 10"))
     assert report.publish(run) == 3
     assert "detached" in json.loads((run / "report.json").read_text())["reason"]
+
+def test_portable_settings_fingerprint_must_agree_across_aba(run):
+    """Optional portable launch metadata is checked without rejecting old archives."""
+    for leg, _ in LEGS:
+        path = run / leg / "launch.json"
+        launch = json.loads(path.read_text(encoding="utf-8"))
+        launch["portable_mode"] = True
+        launch["portable_settings_sha256"] = "a" * 64
+        path.write_text(json.dumps(launch), encoding="utf-8")
+    assert report.publish(run) == 0
+    altered = run / "B" / "launch.json"
+    data = json.loads(altered.read_text(encoding="utf-8"))
+    data["portable_settings_sha256"] = "b" * 64
+    altered.write_text(json.dumps(data), encoding="utf-8")
+    assert report.publish(run) == 3
+    assert json.loads((run / "report.json").read_text())["statuses"]["replay"] == "failed"
+
+
+def test_portable_mode_cannot_claim_missing_profile_hash(run):
+    path = run / "A" / "launch.json"
+    launch = json.loads(path.read_text(encoding="utf-8"))
+    launch["portable_mode"] = True
+    launch["portable_settings_sha256"] = None
+    path.write_text(json.dumps(launch), encoding="utf-8")
+    assert report.publish(run) == 3
+    assert "portable" in json.loads((run / "report.json").read_text())["reason"].lower()
