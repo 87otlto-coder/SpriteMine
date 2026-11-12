@@ -252,3 +252,47 @@ def test_preview_html_uses_verified_files_and_refuses_overwrite(synthetic_archiv
         animation_preview.write_preview(timeline)
     with pytest.raises(ValueError, match="beside"):
         animation_preview.write_preview(timeline, timeline.parent.parent / "elsewhere.html")
+
+
+def test_interrupted_batch_can_reuse_successful_partial_run(synthetic_archive, monkeypatch):
+    source = synthetic_archive
+    old = source["timeline"]
+    root = source["root"]
+    slot = source["slot"]
+    archive_parent = root / "FIXTURE" / "SMB3" / "GraphicsValidation"
+    seen = []
+
+    def first_attempt(namespace, run):
+        seen.append(namespace.warmup)
+        if namespace.warmup == 21:
+            raise RuntimeError("simulated MesenCE interruption")
+        source["records"][run.resolve()] = _frame(namespace.warmup, run)
+
+    monkeypatch.setattr(animation_windows.graphics_harness, "capture", first_attempt)
+    monkeypatch.setattr(animation_windows.graphics_report, "publish", lambda *_: 0)
+    first_args = Namespace(
+        root=root, rom=None, slot=slot, plan="right", first_warmup=20,
+        count=2, start_pulse=False, reuse_run=[], reuse_timeline=old,
+    )
+    with pytest.raises(ValueError, match="Capture failed at warmup 21"):
+        animation_windows.capture_animation(first_args)
+    assert seen == [20, 21]
+    successful, = list(archive_parent.glob("anim-right-w20-*"))
+    prior_data = old.read_bytes()
+
+    def second_attempt(namespace, run):
+        seen.append(namespace.warmup)
+        source["records"][run.resolve()] = _frame(namespace.warmup, run)
+
+    monkeypatch.setattr(animation_windows.graphics_harness, "capture", second_attempt)
+    resume_args = Namespace(
+        root=root, rom=None, slot=slot, plan="right", first_warmup=21,
+        count=2, start_pulse=False, reuse_run=[successful], reuse_timeline=old,
+    )
+    result = animation_windows.capture_animation(resume_args)
+    assert seen == [20, 21, 21, 22]
+    assert result["frame_count"] == 15
+    assert len(result["reused_run_dirs"]) == 13
+    assert len(result["new_run_dirs"]) == 2
+    assert old.read_bytes() == prior_data
+    assert animation_archive.read_verified_timeline(Path(result["timeline_json"]))["frame_count"] == 15
