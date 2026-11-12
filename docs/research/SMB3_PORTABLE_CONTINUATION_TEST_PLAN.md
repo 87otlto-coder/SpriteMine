@@ -51,6 +51,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Full suite failed; do not capture' }
 
 Exercise invalid/corrupt portable settings, altered staged executable, mismatched config across A/B/A legs, invalid or tampered relocated sources, bad archive hashes, and startup failure preservation. No Linux/macOS runners, public artifacts, excessive workflow runs, or copyrighted fixtures in GitHub.
 
+## Gate 1a: Regression failure correction (2026-11-12)
+
+Work's first independent Windows run at commit `3956f236983c1510bd87ab5290376a5745653bb8` reported **57 passed, 3 failed, 0 skipped** in targeted tests and **143 passed, 3 failed, 2 skipped** in the complete suite. Compilation passed; no new emulator processes or captures were launched. The failures were limited to the relocation tests: the shared synthetic fixture used `synthetic-w8` directory names, whereas relocation accepts the `anim-` prefix used by real captured A/B/A runs. No source-archive relocation has passed on real private evidence yet.
+
+The fixture now uses `anim-right-w{warmup}-synthetic`. The security check still rejects any archived run directory not beginning with `anim-`; a new negative test explicitly asserts that `synthetic-w8` is rejected even under an otherwise valid FIXTURE hierarchy.
+
+**Rerun Gate 1 in full on the updated PR HEAD before Gate 2 or 3.** Require all three former failure cases to pass by name, plus the newly added negative test. Preserve exact failure tracebacks and test count. A passing suite on Python 3.14.7 does not establish supported Python 3.11/3.12 compatibility; run 3.11/3.12 on Windows when available, otherwise mark the compatibility gap unresolved. The canonical F: checkout had unusual restricted fetch configuration and could not establish a clean working tree; an isolated checkout is acceptable for *synthetic tests* if matched against GitHub SHA, but do not claim native F: capture readiness until source fixtures and the 18 A/B/A archives are accessible and independently revalidated.
+
 ## Gate 2: Resolve prior evidence and portable profile
 
 Original Work private timeline location was:
