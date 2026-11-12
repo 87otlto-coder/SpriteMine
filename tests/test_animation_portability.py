@@ -132,3 +132,70 @@ def test_rehome_rejects_foreign_or_unsafe_archived_location(synthetic_archive, t
     original.write_text(json.dumps(d), encoding="utf-8")
     with pytest.raises(ValueError, match="Untrusted"):
         animation_archive.verified_timeline_runs(original, runs_parent_override=destination)
+
+def test_relocated_resume_creates_new_receipt_without_changing_source(
+    synthetic_archive, tmp_path, monkeypatch
+):
+    from argparse import Namespace
+    from research.mesence import animation_windows
+    from test_animation_resume import _frame
+
+    source = synthetic_archive
+    source_timeline = source["timeline"]
+    original_bytes = source_timeline.read_bytes()
+    original_sha = hashlib.sha256(original_bytes).hexdigest()
+    destination_root = tmp_path / "NEW_ROOT"
+    destination_runs = destination_root / "FIXTURE" / "SMB3" / "GraphicsValidation"
+    destination_runs.mkdir(parents=True)
+    (destination_root / "FIXTURE" / "SMB3" / "Animations").mkdir()
+    for old in source["paths"][:12]:
+        dest = destination_runs / old.name
+        shutil.copytree(old, dest)
+        old_info, image = source["records"][old.resolve()]
+        new_info = copy.deepcopy(old_info)
+        new_info["frame"]["run_dir"] = str(dest.resolve())
+        source["records"][dest.resolve()] = (new_info, image)
+
+    settings = destination_root / "TOOLS" / "MesenCE" / "Profile" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text('{"preferences":{}}', encoding="utf-8")
+    captured = []
+    def fake_capture(args, run):
+        captured.append((args.warmup, args.emulator_settings))
+        source["records"][run.resolve()] = _frame(args.warmup, run)
+    monkeypatch.setattr(animation_windows.graphics_harness, "capture", fake_capture)
+    monkeypatch.setattr(animation_windows.graphics_report, "publish", lambda _: 0)
+    args = Namespace(
+        root=destination_root, rom=None, slot=source["slot"],
+        plan="right", first_warmup=20, count=2, start_pulse=False,
+        reuse_timeline=source_timeline, rehome_archive=True,
+        reuse_run=[], emulator_settings=settings,
+    )
+    result = animation_windows.capture_animation(args)
+    assert result["frame_count"] == 14
+    assert result["relocated_source_runs"] is True
+    assert captured == [(20, settings.resolve()), (21, settings.resolve())]
+    receipt = json.loads((Path(result["timeline_json"]).parent / "continuation.json").read_text())
+    assert receipt["source_timeline_sha256"] == original_sha
+    assert receipt["source_timeline_frame_count"] == 12
+    assert receipt["portable_settings_sha256"] == hashlib.sha256(settings.read_bytes()).hexdigest()
+    assert source_timeline.read_bytes() == original_bytes
+    assert animation_archive.verified_timeline_runs(
+        Path(result["timeline_json"])
+    )
+
+
+def test_optional_emulator_settings_frame_hash_validated(synthetic_archive):
+    source = synthetic_archive
+    info, _ = source["records"][source["paths"][12].resolve()]
+    info["frame"]["emulator_portable_mode"] = True
+    info["frame"]["emulator_settings_sha256"] = "e" * 64
+    target = source["animations"] / "portable-source"
+    animation_timeline.assemble_timeline(source["paths"][:14], target)
+    timeline = target / "timeline.json"
+    assert animation_archive.read_verified_timeline(timeline)["frames"][12]["emulator_portable_mode"] is True
+    data = json.loads(timeline.read_text())
+    data["frames"][12]["emulator_settings_sha256"] = "not-a-hash"
+    timeline.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="SHA-256"):
+        animation_archive.read_verified_timeline(timeline)
