@@ -127,7 +127,7 @@ def capture(args, run):
                 raise ValueError("Portable MesenCE settings or executable changed")
         with (folder / "emulator.log").open("wb") as log:
             result = subprocess.run([str(launch_exe), *switches, str(script), str(game)],
-                                    env=env, cwd=str(launch_exe.parent),
+                                    env=env, cwd=(str(launch_exe.parent) if portable_settings_path else None),
                                     stdout=log, stderr=subprocess.STDOUT, timeout=55,
                                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         if portable_settings_path is not None:
@@ -154,7 +154,7 @@ def main():
     parser.add_argument("--slot", type=Path, required=True)
     parser.add_argument("--emulator-settings", type=Path,
                         help="Private readable settings.json; stage identical Mesen.exe "
-                             "in the run's FIXTURE/mesen-portable to avoid Documents access")
+                             "in FIXTURE/SMB3/EmulatorRuntime to avoid Documents access")
     parser.add_argument("--plan", choices=("neutral", "right", "jump"), default="neutral")
     parser.add_argument("--warmup", type=int, default=8, choices=range(2, 121), metavar="2..120")
     parser.add_argument("--start-pulse", action="store_true", help="Press Start on poll 4 for a paused game")
