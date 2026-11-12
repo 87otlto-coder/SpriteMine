@@ -41,6 +41,13 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     root = Path(args.root).resolve(strict=True)
     source_slot = Path(args.slot).resolve(strict=True)
     original_slot_sha = graphics_harness.digest(source_slot)
+    settings_arg = getattr(args, "emulator_settings", None)
+    settings_path = Path(settings_arg).resolve(strict=True) if settings_arg else None
+    settings_sha = graphics_harness.digest(settings_path) if settings_path else None
+    prior_timeline = getattr(args, "reuse_timeline", None)
+    rehome = bool(getattr(args, "rehome_archive", False))
+    if rehome and not prior_timeline:
+        raise ValueError("--rehome-archive requires --reuse-timeline")
     fixture = graphics_harness.private_folder(root / "FIXTURE")
     runs_parent = graphics_harness.private_folder(
         fixture / "SMB3" / "GraphicsValidation"
@@ -52,11 +59,12 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     animation_parent.mkdir(parents=True, exist_ok=True)
 
     manual_reuse = getattr(args, "reuse_run", None) or []
-    prior_timeline = getattr(args, "reuse_timeline", None)
     # Explicit --reuse-run paths may follow a prior timeline when a batch
     # failed partway through. Revalidate ALL of them before new execution.
-    source_paths = (verified_timeline_runs(Path(prior_timeline))
-                    if prior_timeline else []) + list(manual_reuse)
+    source_paths = (verified_timeline_runs(
+                        Path(prior_timeline),
+                        runs_parent_override=runs_parent if rehome else None
+                    ) if prior_timeline else []) + list(manual_reuse)
     reuse_paths = [
         graphics_harness.private_folder(Path(path)).resolve(strict=True)
         for path in source_paths
@@ -108,6 +116,8 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     for warmup in range(first, first + count):
         if graphics_harness.digest(source_slot) != original_slot_sha:
             raise ValueError("Original slot backing file changed during sequence capture")
+        if settings_path is not None and graphics_harness.digest(settings_path) != settings_sha:
+            raise ValueError("Portable MesenCE settings source changed during capture")
         run = Path(tempfile.mkdtemp(
             prefix=f"anim-{args.plan}-w{warmup}-", dir=runs_parent
         ))
@@ -115,6 +125,7 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
         run_args = Namespace(
             root=root, rom=args.rom, slot=source_slot, plan=args.plan,
             warmup=warmup, start_pulse=False,
+            emulator_settings=settings_path,
         )
         try:
             graphics_harness.capture(run_args, run)
@@ -131,6 +142,8 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
 
     if graphics_harness.digest(source_slot) != original_slot_sha:
         raise ValueError("Original slot backing file changed during sequence capture")
+    if settings_path is not None and graphics_harness.digest(settings_path) != settings_sha:
+        raise ValueError("Portable MesenCE settings source changed during capture")
     first_timeline_warmup = first - len(reused_windows)
     export = animation_parent / (
         f"{args.plan}-{first_timeline_warmup}-{first+count-1}-{uuid.uuid4().hex[:10]}"
@@ -138,6 +151,24 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     result = assemble_timeline(accepted, export)
     if result["source_slot_sha256"] != original_slot_sha:
         raise ValueError("Assembled sequence source slot identity disagrees")
+    if prior_timeline is not None:
+        prior_sha = graphics_harness.digest(Path(prior_timeline).resolve(strict=True))
+        receipt = {
+            "schema": 1,
+            "source_timeline_sha256": prior_sha,
+            "source_timeline_frame_count": len(reuse_paths) - len(manual_reuse),
+            "relocated_source_runs": rehome,
+            "new_warmup_first": first,
+            "new_warmup_last": first + count - 1,
+            "new_capture_count": count,
+            "combined_frame_count": result["frame_count"],
+            "source_slot_sha256": original_slot_sha,
+            "portable_settings_sha256": settings_sha,
+            "warning": "Filesystem relocation does not change emulator-capture identity; original archived timeline was not rewritten",
+        }
+        (export / "continuation.json").write_text(
+            json.dumps(receipt, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+        )
     return {
         "result": result["result"],
         "status": "validated_local_A_B_A_sequence",
@@ -149,6 +180,8 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
         "timeline_json": str(export / "timeline.json"),
         "spritesheet_png": str(export / "spritesheet.png"),
         "original_slot_unchanged": True,
+        "portable_settings_sha256": settings_sha,
+        "relocated_source_runs": rehome,
         "input_run_dirs": [str(p) for p in accepted],
         "reused_run_dirs": [str(p) for p in accepted[:len(reused_windows)]],
         "new_run_dirs": [str(p) for p in new_runs],
@@ -175,6 +208,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--reuse-timeline", type=Path,
                    help="Previous immutable FIXTURE/SMB3/Animations/*/timeline.json; "
                         "revalidates ALL source windows and prior PNGs before adding new frames")
+    p.add_argument("--rehome-archive", action="store_true",
+                   help="Revalidate copied A/B/A runs under --root FIXTURE while preserving "
+                        "an original timeline from a different Windows workspace")
+    p.add_argument("--emulator-settings", type=Path,
+                   help="Private readable MesenCE settings.json; stage portable emulator "
+                        "per run rather than using inaccessible Documents profile")
     p.add_argument("--start-pulse", action="store_true")
     args = p.parse_args(argv)
     try:
