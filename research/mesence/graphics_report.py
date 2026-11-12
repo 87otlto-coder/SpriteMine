@@ -118,8 +118,22 @@ def validate(run, report, *, write_visuals=True):
                 or meta["plan"] not in ("neutral", "right", "jump")
                 or type(meta["start_pulse"]) is not bool):
             raise ValueError("Invalid source provenance")
-        identities.append({k: meta[k] for k in ("slot_sha256", "probe_sha256", "rom_sha256",
-                                                 "emulator_sha256", "emulator_version", "plan", "warmup", "start_pulse")})
+        identity = {k: meta[k] for k in ("slot_sha256", "probe_sha256", "rom_sha256",
+                                              "emulator_sha256", "emulator_version", "plan", "warmup", "start_pulse")}
+        # Old archives predate portable settings. New records must agree across
+        # all three independent replay legs without changing legacy evidence.
+        if "portable_mode" in meta or "portable_settings_sha256" in meta:
+            if type(meta.get("portable_mode")) is not bool:
+                raise ValueError("Invalid portable MesenCE launcher mode")
+            config_sha = meta.get("portable_settings_sha256")
+            if meta["portable_mode"]:
+                if not isinstance(config_sha, str) or not re.fullmatch("[0-9a-f]{64}", config_sha):
+                    raise ValueError("Invalid portable MesenCE settings fingerprint")
+            elif config_sha is not None:
+                raise ValueError("Unexpected portable settings fingerprint")
+            identity["portable_mode"] = meta["portable_mode"]
+            identity["portable_settings_sha256"] = config_sha
+        identities.append(identity)
         capture, = folder.glob("render_*.json")
         files.append(capture)
         sources.append(json.loads(capture.read_text()))
