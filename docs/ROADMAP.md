@@ -1,11 +1,11 @@
 # SMB3-first roadmap and acceptance checks
 
-Current progress: Phase 0 merged; Phase 2 static explorer prototype in progress; Phase 1 emulator feasibility still an unproven gate for runtime functionality.
+Current progress: Phase 0 merged; Phase 2 static explorer prototype in progress; Phase 1 source-level and real-game capture feasibility demonstrated on the research branch, but a stable production emulator adapter is not yet integrated.
 
 | Phase | Deliverable | Demonstrable acceptance |
 |---|---|---|
 | 0. Foundation | ROM parser, 2bpp CHR export, tests | Correct user ROM hashes; 16 bank images / 8,192 tiles; deterministic offsets; CI — **passed** |
-| 1. Emulator feasibility | Replaceable capture adapter proof | At a reproducible frame, captured OAM/palettes/CHR mapping agree with actual output; state + input replay works — **unproven** |
+| 1. Emulator feasibility | Replaceable capture adapter proof | At a reproducible frame, captured OAM/palettes/CHR mapping agree with actual output; state + input replay works — **research evidence passed for three Mario poses; production adapter remains unimplemented** |
 | 2. Static explorer | PySide6 ROM, bank, tile, palette views | Load verified ROM; inspect, zoom, preview and export any tile with provenance — **implementation pending GUI validation** |
 | 3. Sprite inspector | Reconstruct hardware components and visible sprites | Reconstruct Mario from verified OAM components with correct alpha/flip/priority behavior |
 | 4. Animations | Capture, align, preview and export | Mario walk plus one enemy animation export with durations/origins, no background contamination |

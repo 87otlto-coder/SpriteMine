@@ -109,3 +109,68 @@ def test_gui_export_routes_to_provenance_extractor(app, tmp_path, monkeypatch):
     assert (tmp_path / "chr_bank_01.png").exists()
     assert messages == ["information", "information"]
     window.close()
+
+
+def test_last_bank_preview_palette_switch_and_bank_export(app, tmp_path, monkeypatch):
+    """Boundary bank 15 and live synthetic color must agree with raw export."""
+    from spritemine import desktop
+
+    window = MainWindow()
+    window.load_rom_object(synthetic_rom(chr_banks=16), source_label="synthetic-16.nes")
+    assert window.bank_spin.maximum() == 15
+    window.bank_spin.setValue(15)
+    assert window.selected_tile == 7680
+    assert "8 KiB bank: 15" in window.tile_details.toPlainText()
+    assert "ROM offset: 0x22010" in window.tile_details.toPlainText()
+    first_color = window.atlas.image.pixelColor(0, 0).name()
+    assert first_color == "#000000"
+    window.palette_combo.setCurrentIndex(1)
+    second_color = window.atlas.image.pixelColor(0, 0).name()
+    assert second_color == "#0b2015"
+    assert first_color != second_color
+    assert "Evidence: raw 2bpp; palette is synthetic" in window.tile_details.toPlainText()
+
+    monkeypatch.setattr(
+        desktop, "QFileDialog",
+        SimpleNamespace(getExistingDirectory=lambda *_args: str(tmp_path)),
+    )
+    feedback = []
+    monkeypatch.setattr(
+        desktop, "QMessageBox",
+        SimpleNamespace(
+            information=lambda *_args: feedback.append("exported"),
+            warning=lambda *_args: feedback.append("warning"),
+        ),
+    )
+    window.export_bank_action.trigger()
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    assert len(manifest["entries"]) == 1
+    assert manifest["entries"][0]["bank"] == 15
+    assert (tmp_path / "chr_bank_15.png").is_file()
+    assert feedback == ["exported"]
+    window.close()
+
+
+def test_bad_rom_import_preserves_disabled_controls(app, tmp_path, monkeypatch):
+    from spritemine import desktop
+
+    corrupted = tmp_path / "invalid.nes"
+    corrupted.write_bytes(b"not a valid NES header")
+    window = MainWindow()
+    warnings = []
+    monkeypatch.setattr(
+        desktop, "QFileDialog",
+        SimpleNamespace(getOpenFileName=lambda *_args: (str(corrupted), "")),
+    )
+    monkeypatch.setattr(
+        desktop, "QMessageBox",
+        SimpleNamespace(warning=lambda *_args: warnings.append("rejected")),
+    )
+    window._choose_rom()
+    assert warnings == ["rejected"]
+    assert window.rom is None
+    assert not window.export_tile_action.isEnabled()
+    assert not window.export_bank_action.isEnabled()
+    assert not window.export_all_action.isEnabled()
+    assert window.statusBar().currentMessage() == "ROM import failed"
+    window.close()
