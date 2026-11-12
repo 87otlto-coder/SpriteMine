@@ -161,6 +161,23 @@ Runbook: docs/research/SMB3_BACKGROUND_COMPOSITE_EXPERIMENT.md. Never put source
 The private MesenCE 2.2.1 slot was located, copied and restored independently in nine final processes. The neutral, Right and A plans each passed a 16×16 A/B/A comparison on frame 448385, including exact palette RGB, every transparent position, surrounding controls, and repeated enabled frames. Actual CPU controller reads distinguished effective inputs from a failed Lua-only override. See [observations, build, hashes and reproduction](research/SMB3_GRAPHICS_HARNESS.md). Issue #2 remains open for broader timing, sprite interaction and audio gates.
 
 
+## 2026-11-10 — Phase 4 prerequisite: contiguous Mario frame timeline (synthetic test stage)
+
+PR #5 (graphics harness) remains a separate, open research PR. Its owner-supplied real SMB3 slot-1 results cover three distinct 16x16 poses (standing 138/118, walking-right 138/118, rising-jump 194/62 opaque/transparent pixels, all 256/256), deterministic enabled/disabled/enabled replay, CPU controller input reads and repeatable full-screen hashes from a second Windows checkout. These are **real sampled-pose gates**, not a complete walking or jumping animation.
+
+The stacked research/smb3-animation-timeline branch adds read-only revalidation and assembly of **one verified target frame per A/B/A replay window**, with consecutive warmup values and actual frame IDs. It exports one 16x16 transparent PNG per accepted frame, a private spritesheet, and timeline.json containing frame numbers, exact PPU master clocks, ROM/OAM/CHR source offsets and checksums. Identical RGBA frames remain separate frame events, preserving holds. A bounded Windows launcher can repeat the existing proven slot-1 A/B/A harness with warmups 8/9/10 to *attempt* a three-frame walking sequence. It leaves all prior evidence immutable and new outputs exclusively in FIXTURE. Synthetic regression tests check timing/source identity, pixel fidelity, retained holds, stale archives, failure cases and output paths.
+
+**Not yet observed on the owner's MesenCE:** new *contiguous* multi-frame animation run, complete SMB3 animation cycles, millisecond timing calibration, loop segmentation, animation UI, GIF/APNG export, sprite priority/scanline limits and enemy animations. A success in synthetic CI is not a real SMB3 sequence. Full next procedure: docs/research/SMB3_ANIMATION_TIMELINE.md.
+
+
+## 2026-11-10 — First REAL contiguous three-frame Mario timeline validated
+
+The owner ran the first slot-1 right-input Phase 4 capture and submitted metadata-only timeline.json plus three private 16x16 frame PNGs and a 48x16 spritesheet. Independent byte-level PNG and decoded RGBA hash inspection **passed**. Frame IDs 448385/448386/448387 and warmups 8/9/10 are consecutive; master clock start-frame intervals are 29,780 and 29,781. Each frame has 138 opaque/118 transparent pixels at OAM (128,98), tile IDs [7,5], horizontal flips true, and an identical RGBA image hash b873f8c67626cbaef3d33d7a984b6e39450b6a9af8779846e6d5852548a380d0. Full-screen rendered RGB hashes are different in each frame. Conclusion: **one distinct Mario pose held for three video frames**, not three different walking frames, not yet a full animation.
+
+Following the real evidence, the research timeline builder now reports visual_holds and unique_visual_frame_count while preserving all source frame events. The Windows wrapper can reuse previously verified warmups 8–10 and capture only warmups 11–19, yielding a bounded 12-frame candidate without wasting nine A/B/A emulator launches. Reused source runs are fully reverified, checked against the slot SHA/input plan, and must immediately precede the new warmup range. Synthetic Windows/Ubuntu tests are green. A longer walking pose change still requires an actual owner-side run. Runbook: docs/research/SMB3_ANIMATION_TIMELINE.md; PR #6 remains draft and stacked on open PR #5.
+
+
+
 
 ## 2026-11-12 — Windows-only CI research migration prepared
 

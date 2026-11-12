@@ -101,7 +101,7 @@ def observed_motion(plan, poses):
     return tiles_changed and end[0] < baseline[0] and end[3] == baseline[3]
 
 
-def validate(run, report):
+def validate(run, report, *, write_visuals=True):
     rom = run / "replay.nes"
     sources, phases, files, traces, identities, contexts = [], [], [], [], [], []
     for leg, hidden in LEGS:
@@ -174,8 +174,12 @@ def validate(run, report):
     paths = [p.parent / s["phase_captures"][3]["files"]["screen_rgb"] for p, s in zip(files, sources)]
     report["screens_sha256_A_B_A2"] = [digest(p) for p in paths]
     images = [Image.frombytes("RGB", (256, 240), p.read_bytes()) for p in paths]
-    for name, img in zip(("A", "B", "A2", "RGB-difference"), images + [ImageChops.difference(*images[:2])]):
-        img.save(run / (name + ".png"))
+    if write_visuals:
+        for name, img in zip(
+            ("A", "B", "A2", "RGB-difference"),
+            images + [ImageChops.difference(*images[:2])],
+        ):
+            img.save(run / (name + ".png"))
     if phases[0]["mapper_model_status"] != "matches_known_boundaries":
         raise ValueError("MMC3 reconstruction failed")
     target = phases[0]["snapshots"][2]
@@ -207,7 +211,8 @@ def validate(run, report):
     strip = Image.new("RGB", (64, 16))
     for i, crop in enumerate(crops):
         strip.paste(crop, (16*i, 0))
-    strip.resize((512, 128), Image.Resampling.NEAREST).save(run / "region.png")
+    if write_visuals:
+        strip.resize((512, 128), Image.Resampling.NEAREST).save(run / "region.png")
     report["statuses"]["pixels"] = "verified"
     plan = identities[0]["plan"]
     report["motion_observation"] = {"before_input": poses[59], "final_poll": poses[-1]}
