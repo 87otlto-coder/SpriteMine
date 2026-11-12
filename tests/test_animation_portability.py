@@ -133,6 +133,23 @@ def test_rehome_rejects_foreign_or_unsafe_archived_location(synthetic_archive, t
     with pytest.raises(ValueError, match="Untrusted"):
         animation_archive.verified_timeline_runs(original, runs_parent_override=destination)
 
+def test_rehome_rejects_capture_directory_without_anim_prefix(synthetic_archive, tmp_path):
+    """A plausible FIXTURE hierarchy must not bypass the capture-name gate."""
+    source = synthetic_archive
+    destination = tmp_path / "SAFE" / "FIXTURE" / "SMB3" / "GraphicsValidation"
+    destination.mkdir(parents=True)
+    timeline = source["timeline"]
+    data = json.loads(timeline.read_text(encoding="utf-8"))
+    original = Path(data["frames"][0]["run_dir"])
+    data["frames"][0]["run_dir"] = str(original.with_name("synthetic-w8"))
+    timeline.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Invalid archived capture directory name"):
+        animation_archive.verified_timeline_runs(
+            timeline, runs_parent_override=destination
+        )
+
+
 def test_relocated_resume_creates_new_receipt_without_changing_source(
     synthetic_archive, tmp_path, monkeypatch
 ):
