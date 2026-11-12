@@ -123,7 +123,7 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
         if emulator_exe.is_file():
             if graphics_harness.digest(emulator_exe) != reused_windows[0]["source"]["emulator_sha256"]:
                 raise ValueError("Installed MesenCE build differs from prior verified timeline")
-            probe = b"\\n".join((graphics_harness.HERE / name).read_bytes()
+            probe = b"\n".join((graphics_harness.HERE / name).read_bytes()
                                 for name in ("graphics_replay.lua", "spritemine_render_probe.lua"))
             if hashlib.sha256(probe).hexdigest() != reused_windows[0]["source"]["probe_sha256"]:
                 raise ValueError("Current Lua replay probe differs from prior verified timeline")
@@ -185,7 +185,7 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
             "warning": "Filesystem relocation does not change emulator-capture identity; original archived timeline was not rewritten",
         }
         (export / "continuation.json").write_text(
-            json.dumps(receipt, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+            json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
     return {
         "result": result["result"],
