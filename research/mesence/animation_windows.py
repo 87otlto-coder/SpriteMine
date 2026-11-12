@@ -12,6 +12,7 @@ favors correctness over speed; not a general-purpose animation capturer yet.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import tempfile
@@ -112,6 +113,20 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
             raise ValueError("Reused runs are not consecutive emulator frames")
         if any(b <= a for a, b in zip(prior_clocks, prior_clocks[1:])):
             raise ValueError("Reused runs have non-increasing master clocks")
+
+    if reused_windows:
+        # When installed on the owner's Windows machine, fail before any new
+        # A/B/A launch if the installed emulator or Lua probe differs from
+        # the previously accepted private evidence. Synthetic tests may mock
+        # the emulator entirely and deliberately omit its binary.
+        emulator_exe = root / "TOOLS" / "Mesence" / "Mesen.exe"
+        if emulator_exe.is_file():
+            if graphics_harness.digest(emulator_exe) != reused_windows[0]["source"]["emulator_sha256"]:
+                raise ValueError("Installed MesenCE build differs from prior verified timeline")
+            probe = b"\\n".join((graphics_harness.HERE / name).read_bytes()
+                                for name in ("graphics_replay.lua", "spritemine_render_probe.lua"))
+            if hashlib.sha256(probe).hexdigest() != reused_windows[0]["source"]["probe_sha256"]:
+                raise ValueError("Current Lua replay probe differs from prior verified timeline")
 
     accepted = [Path(r["frame"]["run_dir"]) for r in reused_windows]
     new_runs = []
