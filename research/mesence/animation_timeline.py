@@ -169,6 +169,9 @@ def load_verified_window(run_dir: Path) -> tuple[dict[str, Any], Image.Image]:
         ],
         "rgba_sha256": _sha(image.tobytes()),
     }
+    if "portable_mode" in live["provenance"]:
+        frame["emulator_portable_mode"] = live["provenance"]["portable_mode"]
+        frame["emulator_settings_sha256"] = live["provenance"]["portable_settings_sha256"]
     return {"frame": frame, "source": live["provenance"]}, image
 
 
