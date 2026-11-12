@@ -53,10 +53,10 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
 
     manual_reuse = getattr(args, "reuse_run", None) or []
     prior_timeline = getattr(args, "reuse_timeline", None)
-    if manual_reuse and prior_timeline:
-        raise ValueError("--reuse-run and --reuse-timeline are mutually exclusive")
+    # Explicit --reuse-run paths may follow a prior timeline when a batch
+    # failed partway through. Revalidate ALL of them before new execution.
     source_paths = (verified_timeline_runs(Path(prior_timeline))
-                    if prior_timeline else manual_reuse)
+                    if prior_timeline else []) + list(manual_reuse)
     reuse_paths = [
         graphics_harness.private_folder(Path(path)).resolve(strict=True)
         for path in source_paths
@@ -170,7 +170,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="Number of NEW frames to capture (2–12)")
     p.add_argument("--reuse-run", type=Path, action="append", default=[],
                    help="Existing verified GraphicsValidation A/B/A directory; "
-                        "repeat for previous consecutive frames")
+                        "repeat for previous consecutive frames or add successful "
+                        "partial runs after --reuse-timeline")
     p.add_argument("--reuse-timeline", type=Path,
                    help="Previous immutable FIXTURE/SMB3/Animations/*/timeline.json; "
                         "revalidates ALL source windows and prior PNGs before adding new frames")
