@@ -128,8 +128,18 @@ def _previous_windows(args, *, start=8, count=3):
                 "run_dir": str(directory.resolve()),
                 "warmup": n,
                 "frame_count": 448377 + n,
+                "start_master_clock": 1000000 + n * 29780,
+                "restore": "synthetic immutable slot",
             },
-            "source": {"slot_sha256": original_slot_sha, "plan": "right"},
+            "source": {
+                "slot_sha256": original_slot_sha,
+                "rom_sha256": "b" * 64,
+                "emulator_sha256": "c" * 64,
+                "emulator_version": "test",
+                "probe_sha256": "d" * 64,
+                "plan": "right",
+                "start_pulse": False,
+            },
         }
     return paths, reports
 
@@ -173,7 +183,7 @@ def test_reuses_3_verified_windows_and_captures_only_next_2(tmp_path, monkeypatc
 
 
 @pytest.mark.parametrize("what", [
-    "gap", "wrong_slot", "wrong_plan", "over_limit", "duplicate",
+    "gap", "wrong_slot", "wrong_plan", "different_emulator", "duplicate",
 ])
 def test_invalid_reused_windows_fail_before_new_capture(tmp_path, monkeypatch, what):
     args = _args(tmp_path, first=11, count=2)
@@ -185,8 +195,8 @@ def test_invalid_reused_windows_fail_before_new_capture(tmp_path, monkeypatch, w
         reports[paths[1].resolve()]["source"]["slot_sha256"] = "f" * 64
     elif what == "wrong_plan":
         reports[paths[1].resolve()]["source"]["plan"] = "jump"
-    elif what == "over_limit":
-        args.count = 10
+    elif what == "different_emulator":
+        reports[paths[1].resolve()]["source"]["emulator_sha256"] = "f" * 64
     elif what == "duplicate":
         args.reuse_run.append(paths[0])
 
