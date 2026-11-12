@@ -91,7 +91,7 @@ def synthetic_archive(tmp_path, monkeypatch):
     records = {}
     paths = []
     for warmup in range(8, 26):
-        directory = runs / f"synthetic-w{warmup}"
+        directory = runs / f"anim-right-w{warmup}-synthetic"
         directory.mkdir()
         paths.append(directory)
         records[directory.resolve()] = _frame(warmup, directory)
