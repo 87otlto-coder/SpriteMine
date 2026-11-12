@@ -145,7 +145,7 @@ def test_last_bank_preview_palette_switch_and_bank_export(app, tmp_path, monkeyp
     window.export_bank_action.trigger()
     manifest = json.loads((tmp_path / "manifest.json").read_text())
     assert len(manifest["entries"]) == 1
-    assert manifest["entries"][0]["bank"] == 15
+    assert manifest["entries"][0]["bank_index"] == 15
     assert (tmp_path / "chr_bank_15.png").is_file()
     assert feedback == ["exported"]
     window.close()
