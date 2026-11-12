@@ -15,6 +15,7 @@ import pytest
 
 from research.mesence import animation_archive, animation_timeline
 from research.mesence import graphics_harness
+from test_animation_resume import synthetic_archive  # shared synthetic capture fixture
 
 
 def test_portable_mesen_reuses_content_addressed_private_runtime(tmp_path):
