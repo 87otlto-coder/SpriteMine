@@ -12,7 +12,7 @@ import hashlib
 import json
 import math
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 from PIL import Image
@@ -159,7 +159,9 @@ def read_verified_timeline(timeline_file: Path) -> dict[str, Any]:
     return data
 
 
-def verified_timeline_runs(timeline_file: Path) -> list[Path]:
+def verified_timeline_runs(
+    timeline_file: Path, *, runs_parent_override: Path | None = None
+) -> list[Path]:
     """Validate a prior timeline AND all immutable A/B/A source captures.
 
     Refuses a tampered manifest, replaced PNG, missing run, or provenance
@@ -167,10 +169,30 @@ def verified_timeline_runs(timeline_file: Path) -> list[Path]:
     """
     path = private_folder(Path(timeline_file)).resolve(strict=True)
     data = read_verified_timeline(path)
-    runs_parent = path.parent.parent.parent / "GraphicsValidation"
+    archived_runs_parent = path.parent.parent.parent / "GraphicsValidation"
+    runs_parent = (private_folder(Path(runs_parent_override)).resolve(strict=True)
+                   if runs_parent_override is not None else archived_runs_parent)
+    if runs_parent.name != "GraphicsValidation" or runs_parent.parent.name != "SMB3":
+        raise ValueError("Relocated runs must be under FIXTURE/SMB3/GraphicsValidation")
     runs = []
     for frame in data["frames"]:
-        run = private_folder(Path(frame["run_dir"])).resolve(strict=True)
+        original = str(frame["run_dir"])
+        if runs_parent_override is not None:
+            # The original manifest remains immutable. Resolve each archived
+            # leaf only inside the explicitly selected private FIXTURE root;
+            # verify every A/B/A byte through the normal validator below.
+            source = PureWindowsPath(original)
+            parts = source.parts
+            if (len(parts) < 4 or parts[-3].upper() != "SMB3"
+                    or parts[-2] != "GraphicsValidation"
+                    or "FIXTURE" not in (part.upper() for part in parts)):
+                raise ValueError("Untrusted source capture location in archived timeline")
+            leaf = source.name
+            if not leaf.startswith("anim-") or leaf in (".", "..") or ":" in leaf:
+                raise ValueError("Invalid archived capture directory name")
+            run = private_folder(runs_parent / leaf).resolve(strict=True)
+        else:
+            run = private_folder(Path(original)).resolve(strict=True)
         if run.parent != runs_parent:
             raise ValueError("Prior timeline refers outside expected GraphicsValidation folder")
         runs.append(run)
@@ -182,8 +204,12 @@ def verified_timeline_runs(timeline_file: Path) -> list[Path]:
 
     rebuilt = assemble_timeline(runs, path.parent / "__never_written__", write=False)
     original = copy.deepcopy(data)
-    for frame in original["frames"]:
+    for frame, source_run in zip(original["frames"], runs):
         frame.pop("png_sha256")
+        if runs_parent_override is not None:
+            # Compare all evidence fields unchanged except its absolute
+            # filesystem locator, which necessarily differs after copying.
+            frame["run_dir"] = str(source_run)
     original["sheet"].pop("png_sha256")
     if rebuilt != original:
         raise ValueError("Archived timeline disagrees with independently reverified A/B/A runs")
