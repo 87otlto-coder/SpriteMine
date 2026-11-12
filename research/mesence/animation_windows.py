@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from . import graphics_harness, graphics_report
+from .animation_archive import verified_timeline_runs
 from .animation_timeline import assemble_timeline, load_verified_window
 
 
@@ -50,14 +51,20 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
     runs_parent.mkdir(parents=True, exist_ok=True)
     animation_parent.mkdir(parents=True, exist_ok=True)
 
+    manual_reuse = getattr(args, "reuse_run", None) or []
+    prior_timeline = getattr(args, "reuse_timeline", None)
+    if manual_reuse and prior_timeline:
+        raise ValueError("--reuse-run and --reuse-timeline are mutually exclusive")
+    source_paths = (verified_timeline_runs(Path(prior_timeline))
+                    if prior_timeline else manual_reuse)
     reuse_paths = [
         graphics_harness.private_folder(Path(path)).resolve(strict=True)
-        for path in (getattr(args, "reuse_run", None) or [])
+        for path in source_paths
     ]
     if len({str(path) for path in reuse_paths}) != len(reuse_paths):
         raise ValueError("Duplicate reused A/B/A runs")
-    if len(reuse_paths) + count > 12:
-        raise ValueError("At most 12 total source frames per bounded experiment")
+    if len(reuse_paths) + count > 119:
+        raise ValueError("Maximum timeline is 119 warmups (2..120); use bounded capture batches")
     if any(runs_parent not in path.parents for path in reuse_paths):
         raise ValueError("Reuse must refer to previous local GraphicsValidation runs")
 
@@ -78,9 +85,23 @@ def capture_animation(args: Namespace) -> dict[str, Any]:
             raise ValueError("Reused runs reference a different slot-1 state")
         if any(r["source"]["plan"] != args.plan for r in reused_windows):
             raise ValueError("Reused runs have a different controller input plan")
+        # Fail closed before paying for new A/B/A launches: a mixed archive
+        # must never be accepted even if the later timeline assembly rejects it.
+        identity_keys = ("slot_sha256", "rom_sha256", "emulator_sha256",
+                         "emulator_version", "probe_sha256", "plan", "start_pulse")
+        for key in identity_keys:
+            values = [row["source"][key] for row in reused_windows]
+            if any(value != values[0] for value in values[1:]):
+                raise ValueError(f"Reused runs disagree on source identity: {key}")
+        restores = [r["frame"]["restore"] for r in reused_windows]
+        if any(value != restores[0] for value in restores[1:]):
+            raise ValueError("Reused runs disagree on restored state")
         prior_frames = [r["frame"]["frame_count"] for r in reused_windows]
+        prior_clocks = [r["frame"]["start_master_clock"] for r in reused_windows]
         if any(b - a != 1 for a, b in zip(prior_frames, prior_frames[1:])):
             raise ValueError("Reused runs are not consecutive emulator frames")
+        if any(b <= a for a, b in zip(prior_clocks, prior_clocks[1:])):
+            raise ValueError("Reused runs have non-increasing master clocks")
 
     accepted = [Path(r["frame"]["run_dir"]) for r in reused_windows]
     new_runs = []
@@ -148,8 +169,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--count", type=int, default=3,
                    help="Number of NEW frames to capture (2–12)")
     p.add_argument("--reuse-run", type=Path, action="append", default=[],
-                   help="Existing fully verified GraphicsValidation A/B/A directory; "
+                   help="Existing verified GraphicsValidation A/B/A directory; "
                         "repeat for previous consecutive frames")
+    p.add_argument("--reuse-timeline", type=Path,
+                   help="Previous immutable FIXTURE/SMB3/Animations/*/timeline.json; "
+                        "revalidates ALL source windows and prior PNGs before adding new frames")
     p.add_argument("--start-pulse", action="store_true")
     args = p.parse_args(argv)
     try:
