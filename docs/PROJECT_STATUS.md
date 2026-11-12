@@ -182,3 +182,11 @@ Following the real evidence, the research timeline builder now reports visual_ho
 ## 2026-11-12 — Windows-only CI research migration prepared
 
 Research CI previously used Ubuntu for Lua and a Windows/Ubuntu four-job Python matrix, contrary to the 2026-11-11 incident policy on `main`. The dedicated maintenance branch `ci/windows-research-harmonization` migrates Python to Windows 3.11/3.12 and Lua 5.4 synthetic probes to Windows with an explicit portable validator. Duplicate push/PR executions and unnecessary full pytest runs are removed; source ROM and capture evidence remain private. **Hosted Windows CI accepted: Python 3.11/3.12 and stock Lua 5.4.8 synthetic emulator probes passed in Actions runs 43110543370 and 43110543397; subsequent syntax-coverage PR #12 passed in runs 43111805087 and 43111805097**. This is CI/governance work, not a new SMB3 graphics reconstruction. See `docs/CI_WINDOWS_RESEARCH.md` and the incident report.
+
+## 2026-11-12 — Phase 4 longer animation continuation prepared (research only)
+
+The owner supplied a 12-frame timeline covering verified emulator frames 448385–448396 and warmups 8–19. Independent private archive inspection found 2 unique 16x16 RGBA poses and holds A(5) → B(6) → A(1 observed), with matching PNG and spritesheet hashes. This is **not** verified full-cycle periodicity. Nine new A/B/A Windows replays reported replay/pixel/walking gates passed.
+
+Research implementation proposed on branch `research/smb3-long-animation-resume`: read-only timeline/PNG integrity verifier, revalidation of all prior A/B/A source windows, `--reuse-timeline` continuation across the previous 12-frame total cap, bounded 2–12 newly captured frames per call, and offline HTML frame stepping/zoom. Tests and exact Windows commands are specified in [the long-capture test packet](research/SMB3_LONG_CAPTURE_TEST_PLAN.md).
+
+**Important:** The new implementation is prepared but **not yet validated** by Work mode, hosted Windows CI, or private MesenCE. The GUI PR #4 remains separate, and graphics/animation research is not integrated into production `main`. Real captures, source save states and game graphics remain under private `F:\\Dev\\ROMMAGE\\FIXTURE`.
