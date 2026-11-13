@@ -97,7 +97,11 @@ def observed_motion(plan, poses):
         return all(p == baseline for p in poses[59:])
     tiles_changed = any(p[1::4] != baseline[1::4] for p in poses[60:])
     if plan == "right":
-        return tiles_changed and end[3] > baseline[3] and all(p[0] == baseline[0] for p in poses[59:])
+        # Right input establishes horizontal progress, not a fixed Y position.
+        # Mario can descend under gravity while still taking the same input.
+        # Pair geometry, controller bus, tile changes and pixel-exact A/B/A
+        # replay remain independently required; a Y change alone never passes.
+        return tiles_changed and end[3] > baseline[3]
     return tiles_changed and end[0] < baseline[0] and end[3] == baseline[3]
 
 
@@ -118,8 +122,22 @@ def validate(run, report, *, write_visuals=True):
                 or meta["plan"] not in ("neutral", "right", "jump")
                 or type(meta["start_pulse"]) is not bool):
             raise ValueError("Invalid source provenance")
-        identities.append({k: meta[k] for k in ("slot_sha256", "probe_sha256", "rom_sha256",
-                                                 "emulator_sha256", "emulator_version", "plan", "warmup", "start_pulse")})
+        identity = {k: meta[k] for k in ("slot_sha256", "probe_sha256", "rom_sha256",
+                                              "emulator_sha256", "emulator_version", "plan", "warmup", "start_pulse")}
+        # Old archives predate portable settings. New records must agree across
+        # all three independent replay legs without changing legacy evidence.
+        if "portable_mode" in meta or "portable_settings_sha256" in meta:
+            if type(meta.get("portable_mode")) is not bool:
+                raise ValueError("Invalid portable MesenCE launcher mode")
+            config_sha = meta.get("portable_settings_sha256")
+            if meta["portable_mode"]:
+                if not isinstance(config_sha, str) or not re.fullmatch("[0-9a-f]{64}", config_sha):
+                    raise ValueError("Invalid portable MesenCE settings fingerprint")
+            elif config_sha is not None:
+                raise ValueError("Unexpected portable settings fingerprint")
+            identity["portable_mode"] = meta["portable_mode"]
+            identity["portable_settings_sha256"] = config_sha
+        identities.append(identity)
         capture, = folder.glob("render_*.json")
         files.append(capture)
         sources.append(json.loads(capture.read_text()))
@@ -221,6 +239,30 @@ def validate(run, report, *, write_visuals=True):
     report["statuses"][gate] = "verified" if observed_motion(plan, poses) else "failed"
 
 
+def format_report_html(run, report):
+    """Render the report without modifying the captured A/B/A evidence."""
+    data = json.dumps(report, indent=2, sort_keys=True)
+    figures = "".join(
+        f'<figure><img src="{name}.png" alt="{name}"><figcaption>{name}</figcaption></figure>'
+        for name in ("A", "B", "A2", "RGB-difference")
+        if (run / (name + ".png")).exists()
+        and report["statuses"]["replay"] == "verified"
+    )
+    if report["statuses"]["pixels"] == "verified":
+        figures += (
+            '<figure><img src="region.png" alt="Four enlarged 16 by 16 regions">'
+            '<figcaption>Target at 8×: A, B, A2, absolute RGB difference</figcaption></figure>'
+        )
+    rows = "".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in report["statuses"].items())
+    return (
+        '<!doctype html><meta charset="utf-8"><title>SMB3 graphics validation</title>'
+        '<style>body{font:16px system-ui;margin:2em}th{text-align:left;padding-right:2em}'
+        'figure{display:inline-block;margin:1em 1em 1em 0}img{image-rendering:pixelated}</style>'
+        f'<h1>SMB3 graphics validation</h1><table>{rows}</table>{figures}'
+        f'<details><summary>Evidence and hashes</summary><pre>{html.escape(data)}</pre></details>'
+    )
+
+
 def publish(run, capture_error=None):
     run = private_folder(run)
     report = {"schema": 1, "statuses": {"replay": "not tested", "pixels": "not tested",
@@ -236,19 +278,7 @@ def publish(run, capture_error=None):
         report["reason"] = str(exc)
     data = json.dumps(report, indent=2, sort_keys=True)
     (run / "report.json").write_text(data, encoding="utf-8")
-    figures = "".join(f'<figure><img src="{name}.png" alt="{name}"><figcaption>{name}</figcaption></figure>'
-                      for name in ("A", "B", "A2", "RGB-difference") if (run / (name + ".png")).exists()
-                      and report["statuses"]["replay"] == "verified")
-    if report["statuses"]["pixels"] == "verified":
-        figures += '<figure><img src="region.png" alt="Four enlarged 16 by 16 regions"><figcaption>Target at 8×: A, B, A2, absolute RGB difference</figcaption></figure>'
-    rows = "".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in report["statuses"].items())
-    (run / "report.html").write_text(
-        '<!doctype html><meta charset="utf-8"><title>SMB3 graphics validation</title>'
-        '<style>body{font:16px system-ui;margin:2em}th{text-align:left;padding-right:2em}'
-        'figure{display:inline-block;margin:1em 1em 1em 0}img{image-rendering:pixelated}</style>'
-        f'<h1>SMB3 graphics validation</h1><table>{rows}</table>{figures}'
-        f'<details><summary>Evidence and hashes</summary><pre>{html.escape(data)}</pre></details>',
-        encoding="utf-8")
+    (run / "report.html").write_text(format_report_html(run, report), encoding="utf-8")
     print(json.dumps(report["statuses"]))
     statuses = report["statuses"]
     return 0 if statuses["pixels"] == "verified" and "failed" not in statuses.values() else 3

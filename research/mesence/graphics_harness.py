@@ -31,6 +31,47 @@ def private_folder(path):
     return path
 
 
+
+def prepare_portable_mesen(source_exe, settings_file, run):
+    """Stage or reuse an identical MesenCE build with private settings.json.
+
+    MesenCE 2.2.1 uses the executable folder as HomeFolder when settings.json
+    exists next to the executable. This avoids an inaccessible Documents path
+    without mutating the installed emulator or the user's existing settings.
+    """
+    source_exe = Path(source_exe).resolve(strict=True)
+    settings_file = Path(settings_file).resolve(strict=True)
+    if settings_file.name.lower() != "settings.json" or not settings_file.is_file():
+        raise ValueError("Portable emulator settings must be a readable settings.json")
+    settings_bytes = settings_file.read_bytes()
+    try:
+        value = json.loads(settings_bytes.decode("utf-8-sig"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("Portable MesenCE settings.json is not valid JSON") from exc
+    if not isinstance(value, dict):
+        raise ValueError("Portable MesenCE settings.json must contain a JSON object")
+    run = private_folder(Path(run)).resolve()
+    if run.parent.name != "GraphicsValidation" or run.parent.parent.name != "SMB3":
+        raise ValueError("MesenCE private runtime requires FIXTURE/SMB3/GraphicsValidation")
+    exe_sha = digest(source_exe)
+    settings_sha = hashlib.sha256(settings_bytes).hexdigest()
+    # A private, content-addressed runtime is shared by sequential warmups.
+    # Avoid copying the large emulator executable once per validated frame.
+    runtime_parent = private_folder(run.parent.parent / "EmulatorRuntime")
+    runtime_parent.mkdir(parents=True, exist_ok=True)
+    runtime = runtime_parent / f"mesence-{exe_sha[:16]}-{settings_sha[:16]}"
+    if not runtime.exists():
+        runtime.mkdir()
+        shutil.copyfile(source_exe, runtime / "Mesen.exe")
+        (runtime / "settings.json").write_bytes(settings_bytes)
+    exe_copy = runtime / "Mesen.exe"
+    settings_copy = runtime / "settings.json"
+    if (not exe_copy.is_file() or not settings_copy.is_file()
+            or digest(exe_copy) != exe_sha or digest(settings_copy) != settings_sha):
+        raise ValueError("Existing private MesenCE runtime is incomplete or changed")
+    return exe_copy, exe_sha, settings_sha
+
+
 def capture(args, run):
     fixture = (args.root / "FIXTURE").resolve(strict=True)
     rom = args.rom or fixture / "Super Mario Bros. 3.zip"
@@ -52,6 +93,20 @@ def capture(args, run):
     script = run / "capture.lua"
     script.write_bytes(b"\n".join((HERE / name).read_bytes() for name in
                                   ("graphics_replay.lua", "spritemine_render_probe.lua")))
+    source_exe_sha = digest(exe)
+    portable_settings = getattr(args, "emulator_settings", None)
+    portable_settings_path = (Path(portable_settings).resolve(strict=True)
+                              if portable_settings is not None else None)
+    if portable_settings_path is not None:
+        launch_exe, portable_exe_sha, portable_settings_sha = prepare_portable_mesen(
+            exe, portable_settings_path, run
+        )
+        if portable_exe_sha != source_exe_sha:
+            raise ValueError("Portable MesenCE executable differs from original")
+    else:
+        launch_exe = exe
+        portable_settings_sha = None
+
     version = subprocess.check_output(
         ["powershell.exe", "-NoProfile", "-Command",
          "(Get-Item -LiteralPath $env:SPRITEMINE_EXE).VersionInfo.ProductVersion"],
@@ -65,17 +120,30 @@ def capture(args, run):
                    SPRITEMINE_START_PULSE=str(int(args.start_pulse)), SPRITEMINE_INPUT_PLAN=args.plan, SPRITEMINE_WARMUP=str(args.warmup))
         switches = ["--testRunner", "--timeout=30", "--doNotSaveSettings",
                     "--nes.disableSprites=" + str(hidden).lower()]
+        if portable_settings_path is not None:
+            if (digest(portable_settings_path) != portable_settings_sha
+                    or digest(launch_exe.parent / "settings.json") != portable_settings_sha
+                    or digest(launch_exe) != source_exe_sha):
+                raise ValueError("Portable MesenCE settings or executable changed")
         with (folder / "emulator.log").open("wb") as log:
-            result = subprocess.run([str(exe), *switches, str(script), str(game)], env=env,
+            result = subprocess.run([str(launch_exe), *switches, str(script), str(game)],
+                                    env=env, cwd=(str(launch_exe.parent) if portable_settings_path else None),
                                     stdout=log, stderr=subprocess.STDOUT, timeout=55,
                                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if portable_settings_path is not None:
+            if (digest(portable_settings_path) != portable_settings_sha
+                    or digest(launch_exe.parent / "settings.json") != portable_settings_sha
+                    or digest(launch_exe) != source_exe_sha):
+                raise ValueError("Portable MesenCE profile changed during replay")
         evidence = dict(leg=leg, disable_sprites=hidden, switches=switches, plan=args.plan,
                         emulator_version=version, warmup=args.warmup, start_pulse=args.start_pulse, slot_sha256=initial, emulator_sha256=digest(exe),
-                        probe_sha256=digest(script), rom_sha256=digest(game), exit_code=result.returncode)
+                        probe_sha256=digest(script), rom_sha256=digest(game), exit_code=result.returncode,
+                        portable_mode=portable_settings_path is not None,
+                        portable_settings_sha256=portable_settings_sha)
         (folder / "launch.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
         if result.returncode:
             raise ValueError(f"{leg} emulator exit {result.returncode}. Inspect {folder}")
-    if digest(state) != initial or digest(copy) != initial:
+    if digest(state) != initial or digest(copy) != initial or digest(exe) != source_exe_sha:
         raise ValueError("Slot bytes changed during experiment")
 
 
@@ -84,6 +152,9 @@ def main():
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--rom", type=Path)
     parser.add_argument("--slot", type=Path, required=True)
+    parser.add_argument("--emulator-settings", type=Path,
+                        help="Private readable settings.json; stage identical Mesen.exe "
+                             "in FIXTURE/SMB3/EmulatorRuntime to avoid Documents access")
     parser.add_argument("--plan", choices=("neutral", "right", "jump"), default="neutral")
     parser.add_argument("--warmup", type=int, default=8, choices=range(2, 121), metavar="2..120")
     parser.add_argument("--start-pulse", action="store_true", help="Press Start on poll 4 for a paused game")

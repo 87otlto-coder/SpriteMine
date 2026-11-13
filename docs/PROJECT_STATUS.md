@@ -182,3 +182,45 @@ Following the real evidence, the research timeline builder now reports visual_ho
 ## 2026-11-12 — Windows-only CI research migration prepared
 
 Research CI previously used Ubuntu for Lua and a Windows/Ubuntu four-job Python matrix, contrary to the 2026-11-11 incident policy on `main`. The dedicated maintenance branch `ci/windows-research-harmonization` migrates Python to Windows 3.11/3.12 and Lua 5.4 synthetic probes to Windows with an explicit portable validator. Duplicate push/PR executions and unnecessary full pytest runs are removed; source ROM and capture evidence remain private. **Hosted Windows CI accepted: Python 3.11/3.12 and stock Lua 5.4.8 synthetic emulator probes passed in Actions runs 43110543370 and 43110543397; subsequent syntax-coverage PR #12 passed in runs 43111805087 and 43111805097**. This is CI/governance work, not a new SMB3 graphics reconstruction. See `docs/CI_WINDOWS_RESEARCH.md` and the incident report.
+
+## 2026-11-12 — Phase 4 longer animation continuation prepared (research only)
+
+The owner supplied a 12-frame timeline covering verified emulator frames 448385–448396 and warmups 8–19. Independent private archive inspection found 2 unique 16x16 RGBA poses and holds A(5) → B(6) → A(1 observed), with matching PNG and spritesheet hashes. This is **not** verified full-cycle periodicity. Nine new A/B/A Windows replays reported replay/pixel/walking gates passed.
+
+Research implementation proposed on branch `research/smb3-long-animation-resume`: read-only timeline/PNG integrity verifier, revalidation of all prior A/B/A source windows, `--reuse-timeline` continuation across the previous 12-frame total cap, bounded 2–12 newly captured frames per call, and offline HTML frame stepping/zoom. Tests and exact Windows commands are specified in [the long-capture test packet](research/SMB3_LONG_CAPTURE_TEST_PLAN.md).
+
+**Important:** The new implementation is prepared but **not yet validated** by Work mode, hosted Windows CI, or private MesenCE. The GUI PR #4 remains separate, and graphics/animation research is not integrated into production `main`. Real captures, source save states and game graphics remain under private `F:\\Dev\\ROMMAGE\\FIXTURE`.
+
+## 2026-11-12 — 18 real frames verified; portable continuation prepared (PR #19)
+
+The owner-supplied private 18-frame evidence archive was independently checked: 18 frames 448385–448402, contiguous warmups 8–25, 3 unique Mario RGBA appearances, 4 holds A(5) / B(6) / A(4) / C(3), 18 matching PNG/spritesheet crops, matching archive SHA-256 ledger, and 18 source A/B/A reports marked verified. The C appearance is still active at the end; the last frame has Y moved by 1 while its RGBA pixels are unchanged. This is a real capture finding, **not a completed walk-cycle proof**.
+
+Work's first new warmup-20 emulator launch failed because MesenCE could not access Documents\MesenCE; later captures succeeded after a private portable-settings workaround. The source archive was made under a separate private C: location rather than canonical F:\Dev\ROMMAGE. To make this reproducible, PR #19 now also proposes a private content-addressed MesenCE runtime (same executable hash, explicit settings JSON SHA-256 in each new A/B/A leg), byte-verified relocation of original capture reports to FIXTURE, a continuation receipt and per-frame configuration provenance.
+
+**Testing gate remains open.** The new environment-isolation and relocation code has been committed with synthetic regression tests but has **not yet been tested** by independent Work execution or native Windows MesenCE here. Next bounded real gate: reuse 18 captured frames and capture warmups 26–31 only, expecting 24 contiguous frames 448385–448408 if every gate passes. See docs/research/SMB3_PORTABLE_CONTINUATION_TEST_PLAN.md. Do not merge PR #19 until retested; no game assets enter public GitHub.
+
+## 2026-11-12 — PR #19 Gate 1 blocked by synthetic fixture name, correction submitted
+
+Independent Work mode testing at commit `3956f236983c1510bd87ab5290376a5745653bb8` passed syntax, but reported 57 targeted tests passed / 3 failed, and 143 full-suite tests passed / 3 failed / 2 skipped (Windows 11, Python 3.14.7). The three relocation failures arose because shared synthetic capture folders used `synthetic-wN` instead of the production `anim-` directory prefix. Work correctly stopped before any emulator launch or F: relocation; the historical 18-frame timeline hash matched. Last observed emulator frame remains **448402**.
+
+The test fixture has been corrected to `anim-right-wN-synthetic`, and an explicit rejection test for incorrectly named archives was added. The validator has **not** been weakened. Windows retesting of these changes is **pending**; real relocation, isolated MesenCE startup and warmups 26–31 are still untested. See `docs/research/SMB3_PORTABLE_CONTINUATION_TEST_PLAN.md` for Gate 1a. Do not merge PR #19 or claim 24 frames yet.
+
+## 2026-11-13 — PR #19 second Gate 1 correction awaiting Work retest
+
+Work independent test at `d494d3715a3a8e0323091f06ba471caa44510ed1` passed compilation, reported 59 targeted passed / 2 failed, and full suite 145 passed / 2 failed / 2 skipped. The three previous relocation tests and invalid-prefix regression passed. Two interruption tests incorrectly counted or selected `anim-right-w20..` synthetic fixture directories alongside new run folders. The tests now use before/after directory-set differences and explicitly ensure only newly completed successful runs are reused. **Neither fix altered production relocation/capture security rules.**
+
+**Unverified:** newest synthetic retest, portable MesenCE startup, 18-frame real source relocation, any 24-frame continuation. Frame **448402** is still the last observed. Work must retest Gate 1 against the new commit before attempting private experiments. PR #19 remains open.
+
+## 2026-11-13 — Gate 1 accepted, private Gate 2 passed, canonical F: promotion blocked
+
+Work tested PR #19 at `36e20202d3b03dafe18b6b53656b05aa60014cf6`: syntax PASS, targeted 61 passed / 0 failed, full 147 passed / 0 failed / 2 optional skips on Windows 11 Python 3.14.7. All 18 original A/B/A source windows, 18 PNG hashes and original spritesheet revalidated. The first 12 canonical F: runs (warmups 8–19) match original source file-for-file (948 SHA-256s); the six complete warmups 20–25 (79 files each) are not present on F:. Work's F: mount is read-only. **No emulator launched, no files were moved, no new timeline or frame beyond 448402 exists.** Python 3.11/3.12 compatibility is still unverified.
+
+Independent inspection of the previously shared 18-frame ZIP confirmed it has only 77 files per run, intentionally missing replay.nes and slot-copy.mss. The original C: private capture tree—not that ZIP—is required to migrate source-backed A/B/A evidence. PR #19 now includes `research/mesence/promote_private_runs.py` (dry-run preflight, explicit apply, SHA-verified staging and no overwrite) and `tests/test_private_run_promotion.py` plus `docs/research/SMB3_CANONICAL_FIXTURE_PROMOTION.md`. This new helper is **not yet tested on Work's Windows environment**. The owner must run an explicit write on a Windows session with F: permissions, and Work cannot capture warmups 26–31 into canonical F: until write access exists. Do not claim full milestone acceptance or merge PR #19.
+
+## 2026-11-13 — Promotion regression correction and checkout safeguards (pending retest)
+
+The owner's new Windows logs at PR #19 head `dcfef45a2d08c8f38896ff496422febf9124fc8c` show 152 passed / 2 failed / 2 skipped on the full suite. The two failures are synthetic-only: the private run-promotion tests accidentally pass the 12-frame `synthetic_archive["timeline"]` to a helper correctly restricted to an 18-frame accepted archive. The tests now explicitly build a separate 18-frame synthetic timeline before exercising promotion, and a negative test ensures the old 12-frame fixture still fails closed. **No production validation or copy logic was weakened.**
+
+The same logs independently show a successful **read-only real preflight**: 18 source windows verified, 12 identical original canonical runs, and six complete but absent warmups 20–25. A separate owner-side F: command failed with `No module named research.mesence.promote_private_runs`; the checkout running that command did not have the new helper available. The local PowerShell handoff now verifies fetched and checked-out PR HEADs, source module existence, Python's resolved import location, passing promotion tests and a read-only preflight **before** any `--apply` attempt.
+
+**Still unverified:** new promotion-test corrections on Windows, actual canonical copy of six runs, real portable emulator startup, Python 3.11/3.12 coverage, and warmups 26–31. No new frame beyond 448402. PR #19 remains unmerged.
