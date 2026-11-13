@@ -70,7 +70,12 @@ def test_partial_capture_cannot_be_promoted(tmp_path, monkeypatch):
 
 def _setup_mock_promotion(synthetic_archive, tmp_path, monkeypatch):
     s = synthetic_archive
-    original_timeline = s["timeline"]
+    # The shared fixture's original timeline intentionally has only 12 frames.
+    # Promotion requires exactly the verified 18-frame sequence (warmups 8–25).
+    # Build a distinct synthetic 18-frame archive; never relax the production gate.
+    complete_dir = s["animations"] / "right-complete-18"
+    animation_timeline.assemble_timeline(s["paths"], complete_dir)
+    original_timeline = complete_dir / "timeline.json"
     old_bytes = original_timeline.read_bytes()
     names = tuple(p.name for p in s["paths"])
     monkeypatch.setattr(promote, "EXPECTED_TIMELINE_SHA256", sha(old_bytes))
