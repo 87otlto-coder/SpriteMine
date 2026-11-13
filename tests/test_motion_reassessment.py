@@ -110,6 +110,25 @@ def test_apply_preserves_original_report_and_rechecks_raw_evidence(old_failed_ca
         reassess.reassess(run)
 
 
+def test_windows_crlf_reports_are_accepted_and_kept_crlf(old_failed_capture):
+    run, _ = old_failed_capture
+    for name in ("report.json", "report.html"):
+        target = run / name
+        normalized = target.read_bytes().replace(b"\r\n", b"\n")
+        target.write_bytes(normalized.replace(b"\n", b"\r\n"))
+    before = reassess._capture_manifest(run)
+    assert reassess.reassess(run)["status"] == "ready_for_explicit_reassessment"
+    assert reassess._capture_manifest(run) == before
+    result = reassess.reassess(run, apply=True)
+    review = Path(result["review_history"])
+    for name in ("report.json", "report.html"):
+        new_bytes = (run / name).read_bytes()
+        assert b"\r\n" in new_bytes
+        assert b"\n" not in new_bytes.replace(b"\r\n", b"")
+        old_bytes = (review / ("original-" + name)).read_bytes()
+        assert sha(old_bytes) == before[name]
+
+
 def test_dry_run_refuses_different_metadata_without_reclassification(
     old_failed_capture, monkeypatch
 ):
