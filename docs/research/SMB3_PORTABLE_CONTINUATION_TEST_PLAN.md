@@ -59,6 +59,16 @@ The fixture now uses `anim-right-w{warmup}-synthetic`. The security check still 
 
 **Rerun Gate 1 in full on the updated PR HEAD before Gate 2 or 3.** Require all three former failure cases to pass by name, plus the newly added negative test. Preserve exact failure tracebacks and test count. A passing suite on Python 3.14.7 does not establish supported Python 3.11/3.12 compatibility; run 3.11/3.12 on Windows when available, otherwise mark the compatibility gap unresolved. The canonical F: checkout had unusual restricted fetch configuration and could not establish a clean working tree; an isolated checkout is acceptable for *synthetic tests* if matched against GitHub SHA, but do not claim native F: capture readiness until source fixtures and the 18 A/B/A archives are accessible and independently revalidated.
 
+## Gate 1b: interruption test isolation correction (2026-11-13)
+
+Independent Work retest at `d494d3715a3a8e0323091f06ba471caa44510ed1` reported compilation passed, targeted **59 passed / 2 failed**, full suite **145 passed / 2 failed / 2 skipped**. The three earlier relocation failures are now fixed, and the new invalid-directory-prefix test passed.
+
+Two unrelated interruption assertions in `tests/test_animation_resume.py` still used broad `anim-right-w2*` and `anim-right-w20-*` globs, which now pick up existing `anim-right-w20..25-synthetic` fixture directories. The first counted eight instead of two created directories. The second could not choose a unique warmup-20 capture. **No emulator ran and no real source evidence was relocated.**
+
+The corrected tests snapshot `GraphicsValidation` before each simulated batch and take a set difference afterward. They explicitly verify exactly the two newly created run directories, select the successful new warmup-20 run for resume, and reject reuse of the failed new warmup-21 run. They retain the now-correct fixture names and invalid-name rejection test. No production validator or capture implementation was weakened.
+
+**Retest Gate 1 in full at the latest PR head.** Require both interruption tests to pass, confirm that all four relocation/security tests from the earlier round still pass, and stop at any failure before Gate 2. The Python 3.11/3.12 verification gap remains open; Python 3.14 alone is not acceptance of supported versions.
+
 ## Gate 2: Resolve prior evidence and portable profile
 
 Original Work private timeline location was:
