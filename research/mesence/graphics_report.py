@@ -97,7 +97,11 @@ def observed_motion(plan, poses):
         return all(p == baseline for p in poses[59:])
     tiles_changed = any(p[1::4] != baseline[1::4] for p in poses[60:])
     if plan == "right":
-        return tiles_changed and end[3] > baseline[3] and all(p[0] == baseline[0] for p in poses[59:])
+        # Right input establishes horizontal progress, not a fixed Y position.
+        # Mario can descend under gravity while still taking the same input.
+        # Pair geometry, controller bus, tile changes and pixel-exact A/B/A
+        # replay remain independently required; a Y change alone never passes.
+        return tiles_changed and end[3] > baseline[3]
     return tiles_changed and end[0] < baseline[0] and end[3] == baseline[3]
 
 
