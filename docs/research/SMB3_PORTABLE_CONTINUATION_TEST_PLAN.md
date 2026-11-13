@@ -89,6 +89,16 @@ Expected: 18 independently revalidated windows. Identify a real existing, readab
 
 If F: is inaccessible, report that limitation rather than silently claim a canonical workspace test.
 
+## Gate 2a: canonical six-run promotion and permissions (2026-11-13)
+
+Independent Work verification at PR #19 head 36e20202d3b03dafe18b6b53656b05aa60014cf6 reported **61 targeted passed / 0 failed**, **147 full passed / 0 failed / 2 optional skips**, and all **18 original A/B/A runs** revalidated from the private C: source. The existing canonical F: warmups 8–19 matched across 948 file SHA-256s. Warmups 20–25 were fully verified in the original C: source (79 files each) but missing from canonical F:. Work's F: mount was read-only, so **no migration, emulator startup, or new capture took place**. Last verified real frame remains 448402.
+
+The stripped-down private sharing archive has only **77 files per A/B/A directory**, omitting replay.nes and slot-copy.mss. It is not a valid migration source and should never be repaired by regenerating those bytes. Use only the original complete 79-file C: source.
+
+A new narrow helper `research/mesence/promote_private_runs.py` plus synthetic tests `tests/test_private_run_promotion.py` was added. Before any write it verifies the original timeline SHA, all 18 original A/B/A runs, all 12 existing canonical source runs, six exact missing directory names, 79-file completeness, and copied ROM/state SHA-256. Its default CLI is read-only; `--apply` stages and checks the six absent directories, refuses overwrites, and verifies all 18 canonical source captures afterward.
+
+**Work: test the new helper synthetically and run its read-only preflight only.** If F: remains read-only, do not attempt `--apply` from Work. Instead the owner can use the complete, copy-paste-ready local PowerShell instructions in [SMB3_CANONICAL_FIXTURE_PROMOTION.md](SMB3_CANONICAL_FIXTURE_PROMOTION.md) on a Windows session with the required read/write access. Do not proceed to Gate 3 until 18 canonical A/B/A runs verify AND Work can write canonical F: capture outputs. No automatic C: fallback is authorized by this packet.
+
 ## Gate 3: Six new real Windows captures
 
 Run only after all earlier gates pass. Use existing verified ROM, original slot and real settings profile. The source timeline may still reside on C:; --rehome-archive handles copied run directories under F:.
