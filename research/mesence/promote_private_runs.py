@@ -89,7 +89,7 @@ def _validate_root(parent: Path) -> Path:
 
 def check_and_promote(timeline_file: Path, target_root: Path, *, apply: bool = False) -> dict:
     timeline = private_folder(Path(timeline_file)).resolve(strict=True)
-    target_base = private_folder(Path(target_root)).resolve(strict=True)
+    target_base = Path(target_root).resolve(strict=True)
     dest = _validate_root(target_base / "FIXTURE" / "SMB3" / "GraphicsValidation")
     if _sha(timeline) != EXPECTED_TIMELINE_SHA256:
         raise ValueError("Original 18-frame timeline SHA-256 mismatch; aborting")
@@ -163,6 +163,8 @@ def check_and_promote(timeline_file: Path, target_root: Path, *, apply: bool = F
             raise ValueError("Relocated A/B/A source verification did not yield 18 windows")
         if _sha(timeline) != before_timeline:
             raise ValueError("Source timeline changed during verification")
+        if not any(stage.iterdir()):
+            stage.rmdir()  # remove empty staging shell only; never delete evidence
         return {
             "status": "promoted_and_reverified",
             "originally_present": len(already),
