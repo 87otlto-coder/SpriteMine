@@ -86,7 +86,11 @@ def reassess(run_dir: Path, *, apply: bool = False) -> dict:
             or provenance.get("emulator_sha256") != EXPECTED_EXE):
         raise ValueError("Unexpected A/B/A capture provenance")
 
-    if html_bytes.decode("utf-8") != graphics_report.format_report_html(run, archived):
+    # The legacy publisher used Path.write_text, which translates embedded
+    # JSON newlines to CRLF on Windows. Do not mistake that for source tampering.
+    existing_html = html_bytes.decode("utf-8")
+    rendered_html = graphics_report.format_report_html(run, archived)
+    if existing_html not in (rendered_html, rendered_html.replace("\n", "\r\n")):
         raise ValueError("Original HTML report differs from the archived report; preserve it")
 
     updated = {"schema": 1, **_initial_report()}
@@ -102,8 +106,15 @@ def reassess(run_dir: Path, *, apply: bool = False) -> dict:
                            if updated.get(k) != only_walk_reclassified.get(k))
         raise ValueError(f"Independent revalidation changed more than the walking gate: {differing}")
 
-    updated_bytes = json.dumps(updated, indent=2, sort_keys=True).encode("utf-8")
-    updated_html = graphics_report.format_report_html(run, updated).encode("utf-8")
+    # Keep the original platform's report line endings in the revised artifacts.
+    json_eol = "\r\n" if b"\r\n" in report_bytes else "\n"
+    html_eol = "\r\n" if b"\r\n" in html_bytes else "\n"
+    updated_bytes = json.dumps(updated, indent=2, sort_keys=True).replace(
+        "\n", json_eol
+    ).encode("utf-8")
+    updated_html = graphics_report.format_report_html(run, updated).replace(
+        "\n", html_eol
+    ).encode("utf-8")
     result = {
         "status": "ready_for_explicit_reassessment",
         "run": str(run),
