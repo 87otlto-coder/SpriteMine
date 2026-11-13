@@ -88,8 +88,18 @@ def reassess(run_dir: Path, *, apply: bool = False) -> dict:
 
     # The legacy publisher used Path.write_text, which translates embedded
     # JSON newlines to CRLF on Windows. Do not mistake that for source tampering.
+    # The published JSON uses sort_keys=True, but the original HTML rows
+    # followed the validator's insertion order. Restore that display order
+    # strictly from the fixed schema before comparing the archived HTML.
+    original_status_order = tuple(_initial_report()["statuses"])
+    if set(archived["statuses"]) != set(original_status_order):
+        raise ValueError("Unexpected status keys in archived A/B/A report")
+    display_report = copy.deepcopy(archived)
+    display_report["statuses"] = {
+        key: archived["statuses"][key] for key in original_status_order
+    }
     existing_html = html_bytes.decode("utf-8")
-    rendered_html = graphics_report.format_report_html(run, archived)
+    rendered_html = graphics_report.format_report_html(run, display_report)
     if existing_html not in (rendered_html, rendered_html.replace("\n", "\r\n")):
         raise ValueError("Original HTML report differs from the archived report; preserve it")
 
