@@ -30,7 +30,21 @@ if (git branch --list 'research/smb3-long-animation-resume') {
 if ($LASTEXITCODE -ne 0) { throw 'Branch switch failed' }
 git pull --ff-only origin research/smb3-long-animation-resume
 if ($LASTEXITCODE -ne 0) { throw 'Git pull failed' }
+$localHead = (git rev-parse HEAD).Trim()
+$remoteHead = (git rev-parse refs/remotes/origin/research/smb3-long-animation-resume).Trim()
+if ($localHead -ne $remoteHead) { throw "Local/remote PR heads differ: $localHead vs $remoteHead" }
+$module = Join-Path $repo 'research\mesence\promote_private_runs.py'
+if (-not (Test-Path -LiteralPath $module -PathType Leaf)) {
+    throw 'Promotion module absent: checkout is stale or on the wrong branch'
+}
 $python = Join-Path $repo '.venv\Scripts\python.exe'
+if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Research Python venv missing' }
+$actualModule = (& $python -c 'from pathlib import Path; import research.mesence.promote_private_runs as m; print(Path(m.__file__).resolve())')
+if ($LASTEXITCODE -ne 0 -or $actualModule.Trim() -ine (Resolve-Path -LiteralPath $module).Path) {
+    throw 'Python imported a different SpriteMine module. Stop before touching FIXTURE.'
+}
+& $python -m pytest -q tests/test_private_run_promotion.py
+if ($LASTEXITCODE -ne 0) { throw 'Promotion tests failed; do not copy evidence' }
 $old = 'C:\Users\87otl\Documents\ChatGPT\SpriteMine\PR19-private\FIXTURE\SMB3\Animations\right-8-25-bad20ce00c\timeline.json'
 if (-not (Test-Path -LiteralPath $python)) { throw 'Research Python venv missing' }
 if (-not (Test-Path -LiteralPath $old)) {
@@ -44,12 +58,22 @@ The recorded C: path is historical. If it no longer exists, locate the ORIGINAL 
 
 Expected read-only result: ready_for_explicit_write, 18 verified original windows, 12 identical canonical source runs, six missing names for warmups 20–25, and 79 files per capture. No writes occur.
 
+The JSON status block is the **program's output**, not a PowerShell command. Do not paste example JSON into PowerShell; run only the commands in the fenced PowerShell blocks. Check that the imported module path points into the F: checkout before any write.
+
 ## Explicit promotion, only after matching preflight
 
 ~~~powershell
 Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-graphics'
 $python = 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-graphics\.venv\Scripts\python.exe'
 $old = 'C:\Users\87otl\Documents\ChatGPT\SpriteMine\PR19-private\FIXTURE\SMB3\Animations\right-8-25-bad20ce00c\timeline.json'
+if (-not (Test-Path -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-graphics\research\mesence\promote_private_runs.py' -PathType Leaf)) {
+    throw 'Stale F: checkout; run the read-only checkout/test preflight first'
+}
+if (-not (Test-Path -LiteralPath $old -PathType Leaf)) { throw 'Complete original timeline not accessible' }
+& $python -m pytest -q tests/test_private_run_promotion.py
+if ($LASTEXITCODE -ne 0) { throw 'Promotion tests failed; do not apply' }
+& $python -m research.mesence.promote_private_runs --timeline $old --target-root 'F:\Dev\ROMMAGE'
+if ($LASTEXITCODE -ne 0) { throw 'Read-only preflight failed; do not apply' }
 & $python -m research.mesence.promote_private_runs --timeline $old --target-root 'F:\Dev\ROMMAGE' --apply
 if ($LASTEXITCODE -ne 0) { throw 'Promotion failed; preserve private staging evidence' }
 & $python -m research.mesence.promote_private_runs --timeline $old --target-root 'F:\Dev\ROMMAGE'
