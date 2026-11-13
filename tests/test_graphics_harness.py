@@ -129,6 +129,42 @@ def test_motion_requires_displacement_and_tile_change(plan):
     assert report.observed_motion(plan, poses)
 
 
+def test_right_motion_accepts_verified_vertical_drift_without_new_jump_input():
+    """Real SMB3 warmup 26 moves Y 97 -> 98 at poll 88 while holding Right.
+
+    Requiring Y to remain stationary is not a rightward-movement invariant.
+    The paired OAM sprites, tile transition and positive X progress still are.
+    """
+    baseline = [97, 5, 0, 127, 97, 7, 0, 135]
+    poses = [baseline.copy() for _ in range(88)]
+    for index in range(60, 88):
+        poses[index] = [97, 27, 64, 128, 97, 25, 64, 136]
+    poses[-1] = [98, 27, 64, 128, 98, 25, 64, 136]
+    assert report.observed_motion("right", poses)
+
+    # Gravity alone cannot establish walking; X still has to progress.
+    no_x_progress = [p.copy() for p in poses]
+    for pose in no_x_progress[60:]:
+        pose[3] = 127
+        pose[7] = 135
+    assert not report.observed_motion("right", no_x_progress)
+
+    # Both hardware sprite components must remain vertically aligned.
+    misaligned_pair = [p.copy() for p in poses]
+    misaligned_pair[-1][4] = 97
+    assert not report.observed_motion("right", misaligned_pair)
+
+    # Right motion still needs a tile transition.
+    no_tile_transition = [p.copy() for p in poses]
+    for pose in no_tile_transition[60:]:
+        pose[1] = 5
+        pose[5] = 7
+    assert not report.observed_motion("right", no_tile_transition)
+
+    # Neutral must still reject all changes, even a valid right-moving pose.
+    assert not report.observed_motion("neutral", poses)
+
+
 def test_identical_but_unrelated_restore_rejected(run):
     for leg, _ in LEGS:
         p = run / leg / "replay.log"
