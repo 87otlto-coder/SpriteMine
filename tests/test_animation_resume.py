@@ -222,6 +222,8 @@ def test_interrupted_capture_preserves_verified_archive(synthetic_archive, monke
         plan="right", first_warmup=20, count=2, start_pulse=False,
         reuse_run=[], reuse_timeline=source["timeline"]
     )
+    runs_parent = source["root"] / "FIXTURE" / "SMB3" / "GraphicsValidation"
+    before = set(runs_parent.iterdir())
     seen = []
     def capture(namespace, run):
         seen.append(namespace.warmup)
@@ -236,7 +238,15 @@ def test_interrupted_capture_preserves_verified_archive(synthetic_archive, monke
     assert seen == [20, 21]
     assert original == source["timeline"].read_bytes()
     assert not list(source["animations"].glob("right-8-21-*"))
-    assert len(list((source["root"] / "FIXTURE" / "SMB3" / "GraphicsValidation").glob("anim-right-w2*"))) == 2
+    # The shared fixture already contains valid anim-right-w20..25 runs.
+    # Count only directories made by this simulated batch.
+    created = set(runs_parent.iterdir()) - before
+    assert len(created) == 2
+    assert all(run.is_dir() for run in created)
+    accepted, = [run for run in created if run.name.startswith("anim-right-w20-")]
+    failed, = [run for run in created if run.name.startswith("anim-right-w21-")]
+    assert (accepted / "private-diagnostic.txt").read_text() == "mock capture"
+    assert not (failed / "private-diagnostic.txt").exists()
 
 
 def test_preview_html_uses_verified_files_and_refuses_overwrite(synthetic_archive):
@@ -260,6 +270,7 @@ def test_interrupted_batch_can_reuse_successful_partial_run(synthetic_archive, m
     root = source["root"]
     slot = source["slot"]
     archive_parent = root / "FIXTURE" / "SMB3" / "GraphicsValidation"
+    before = set(archive_parent.iterdir())
     seen = []
 
     def first_attempt(namespace, run):
@@ -277,7 +288,13 @@ def test_interrupted_batch_can_reuse_successful_partial_run(synthetic_archive, m
     with pytest.raises(ValueError, match="Capture failed at warmup 21"):
         animation_windows.capture_animation(first_args)
     assert seen == [20, 21]
-    successful, = list(archive_parent.glob("anim-right-w20-*"))
+    # Select the successful run from THIS attempt, never an existing fixture.
+    created = set(archive_parent.iterdir()) - before
+    assert len(created) == 2
+    successful, = [run for run in created if run.name.startswith("anim-right-w20-")]
+    failed, = [run for run in created if run.name.startswith("anim-right-w21-")]
+    assert successful.resolve() in source["records"]
+    assert failed.resolve() not in source["records"]
     prior_data = old.read_bytes()
 
     def second_attempt(namespace, run):
@@ -293,6 +310,8 @@ def test_interrupted_batch_can_reuse_successful_partial_run(synthetic_archive, m
     assert seen == [20, 21, 21, 22]
     assert result["frame_count"] == 15
     assert len(result["reused_run_dirs"]) == 13
+    assert str(successful.resolve()) in result["reused_run_dirs"]
+    assert str(failed.resolve()) not in result["reused_run_dirs"]
     assert len(result["new_run_dirs"]) == 2
     assert old.read_bytes() == prior_data
     assert animation_archive.read_verified_timeline(Path(result["timeline_json"]))["frame_count"] == 15
