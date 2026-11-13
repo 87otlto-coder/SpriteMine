@@ -116,6 +116,22 @@ def _setup_mock_promotion(synthetic_archive, tmp_path, monkeypatch):
     return original_timeline, old_bytes, root, dest, s
 
 
+def test_promotion_rejects_valid_but_incomplete_12_frame_archive(
+    synthetic_archive, tmp_path, monkeypatch
+):
+    """A genuine valid 12-frame fixture must fail the 18-frame promotion gate."""
+    source = synthetic_archive
+    timeline = source["timeline"]
+    monkeypatch.setattr(promote, "EXPECTED_TIMELINE_SHA256", sha(timeline.read_bytes()))
+    monkeypatch.setattr(promote, "EXPECTED_ROM_SHA256", "c" * 64)
+    monkeypatch.setattr(promote, "EXPECTED_SLOT_SHA256", sha(source["slot"].read_bytes()))
+    canonical = tmp_path / "CANONICAL"
+    (canonical / "FIXTURE" / "SMB3" / "GraphicsValidation").mkdir(parents=True)
+    with pytest.raises(ValueError, match="Not the accepted 18-frame"):
+        promote.check_and_promote(timeline, canonical)
+    assert not any((canonical / "FIXTURE" / "SMB3" / "GraphicsValidation").iterdir())
+
+
 def test_promotion_dry_run_is_read_only_and_apply_verifies_all_18(synthetic_archive, tmp_path, monkeypatch):
     original, old_bytes, root, dest, s = _setup_mock_promotion(
         synthetic_archive, tmp_path, monkeypatch
