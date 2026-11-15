@@ -1,0 +1,60 @@
+{
+  "schema": "spritemine.smb3.runtime-forensics-ledger/1",
+  "accepted_base": "d9aa7adf2bb35b917ce0305cf6878ec7c394e521",
+  "prior_research_head": "0aca0c961fb460f8c05630b8c8db83050a9d236d",
+  "rom_sha256": "4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579",
+  "timeline_sha256": "212fad937f7474078716a70e83227d9fc8fb9230a755748002a9ce9c0ffa034c",
+  "emulator_sha256": "8ef403d6b9af32075416193914d7993ce8480b347fe1f20a0cfd9815374933e7",
+  "emulator_source_commit": "20ba206cef5ba207c21203176d02cb9f43dda9fb",
+  "environment": {"os": "Windows", "python": "3.14.7", "pytest_available": false},
+  "checks": {
+    "prior_source_windows_revalidated": 24,
+    "prior_frame_first": 448385,
+    "prior_frame_last": 448408,
+    "all_six_oam_tile_fields_compared": 144,
+    "new_synthetic_unittests_passed": 10,
+    "existing_pattern_unittests_passed": 4,
+    "new_native_captures": 0,
+    "hosted_ci_runs": 0
+  },
+  "knowledge_map": [
+    {"identity": "player_recipe_table", "confidence": "verified", "evidence_class": "decoded",
+     "rom_file_offset": 240737, "prg_bank_8k": 29, "cpu_address_when_bank_mapped": 52305,
+     "length": 486, "sha256": "4c655ba8a75e38616af7567e99867b697485ab1bf663a52e59643e0fec7606b5",
+     "validation": "Complete source table uniquely matches accepted ROM"},
+    {"identity": "captured_jump_fall_recipe_correspondence", "confidence": "verified",
+     "evidence_class": "captured", "first_frame": 448400, "last_frame": 448408,
+     "candidate_frame_id": 64, "observed_ram_frame_id": null,
+     "validation": "All six selected OAM tile fields, four suppressed slots and physical visible CHR offsets agree"},
+    {"identity": "terrain_edge_causes_airborne_transition", "confidence": "strong hypothesis",
+     "evidence_class": "interpretation", "causative_instruction_observed": false,
+     "validation": "Source selects jump/fall on airborne path; captured matching pose precedes downward Y"},
+    {"identity": "world_1_1_source", "confidence": "verified", "evidence_class": "decoded",
+     "header_rom_offset": 129938, "stream_rom_offset": 129947, "stream_length": 264,
+     "stream_sha256": "ef2d1e5a95cd51391e5651af0cdd9ab0cba36985e4cf971d3eed7c34d506892a",
+     "validation": "Complete source stream unique match; no runtime geometry comparison"},
+    {"identity": "nes_lua_master_clock_unit", "confidence": "verified", "evidence_class": "source_analysis",
+     "unit": "CPU cycles", "api_width_bits": 32, "full_counter_field": "cpu.cycleCount",
+     "validation": "Exact build source NesConsole::GetMasterClock and LuaApi::GetState"}
+  ],
+  "candidate_ram_symbols_not_live_verified": {
+    "Player_XHi": 117, "Player_X": 144, "Player_YHi": 135, "Player_Y": 162,
+    "Player_XVel": 189, "Player_YVel": 207, "Player_InAir": 216,
+    "Player_Frame": 238, "Player_Suit": 237, "Player_WalkAnimTicks": 1396,
+    "Player_SprOff": 1422, "Player_XVelFrac": 1869, "Player_YVelFrac": 1887,
+    "Level_VertScrollH": 1346, "Level_VertScroll": 1347
+  },
+  "blockers": [
+    {"objective": "new_native_private_experiments", "status": "blocked",
+     "path": "F:\\Dev\\ROMMAGE\\FIXTURE\\SMB3\\RuntimeInvestigation",
+     "reason": "Directory creation access denied on two probes; private captures not relocated"},
+    {"objective": "observer_native_and_Lua_mock_validation", "status": "not tested",
+     "reason": "Observer prepared only; no launcher integration or Lua execution performed"}
+  ],
+  "source_reference_sha256": {
+    "Southbird/smb3.asm": "6ebfb33a9f00b881b998654cecb8ef70d2f28bd4aab26d0b1a5d43a60be6035d",
+    "Southbird/PRG/prg008.asm": "95f809da88a7885cd35ac7f0b0e07dfb208a790153e8ad4a3e4a692776ed9ef7",
+    "Southbird/PRG/prg029.asm": "7a9a2e1e77e56d308eb59ff41b8d56f90b53f181a3b541eb0cecc2ef9feaf8cc",
+    "Southbird/PRG/levels/Plains/1-1.asm": "479f18a5bc2af3cd7bbe2eec31f0863acb7b9dc29748ae6926b2075d36ad6a7e"
+  }
+}
