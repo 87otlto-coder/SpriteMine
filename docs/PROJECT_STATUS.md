@@ -1,5 +1,22 @@
 # Project status
 
+## 2026-11-15 — runtime-forensics source increment
+
+Separate branch `research/smb3-runtime-forensics` starts from accepted PR #19
+head d9aa7ad. The existing 24-frame timeline (448385–448408) and all 24 A/B/A
+source windows revalidated read-only. A new narrow player-recipe reader matches
+the original PRG1 table; historical analysis checks 144 OAM tile fields. World
+1-1 source stream and nine-byte header are identified, with a partial header
+reader. Ten new synthetic unittest cases pass on Windows Python 3.14.7.
+
+MesenCE 2.2.1 source establishes that NES masterClock counts CPU cycles and is
+truncated to uint32 by Lua getState. Preserve the historical manifest unchanged.
+Canonical F: writes remain denied; no new native capture, full state-transition
+proof, complete level, audio capture or walking loop was produced. New Lua
+observer is preparation only and has not been executed or integrated into the
+launcher. Full pytest and hosted CI were not run. See
+[research report](research/SMB3_RUNTIME_FORENSICS.md).
+
 **Current work — 2026-11-10:** The research branch now contains a paired start/end frame recorder (spritemine_phase_capture.lua) and read-only same-session MMC3 validator (verify_phase_capture.py). It records four full 8 KiB PPU boundary snapshots with OAM, palette and intervening bank writes, and compares captured hashes with ROM-derived bank mapping when supplied the verified ROM. Synthetic tests and a full mock execution are in CI. **Real MesenCE execution of this new recorder remains pending.** See research/mesence/README.md.
 
 **Latest research snapshot — 2026-11-09:** Phase 0 foundation merged to main. Phase 2 static explorer is in PR #4 with real Windows launch/import/atlas/tile inspection observed; remaining export and edge-case checks pending. Phase 1 MesenCE can now capture actual SMB3 state, and independent MMC3 register traces can reconstruct **all 8 physical CHR-ROM bank mappings at sampled frame boundaries**. The predicted endFrame 8192-byte PPU image matches two private capture snapshots byte for byte, verified by SHA-256. Exact render-time Mario sprite reconstruction, save-state replay and full coverage remain unproven. See [MMC3 CHR mapping verification](research/MMC3_CHR_MAPPING_VERIFICATION.md).
