@@ -1,5 +1,19 @@
 # Project status
 
+## 2026-11-16 — source-derived ROM spelunking (documentation branch)
+
+Recorded World 1-1's variable-length command grammar (86 records, five extra
+bytes, one terminator), source-derived terrain/object/scroll mechanisms, and
+Mario's collision/animation/4.4-fixed-point motion chain. An explicit +5-unit
+gravity model fits all nine captured final-hold screen-Y values, but live RAM,
+world/camera state, full level decoding and an observed code path remain unproven.
+See [research handoff](research/SMB3_ROM_SPELUNKING_20261116.md),
+[player physics](research/SMB3_PLAYER_PHYSICS.md) and
+[World 1-1 reconstruction](research/SMB3_WORLD1_1_RECONSTRUCTION.md).
+No new ROM/capture, emulator run, synthetic tests or CI were produced for this
+source-only documentation increment. Ordinary owner Windows PowerShell can write
+to the private RuntimeInvestigation folder; Work environment still cannot.
+
 ## 2026-11-15 — runtime-forensics source increment
 
 Separate branch `research/smb3-runtime-forensics` starts from accepted PR #19
