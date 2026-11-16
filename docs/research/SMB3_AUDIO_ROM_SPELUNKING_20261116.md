@@ -7,7 +7,7 @@ This note continues [the SpriteMine research ledger](SMB3_ROM_SPELUNKING_2026111
 
 ## Sources and exact fixture
 
-- Private original ZIP member \`Super Mario Bros. 3.nes\` (393,232 bytes), SHA-256 \`4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579\`, read-only.
+- Private original ZIP member `Super Mario Bros. 3.nes` (393,232 bytes), SHA-256 `4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`, read-only.
 - Header: standard iNES, mapper 4 (MMC3), PRG 256 KiB, CHR 128 KiB. The PRG begins at file offset 0x10.
 - Source reference: Southbird SMB3 disassembly [PRG028](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg028.asm), [PRG031](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg031.asm), [PRG022](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg022.asm), [PRG008](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm), [RAM and hardware symbols](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm) at commit 09b1bd81.
 - Hardware reference: [NESdev APU pulse](https://www.nesdev.org/wiki/APU_Pulse), [APU frame counter/length registers](https://www.nesdev.org/wiki/APU_registers), [APU length counter](https://www.nesdev.org/wiki/APU_Length_Counter).
@@ -20,19 +20,19 @@ A read-only search of the PRG bytes found these exact tables. Both the physical 
 
 | Source structure | 8-KiB PRG bank | Offset in PRG | iNES file offset | CPU address |
 | --- | ---: | --- | --- | --- |
-| 12-note pulse-period table (\`Square1_Table_Notes\`) | 31 | 0x3E839 | 0x3E849 | 0xE839 |
-| \`Music_RestH_LUT\` | 31 | 0x3E874 | 0x3E884 | 0xE874 |
-| \`Music_Set2B_IndexOffs\` | 28 | 0x39400 | 0x39410 | 0xB400 |
-| \`Music_Set2B_Headers\` | 28 | 0x3942D | 0x3943D | 0xB42D |
-| \`Music_Set2B_Starts\` | 28 | 0x39530 | 0x39540 | 0xB530 |
-| \`Music_Set2B_Ends\` | 28 | 0x3953C | 0x3954C | 0xB53C |
-| \`Music_Set2B_Loops\` | 28 | 0x39548 | 0x39558 | 0xB548 |
+| 12-note pulse-period table (`Square1_Table_Notes`) | 31 | 0x3E839 | 0x3E849 | 0xE839 |
+| `Music_RestH_LUT` | 31 | 0x3E874 | 0x3E884 | 0xE874 |
+| `Music_Set2B_IndexOffs` | 28 | 0x39400 | 0x39410 | 0xB400 |
+| `Music_Set2B_Headers` | 28 | 0x3942D | 0x3943D | 0xB42D |
+| `Music_Set2B_Starts` | 28 | 0x39530 | 0x39540 | 0xB530 |
+| `Music_Set2B_Ends` | 28 | 0x3953C | 0x3954C | 0xB53C |
+| `Music_Set2B_Loops` | 28 | 0x39548 | 0x39558 | 0xB548 |
 
 Evidence classification: **direct original-ROM byte-match**, independently of the source's symbolic labels. Pointer structures were resolved within the proper bank. This is *not* a live trace proving selection of a particular song during gameplay.
 
 ## 2. Song selection and reusable segments
 
-\`MUS2B_OVERWORLD = 0x10\` is Set 2B selection index 0. Its ROM-backed Start/End/Loop indices are 0/6/1. Looking up its index-offset table and seven-byte segment headers yields this initial segment order:
+`MUS2B_OVERWORLD = 0x10` is Set 2B selection index 0. Its ROM-backed Start/End/Loop indices are 0/6/1. Looking up its index-offset table and seven-byte segment headers yields this initial segment order:
 
 | Sequence index | Header | Data base (mapped CPU) |
 | ---: | --- | --- |
@@ -46,7 +46,7 @@ Evidence classification: **direct original-ROM byte-match**, independently of th
 
 Index 0 is introductory; indices 1–6 recur under the documented loop logic. Index 1 and 3 share identical source segment data. Source-derived topology and pointers are now independently checked against the ROM. Segment timing and all individual channel events have *not* been fully decoded or APU-validated.
 
-The selection rows for \`MUS2B_TOADHOUSE = 0x80\` and \`MUS2B_PSWITCH = 0xA0\` both contain Start/End/Loop indices 0x1B/0x1D/0x1B. They are distinct gameplay requests with a common source arrangement. Actual in-game audible equality requires state-sensitive verification.
+The selection rows for `MUS2B_TOADHOUSE = 0x80` and `MUS2B_PSWITCH = 0xA0` both contain Start/End/Loop indices 0x1B/0x1D/0x1B. They are distinct gameplay requests with a common source arrangement. Actual in-game audible equality requires state-sensitive verification.
 
 ## 3. Introductory segment channel locations
 
@@ -66,7 +66,7 @@ The Pulse 2 stream occupies **24 bytes**, ending at 0xB56B, immediately before t
 
 The engine uses a 12-word base-period table and octave shifts; the note codes are in doubled semitone units. For the ordinary pulse-note path, note byte 0x30 resolves to timer 0x01AB:
 
-\`1,789,773 / (16 * (0x01AB + 1)) = 261.36 Hz\`, approximately C4.
+`1,789,773 / (16 * (0x01AB + 1)) = 261.36 Hz`, approximately C4.
 
 A note byte of 0x26 resolves to timer 0x023A, about 195.90 Hz (approximately G3), and note byte 0x3E resolves to timer 0x011C, about 392.49 Hz (G4).
 
@@ -78,13 +78,13 @@ The code treats note byte 0x7E as a rest that returns without a new note-frequen
 
 ## 5. Patches, timing and sound effect arbitration
 
-PRG031 \`Music_PatchGetCTL\` uses the event command's patch bits to select one of eight short or long pulse-control data tables from PRG028. The current note-length countdown indexes this table and writes the control byte to 0x4000 or 0x4004. Thus the timbre can change during a held note, even without a new pitch event. The patch table is *not a PCM sample*.
+PRG031 `Music_PatchGetCTL` uses the event command's patch bits to select one of eight short or long pulse-control data tables from PRG028. The current note-length countdown indexes this table and writes the control byte to 0x4000 or 0x4004. Thus the timbre can change during a held note, even without a new pitch event. The patch table is *not a PCM sample*.
 
-Example timing from \`Music_RestH_LUT\`: timing row 0x30 with low-nibble index 2 returns eight update ticks; index 8 returns 24 ticks. A time-warning offset of 0x10 selects another timing row. The same song events can therefore be performed at modified pace.
+Example timing from `Music_RestH_LUT`: timing row 0x30 with low-nibble index 2 returns eight update ticks; index 8 returns 24 ticks. A time-warning offset of 0x10 selects another timing row. The same song events can therefore be performed at modified pace.
 
-\`Sound_Process\` handles Level 2 effects, Player effects, Level 1 effects, Map effects and Music in that order, then clears the request queues. Pulse 1 music can be interrupted by player/map effects; Pulse 2 by Level 1 effects. A gameplay capture mixes these sources and cannot automatically be presented as a clean original music sequence.
+`Sound_Process` handles Level 2 effects, Player effects, Level 1 effects, Map effects and Music in that order, then clears the request queues. Pulse 1 music can be interrupted by player/map effects; Pulse 2 by Level 1 effects. A gameplay capture mixes these sources and cannot automatically be presented as a clean original music sequence.
 
-\`Sound_Engine_Begin\` writes 0xFF to APU frame counter 0x4017 when called, selecting 5-step frame-sequencer mode with IRQ inhibit. PRG022 calls the sound engine in its per-frame path after mapping PRG28 into the 0xA000 window. The full APU waveform depends on the frame-counter clocking, register-write timing, envelope, sweep, nonlinear mixing and DMC behavior, not just note names.
+`Sound_Engine_Begin` writes 0xFF to APU frame counter 0x4017 when called, selecting 5-step frame-sequencer mode with IRQ inhibit. PRG022 calls the sound engine in its per-frame path after mapping PRG28 into the 0xA000 window. The full APU waveform depends on the frame-counter clocking, register-write timing, envelope, sweep, nonlinear mixing and DMC behavior, not just note names.
 
 ## 6. DMC and other boundaries
 
