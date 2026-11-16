@@ -8,6 +8,7 @@ This is a **documentation-only, source-derived research increment** on top of dr
 - [Earlier runtime-forensics acceptance and unresolved questions](SMB3_RUNTIME_FORENSICS.md)
 - [ROM-backed music segments, pitch decoder and APU research](SMB3_AUDIO_ROM_SPELUNKING_20261116.md)
 - [ROM-confirmed APU envelopes and channel arbitration](SMB3_APU_ENVELOPES_AND_ARBITRATION_20261116.md)
+- [Authoritative MesenCE 2.2.1, FCEUX and NESdev audio cross-check](SMB3_APU_EMULATOR_CROSSCHECK_20261116.md)
 
 ## Evidence and research continuity
 
