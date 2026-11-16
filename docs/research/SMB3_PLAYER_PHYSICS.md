@@ -127,7 +127,7 @@ Use MesenCE 2.2.1 with the already accepted, immutable save-state and input sequ
 | 0x0603–0x0604 | Level_Tile_GndL/R | foot-probe tile identities |
 | 0x0608–0x060B | Level_Tile_Quad | relevant tile ID groups |
 | 0x7E94–0x7E9B | Tile_AttrTable | active collision thresholds |
-| 0x12 / 0xFC | Horz_Scroll_Hi / Horz_Scroll | camera scroll state |
+| 0x12 / 0xFD | Horz_Scroll_Hi / Horz_Scroll | camera scroll state |
 
 **Required evidence:** frame-indexed reads at 448396–448408, observed writes to grounded/velocity/frame variables with exact physical PRG mapping, controller inputs, corresponding OAM/PPU state, and independent comparison with the uninstrumented 24-frame replay. Preserve source hashes and input/capture provenance. Do not infer live memory from this table alone.
 
