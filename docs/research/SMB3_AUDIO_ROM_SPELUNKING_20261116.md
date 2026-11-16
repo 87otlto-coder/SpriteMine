@@ -106,3 +106,71 @@ Implement in stages:
 **Verification status:** original ROM hash and byte location matches confirmed; introductory segment pointer resolution and basic Pulse 2 event counts checked in memory; no emulator launched; no new audio or copyrighted assets exported; no new tests committed.
 
 This is research evidence, not a claim of exhaustive music decoding or complete audio export.
+
+
+## 8. Full intro channel-boundary audit (subsequent read-only confirmation)
+
+The same verified private ROM ZIP was independently opened read-only again; ZIP CRC passed and ROM SHA-256 was rechecked. This analysis evaluated **all five** channels in the first Set 2B Overworld 1 segment. It follows PRG031's channel-specific command treatment, does not emit copyrighted note streams or sample bytes, and was not compared against actual APU playback.
+
+| Channel | CPU start–last source byte (PRG28) | Bytes | Static result within 192 ticks |
+| --- | --- | ---: | --- |
+| Pulse 2 | 0xB554–0xB56B | 24 | 9 notes, 7 rests; segment-end 0x00 at last byte |
+| Pulse 1 | 0xB56C–0xB57C | 17 | 7 notes, 4 rests; last rest extends beyond segment boundary |
+| Triangle | 0xB57D–0xB594 | 24 | 8 notes, 8 rests over 192 ticks; final byte 0x00 not consumed by bounded analysis |
+| Noise | 0xB595–0xB598 | 4 | Two-event 48-tick pattern repeated four times; 0x00 resets its own track pointer |
+| DMC | 0xB599–0xB5A8 | 16 | 8 DMC trigger requests, one 0x7E stop |
+
+The 85-byte contiguous span 0xB554–0xB5A8 ends immediately before the next segment base 0xB5A9. Read-only SHA-256 of the **source spans** (hashes only, bytes not published):
+
+| Span | SHA-256 |
+| --- | --- |
+| All 85 bytes | `3014179af03a6886d82ec03ca7e17472d9cb00caf6255f6405e311ca4540e5af` |
+| Pulse 2 | `3613af1720d630a0382be5b46010f0975cd787356457fd970bf720890c033fde` |
+| Pulse 1 | `d5e22a2486252b615b32597f900286ccd42c3afc37e8288263c502ab1f463bee` |
+| Triangle | `4572f3067c38adc994c3354cf0d6f742d8d74cc6273e0668530ee274883e8ef8` |
+| Noise | `c109fdcd3a4aab92d573609bbe22b64ab09b338b28d5fe941c247517e806a381` |
+| DMC track | `4b054b8c3bd0d6ac51d516810cc0ede36e82f1d2784c94185d70e4fd38406b11` |
+
+**Important boundary behavior:** Pulse 1's final rest begins at tick 112, and its programmed duration is 96 ticks (nominal endpoint tick 208). The leading Pulse 2 channel reaches the segment terminator at tick 192; `PRG031_E48C` initializes the next segment's counters and track pointers, so that Pulse 1 rest is *not* left to finish naturally. Similarly, the Noise channel repeats its own short pattern without waiting for a segment loop. A byte-slice-based decoder without a shared sequencer clock would get this wrong.
+
+Channel-specific rest semantics also matter: 0x7E on a pulse channel skips a new pitch update (not necessarily immediate silence); on Triangle it changes the linear-control state; on DMC it requests a stop through the DMC handler; the Noise track uses source note 0x01 for its silent event. These are not interchangeable "rest = zero audio now" operations.
+
+## 9. Overworld 1's original Pulse 2 section lengths
+
+Following the main Pulse 2 segment-end byte and PRG031's Set 2B header/index tables, each of the seven initial segment references was decoded independently through its first 0x00 terminator. The initial order and bounded durations are:
+
+| Index | Header identity | Pulse 2 source span (incl. terminator) | Note events | Rest events | Music update ticks |
+| ---: | --- | --- | ---: | ---: | ---: |
+| 0 | 0x0F | 0xB554–0xB56B | 9 | 7 | 192 |
+| 1 | 0x10 | 0xB5A9–0xB5C2 | 7 | 9 | 192 |
+| 2 | 0x11 | 0xB5C3–0xB5D4 | 6 | 5 | 192 |
+| 3 | 0x10 (reused) | 0xB5A9–0xB5C2 | 7 | 9 | 192 |
+| 4 | 0x12 | 0xB629–0xB63A | 6 | 5 | 192 |
+| 5 | 0x13 | 0xB68A–0xB6BE | 24 | 16 | 384 |
+| 6 | 0x14 | 0xB71D–0xB74C | 22 | 15 | 384 |
+
+The source-defined **initial pass totals 1,728 music-update ticks**; the repeating indices 1–6 total **1,536 ticks**. These are logical sequencer durations under the normal timing table, not independently timestamped emulator playback. Time-warning tempo substitution and game state can change wall-clock behavior.
+
+The segment header data also shows **per-channel sharing**: headers 0x10, 0x11 and 0x12 all point their Noise track to 0xB658, while headers 0x10 and 0x11 both point their DMC track to 0xB667. Full-segment and individual-channel duplication must be treated separately in the asset catalog.
+
+## 10. Specific DMC cues and sample-length anomaly
+
+The intro's source DMC track requests cues 0x01, 0x05 and 0x08 (plus 0x7E stop), with repeated occurrences. The original ROM's DMC control/length/address tables are at fixed PRG31 CPU addresses **0xE32A**, **0xE31A** and **0xE30A** respectively. The relevant cue resolutions are:
+
+| One-based cue | Sample label in disassembly | DMC CPU source address | Requested byte length | Rate register |
+| --- | --- | --- | ---: | --- |
+| 0x01 | DMC01 | 0xE000 | 129 | 0x0F |
+| 0x05 | DMC04 | 0xE980 | 257 | 0x0F |
+| 0x08 | DMC06 | 0xEA80 | 897 | 0x0F |
+
+The MMC3 permanently maps its last 8-KiB PRG bank at 0xE000–0xFFFF, so **these three specifically used intro samples are bank-stable**. This is a useful reduction in complexity for first-frame audio validation; it does **not** apply to all SMB3 DMC cues, since some start at 0xC000–0xDFFF and depend on bank mapping.
+
+A separate **unconfirmed suspicious cue** is 0x04: the ROM table selects the same DMC02 start address 0xE080 as cue 0x02 but with an encoded length of **1,025 bytes**, versus **449 bytes** for cue 0x02. That would request reads through 0xE480, 576 bytes farther than the shorter selection and into other bank31 contents. This is a real table-length difference, not evidence that the cue is used, audible, intentional or a "lost sample". The intro uses neither of these two cues.
+
+Hardware DMC formulas: sample CPU start = 0xC000 + (64 × 0x4012), byte count = 16 × 0x4013 + 1, with CPU address to physical file mapping dependent on current MMC3 bank where applicable. See [NESdev DMC](https://www.nesdev.org/wiki/APU_DMC), [NESdev MMC3](https://www.nesdev.org/wiki/MMC3) and the pinned PRG031 ROM-source table.
+
+## 11. Reproducibility / pending gates
+
+This increment is a **private read-only analytical verification**, not a newly tested project implementation. It used the unchanged original ROM as the source, masked 8-KiB PRG offsets to translate CPU addresses, indexed the ROM-verified header and channel tables, and applied the source's rest/patch/track-end behaviors. No original note arrays, PCM sample data or copyrighted music output were exported.
+
+Next engineering gates: implement a bounded deterministic, fixture-independent synthetic parser with explicit per-channel state and source offsets; validate its metadata counts against this ledger; confirm time/scheduling with live MesenCE 2.2.1 APU register traces before declaring note or audio export fidelity.
