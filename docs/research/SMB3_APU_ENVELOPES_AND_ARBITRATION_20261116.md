@@ -160,3 +160,32 @@ The entry point `Sound_Engine_Begin` in pinned PRG028 always writes `0xFF` to AP
 This differs from ordinary sound-effect takeover, where the music interpreter does execute and consumes source timing/events while selectively suppressing a channel's note/envelope writes. Thus "pause," "temporary channel ownership" and "music stop/restart" are different event histories. Reproducible native experiments should record all three separately, including the `$4017` writes.
 
 NESdev documents that writing `$4017` in 5-step mode can clock APU envelope/length/sweep units as part of the reset behavior, with CPU-cycle-sensitive timing. No cycle-exact assertion is made here; source-level knowledge that the write occurs is stronger than our knowledge of its exact hardware timing at the chosen replay frames.
+
+
+## 10. Source-derived audio RAM probe map and frame-end queue trap
+
+The pinned `smb3.asm` RAM sound block begins at `0x04D0` and ends before `0x0500`. Its consecutive `.ds` declarations were independently counted from `0x04D0` (not guessed from symbol names). A compact set of research-relevant addresses follows:
+
+| CPU address | Southbird symbol | Meaning |
+| --- | --- | --- |
+| 0x04D3 | `Music_Sq2RestH` | Current Pulse 2 event-duration hold |
+| 0x04D4 | `Music_Sq2Rest` | Countdown to next Pulse 2 event |
+| 0x04D5 | `Music_Sq2NoteLen` | Pulse 2 instrument patch countdown |
+| 0x04D6 | `Music_Sq1Rest` | Pulse 1 music event countdown |
+| 0x04D7 | `Music_Sq1NoteLen` | Pulse 1 patch countdown |
+| 0x04E1 | `SndCur_Player` | Active player SFX; takes precedence on Pulse 1 |
+| 0x04E2 | `SndCur_Level1` | Active Level 1 SFX; takes precedence on Pulse 2 |
+| 0x04E6 | `SndCur_Map` | Active map SFX; takes precedence on Pulse 1 |
+| 0x04ED | `Sound_IsPaused` | Pause state |
+| 0x04F1 | `Sound_QPlayer` | Pending player SFX request |
+| 0x04F2 | `Sound_QLevel1` | Pending Level 1 SFX request |
+| 0x04F3 | `Sound_QLevel2` | Pending Level 2 SFX request |
+| 0x04F5 | `Sound_QMusic2` | Pending Set 2A/B music request |
+| 0x04FE | `Music_Sq2TrkOff` | Pulse 2 position in current source segment |
+| 0x07F7 | `Music_Sq2Patch` | Stored current Pulse 2 patch selector |
+
+**End-of-frame queue trap:** PRG028 `Sound_Process` processes effects before music and then clears queued `Sound_QMusic1/2`, `Sound_QPlayer`, `Sound_QLevel1/2`, `Sound_QMap` and `Sound_QPause`. Some pause paths also skip directly to queue clearing. Therefore an ordinary endFrame CPU RAM sample can display zero-valued queue variables even when an event was queued and played earlier that frame. To determine whether a jump SFX was requested during a candidate walk-off, use a **write callback** on `0x04F1` or sample the queue immediately before sound-engine processing, with physical PRG writer mapping and frame/cycle information. Use `0x04E1` as an independently sampled *active effect* indicator, but do not infer that it tracks every request's complete history.
+
+These addresses are **source-derived candidates**, not live-confirmed values. The `0x07F7` label comes from the fixed RAM context around `0x07F0` and must also be validated during actual gameplay. Avoid confusing the game-managed music state with APU hardware state. Capture `0x4017` and `0x4004–0x4007` writes separately.
+
+This makes an inexpensive, bounded experiment possible: first record RAM snapshots at source routine boundaries, then add targeted write tracing for just the queue/active-effect values and relevant APU register writes. Avoid an unbounded CPU execution callback. Keep all real game captures private under `F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation`.
