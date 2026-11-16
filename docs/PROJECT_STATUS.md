@@ -4,9 +4,13 @@
 
 Read the private, verified PRG1 ROM without modifying it. Confirmed physical
 locations of the pulse-period, music-timing and Set 2B song/segment/loop tables.
-Resolved the Overworld 1 introductory segment's five channel-track addresses;
-a bounded source-guided Pulse 2 interpretation identified 9 notes and 7 rests
-(192 music-update ticks) without exporting original music. Documented envelope,
+Resolved and source-guided decoded all five Overworld 1 introductory
+channel streams without exporting original music: Pulse 2 (9 notes, 7 rests),
+Pulse 1 (7 notes, 4 rests), Triangle (8 notes, 8 rests), repeating noise
+pattern, and 8 DMC sample triggers plus a stop. Pulse 2 spans seven segment
+references (1,728 introductory and 1,536 repeat-loop sequencer ticks at normal
+tempo); the time-warning duration tables reduce these to 1,440 and 1,280
+respectively. All lengths are analytical predictions, not measured playback. Documented envelope,
 APU length-register and frame-counter behavior, plus unresolved native audio
 verification gates. See [audio research](research/SMB3_AUDIO_ROM_SPELUNKING_20261116.md).
 No native MesenCE or APU register-capture test has been run for this increment.
