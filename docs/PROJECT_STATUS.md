@@ -1,5 +1,16 @@
 # Project status
 
+## 2026-11-16 — ROM-backed SMB3 music structure research
+
+Read the private, verified PRG1 ROM without modifying it. Confirmed physical
+locations of the pulse-period, music-timing and Set 2B song/segment/loop tables.
+Resolved the Overworld 1 introductory segment's five channel-track addresses;
+a bounded source-guided Pulse 2 interpretation identified 9 notes and 7 rests
+(192 music-update ticks) without exporting original music. Documented envelope,
+APU length-register and frame-counter behavior, plus unresolved native audio
+verification gates. See [audio research](research/SMB3_AUDIO_ROM_SPELUNKING_20261116.md).
+No native MesenCE or APU register-capture test has been run for this increment.
+
 ## 2026-11-16 — source-derived ROM spelunking (documentation branch)
 
 Recorded World 1-1's variable-length command grammar (86 records, five extra
