@@ -1,5 +1,20 @@
 # Project status
 
+## 2026-11-16 — external authoritative emulator verification
+
+Reviewed the **exact MesenCE 2.2.1 source commit** 20ba206, official Lua API
+documentation, independent FCEUX APU implementation and NESdev hardware
+references. Confirmed pulse constant-volume/duty semantics, length-counter
+timer fields, DMC address/length formulas and MMC3 final-bank mapping.
+Critical qualifications: MesenCE schedules $4017 frame-counter reset 3/4
+CPU cycles after write; Lua write callbacks run before the write and can
+**mutate it if returning an integer**; CPU-memory reads can have I/O side
+effects unless using debug memory types; DMC DMA can interfere with
+controller reads on NTSC. Hardware confirmations do not independently
+verify SMB3's source-derived note counts, sound priorities or raw-ROM
+hashes. See [source cross-check](research/SMB3_APU_EMULATOR_CROSSCHECK_20261116.md).
+No native emulator playback experiment or new ROM test was performed.
+
 ## 2026-11-16 — SMB3 APU envelope and SFX arbitration spelunking
 
 Verified the private PRG1 ROM's 610-byte music patch block at physical
