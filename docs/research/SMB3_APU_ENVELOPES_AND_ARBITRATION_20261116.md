@@ -151,3 +151,12 @@ A read-only stream-boundary audit of the original PRG28 music data for the initi
 This counts *event occurrences* in the selected arrangement, not unique ROM notes, pitches or assets. The decoder observes the source event/timing byte grammar but is **not verified against native APU writes**. The initial Pulse 1 stream similarly contains seven note events, with one patch-3 and six patch-2 selections, and four rest events. No conclusion about the remaining four channels' instrument use is made from this scan.
 
 The repeated event pattern confirms that source patch identity, note identity, duration and channel-specific audio outcome should remain separate fields in SpriteMine's audio-catalog model.
+
+
+## 9. Pause does not equal channel arbitration
+
+The entry point `Sound_Engine_Begin` in pinned PRG028 always writes `0xFF` to APU frame counter `$4017` **before** checking queued pause/resume and active pause flags. When `Sound_IsPaused` is nonzero it branches to queue cleanup rather than executing `Sound_Process`, so the usual music track/rest counters do not advance through the normal music interpreter on that call. The pause-effect code can separately write to APU and disable/enable channels. On resume, it re-enables channels and returns to normal processing.
+
+This differs from ordinary sound-effect takeover, where the music interpreter does execute and consumes source timing/events while selectively suppressing a channel's note/envelope writes. Thus "pause," "temporary channel ownership" and "music stop/restart" are different event histories. Reproducible native experiments should record all three separately, including the `$4017` writes.
+
+NESdev documents that writing `$4017` in 5-step mode can clock APU envelope/length/sweep units as part of the reset behavior, with CPU-cycle-sensitive timing. No cycle-exact assertion is made here; source-level knowledge that the write occurs is stronger than our knowledge of its exact hardware timing at the chosen replay frames.
