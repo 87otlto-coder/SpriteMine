@@ -1,5 +1,20 @@
 # Project status
 
+## 2026-11-16 — SMB3 APU envelope and SFX arbitration spelunking
+
+Verified the private PRG1 ROM's 610-byte music patch block at physical
+PRG offsets 0x39196–0x393F7, SHA-256
+e9bb4a059a48ac060fac47a1a753290fff3d8d52055d9777b50baa8209dda358.
+All 610 patch bytes set the APU constant-volume bit: the music engine
+changes pulse duty/volume through its own reverse-indexed patch curves.
+The first Overworld 1 Pulse 2 note predicts APU control writes
+99/9A/9A/99/98/97/95/93 over eight engine updates (assuming no SFX).
+Source tracing also shows music positions advance during some SFX channel
+takeovers while music envelope counters can remain frozen.
+These are ROM/source-backed predictions, **not native APU observations**.
+See [envelope/arbitration research](research/SMB3_APU_ENVELOPES_AND_ARBITRATION_20261116.md).
+No emulator was launched and no copyrighted audio or sample data was committed.
+
 ## 2026-11-16 — ROM-backed SMB3 music structure research
 
 Read the private, verified PRG1 ROM without modifying it. Confirmed physical
