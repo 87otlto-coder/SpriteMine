@@ -174,3 +174,28 @@ Hardware DMC formulas: sample CPU start = 0xC000 + (64 × 0x4012), byte count = 
 This increment is a **private read-only analytical verification**, not a newly tested project implementation. It used the unchanged original ROM as the source, masked 8-KiB PRG offsets to translate CPU addresses, indexed the ROM-verified header and channel tables, and applied the source's rest/patch/track-end behaviors. No original note arrays, PCM sample data or copyrighted music output were exported.
 
 Next engineering gates: implement a bounded deterministic, fixture-independent synthetic parser with explicit per-channel state and source offsets; validate its metadata counts against this ledger; confirm time/scheduling with live MesenCE 2.2.1 APU register traces before declaring note or audio export fidelity.
+
+
+## 12. Quantified low-time warning tempo, checked against ROM
+
+PRG031 `Music_GetRestTicks` computes timing lookup index `Music_RestH_Base + Music_RestH_Off + (command & 0x0F)`; the low-time-warning recovery path sets `Music_RestH_Off = 0x10` before requeuing the held Set 2B music. The original seven Overworld 1 Pulse 2 segments all use base 0x30, so normal timing reads row 0x30 and accelerated timing reads row 0x40.
+
+Read-only redecoding of **every segment's original byte stream** under both modes gave:
+
+| Initial sequence index | Normal timing ticks | Warning timing ticks |
+| ---: | ---: | ---: |
+| 0 | 192 | 160 |
+| 1 | 192 | 160 |
+| 2 | 192 | 160 |
+| 3 | 192 | 160 |
+| 4 | 192 | 160 |
+| 5 | 384 | 320 |
+| 6 | 384 | 320 |
+| **Initial pass, indices 0–6** | **1,728** | **1,440** |
+| **Repeating loop, indices 1–6** | **1,536** | **1,280** |
+
+Each complete segment is exactly **5/6 of its original tick duration**; nominal event rate is **6/5 of normal (20% faster)**. This holds for segment aggregates, not necessarily for every individual note: the lookup entries are not all reduced at identical ratios. The note bytes, segment order and channel pointer identities are unchanged. This is a **ROM-backed sequencer-model prediction**, not a measured emulator playback or claim that the actual audio clock advances identically in all game states.
+
+In PRG031, the time-warning Set 1 song's completion path calls the Set 2B queue logic for the held track after setting the +0x10 timing offset. Under that code path, the song's segment traversal is reinitialized at its beginning, rather than necessarily resuming a suspended note position. Test this in the native emulator before presenting it as an observed in-game transition.
+
+This speed-multiplier finding is independently reproducible using only the verified PRG1 ROM's 0xE874 duration table, seven Set 2B headers, the Pulse 2 streams and the source-described lookup/queue semantics; no copyright-protected note data needs to be published.
