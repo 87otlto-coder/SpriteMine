@@ -131,3 +131,23 @@ Maintain three separate result classes: **ROM-decoded sequence**, **emulator-cap
 For SMB3 music, the original ROM and pinned disassembly establish a usable deterministic control structure: song/segment selection → channel event timing → note period and patch choice → a software-driven, reverse-indexed constant-volume/duty envelope → active-SFX arbitration → CPU write stream → APU output.
 
 This note covers only a small, checked portion of that chain and provides falsifiable next steps. No ROM was modified; no original music stream, DPCM sample or extracted game asset was published.
+
+
+## 8. Overworld 1 note-event patch usage, complete bounded Pulse 2 scan
+
+A read-only stream-boundary audit of the original PRG28 music data for the initial **seven** Overworld 1 segment references (0x0F, 0x10, 0x11, reused 0x10, 0x12, 0x13, 0x14) identifies **81 Pulse 2 note events**, **66 rest events** and no `0xFF` bends in the bounded source tracks.
+
+| Source segment reference | Notes | Rests | Patch 3 notes | Patch 2 notes |
+| --- | ---: | ---: | ---: | ---: |
+| 0x0F | 9 | 7 | 1 | 8 |
+| 0x10 | 7 | 9 | 0 | 7 |
+| 0x11 | 6 | 5 | 0 | 6 |
+| 0x10 (reused) | 7 | 9 | 0 | 7 |
+| 0x12 | 6 | 5 | 0 | 6 |
+| 0x13 | 24 | 16 | 0 | 24 |
+| 0x14 | 22 | 15 | 0 | 22 |
+| **Total** | **81** | **66** | **1** | **80** |
+
+This counts *event occurrences* in the selected arrangement, not unique ROM notes, pitches or assets. The decoder observes the source event/timing byte grammar but is **not verified against native APU writes**. The initial Pulse 1 stream similarly contains seven note events, with one patch-3 and six patch-2 selections, and four rest events. No conclusion about the remaining four channels' instrument use is made from this scan.
+
+The repeated event pattern confirms that source patch identity, note identity, duration and channel-specific audio outcome should remain separate fields in SpriteMine's audio-catalog model.
