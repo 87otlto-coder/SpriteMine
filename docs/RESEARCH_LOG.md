@@ -1,5 +1,23 @@
 # Research log
 
+## 2026-11-17 — Expedition 10/11: sound producers and live block state
+
+Question: How do SMB3 gameplay triggers feed SFX and live level reconstruction?
+Source: pinned Southbird disassembly PRG000/001/002/007/008/014/026/028/029/030,
+MesenCE 2.2.1 Lua docs and NESdev APU specification. Findings: request queues
+cleared per sound process pass; 1-Up currently playing suppresses other Level 1
+requests; $80|$10 composite value could select previously unidentified $90
+handler (UNPROVEN in actual gameplay). Blocks use tile/action/direction tables,
+finite bounce slots, one pending tile-change event, an independent pending PPU
+pattern commit, and conditional effective-tile substitution while P-Switch is
+active. Ten-coin timer initial 200 and count initial 9 derive from source; no
+native timing verified. Confidence: high for source code relationships, low for
+unobserved collisions/edge cases, no new PRG1 runtime proof. See
+[Event producers](research/SMB3_EVENT_PRODUCER_CHAINS_20261117.md) and
+[Block machinery](research/SMB3_BLOCK_INTERACTION_SPELUNKING_20261117.md).
+Next: Windows PRG1 A/B/A tracing of block queue, CHR mapping, tile RAM, PPU,
+APU and control-state transitions; avoid mutating ROM or private fixtures.
+
 Record date, question, source/experiment, observation, confidence and next action. Link each major result to the exact code commit, emulator version and (where possible) test fixture.
 
 ## 2026-11-08 — Source ROM identity
