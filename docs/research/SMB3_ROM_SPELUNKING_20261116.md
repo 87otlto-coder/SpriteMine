@@ -11,6 +11,8 @@ This is a **documentation-only, source-derived research increment** on top of dr
 - [Authoritative MesenCE 2.2.1, FCEUX and NESdev audio cross-check](SMB3_APU_EMULATOR_CROSSCHECK_20261116.md)
 - [SMB3 SFX synthesis, priorities, Noise/Triangle conflicts and DMC side effects](SMB3_SFX_RUNTIME_SPELUNKING_20261117.md)
 - [ROM-verified SFX bytecode, map effect timelines and adjacent-table reads](SMB3_SFX_ROM_TABLES_20261117.md)
+- [Expedition 10: gameplay-to-sound producer chain and collected-item state](SMB3_EVENT_PRODUCER_CHAINS_20261117.md)
+- [Expedition 11: block-action interpreter, tile/PPU split, ten-coin and P-Switch](SMB3_BLOCK_INTERACTION_SPELUNKING_20261117.md)
 
 ## Evidence and research continuity
 
