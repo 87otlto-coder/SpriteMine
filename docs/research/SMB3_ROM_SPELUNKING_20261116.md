@@ -10,6 +10,7 @@ This is a **documentation-only, source-derived research increment** on top of dr
 - [ROM-confirmed APU envelopes and channel arbitration](SMB3_APU_ENVELOPES_AND_ARBITRATION_20261116.md)
 - [Authoritative MesenCE 2.2.1, FCEUX and NESdev audio cross-check](SMB3_APU_EMULATOR_CROSSCHECK_20261116.md)
 - [SMB3 SFX synthesis, priorities, Noise/Triangle conflicts and DMC side effects](SMB3_SFX_RUNTIME_SPELUNKING_20261117.md)
+- [ROM-verified SFX bytecode, map effect timelines and adjacent-table reads](SMB3_SFX_ROM_TABLES_20261117.md)
 
 ## Evidence and research continuity
 
