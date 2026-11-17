@@ -11,8 +11,12 @@ junction). The main layout's 60 candidate cloud writes have source-derived
 screen/row/type biases, including column-locked graphic selection and
 potential writes beyond the declared eleven screens. Reconstructed both
 junction landing recipes from source/ROM bytes. Static footprint calculations
-give 12 requested bonus coin tiles and 269 unique diamond-rectangle cells;
-the **final live tilemap and visible PPU output remain unverified**.
+give 12 requested bonus coin tiles and 269 unique diamond-rectangle cells.
+A separate 864-byte first-entry bonus-room logical-tile research model now has
+candidate SHA-256 `c57b72c77899d596745065c90878327993f9a25e6289c0b22d960c58021b088a`,
+with 575 sky, 269 diamond, 12 coin and eight pipe cells. **This is a source-
+and ROM-derived prediction, not an observed live Tile_Mem or PPU hash**;
+full native comparison remains outstanding.
 See [Expedition 12](research/SMB3_WORLD1_1_BONUS_AND_RANDOM_CLOUDS_20261117.md).
 No ROM bytes/assets were committed; no MesenCE or native Windows test ran.
 
