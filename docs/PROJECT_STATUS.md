@@ -1,5 +1,21 @@
 # Project status
 
+## 2026-11-17 — SMB3 original-ROM SFX data formats and table boundaries
+
+Read the user's verified, unchanged PRG1 ROM in memory and decoded world-map
+SFX primary track schedules: 15/45 (world entrance), 2/15 (move),
+12/54 (level entry), 3/17 (flip), 5/30 (bonus), 3/26 (deny), as
+pitch events/engine updates. Level entry's secondary Pulse 2 track has a
+56-update nominal program and is cut short by the primary track's
+54-update end. Four source-encoded Level 1 scripts decode to 24,44,16,18
+event-bearing updates respectively. Confirmed six reverse-indexed 1-Up
+notes and counter-indexed rise/vine table access. Some Level 2 routines
+read **beyond named table boundaries**, using adjacent ROM bytes or code,
+and two separate Noise curves contain identical prefix data.
+All ROM offsets and block hashes are recorded in
+[the SFX tables report](research/SMB3_SFX_ROM_TABLES_20261117.md).
+Source/ROM-derived only: no live MesenCE trace or sound playback validation.
+
 ## 2026-11-17 — SMB3 SFX synthesis and channel-interference spelunking
 
 Traced pinned PRG1 disassembly's Player, Level 1 and Level 2 SFX handlers.
