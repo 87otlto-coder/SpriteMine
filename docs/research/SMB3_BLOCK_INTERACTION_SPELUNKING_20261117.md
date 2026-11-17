@@ -4,7 +4,7 @@
 
 The source links below point to the pinned disassembly. Companion: [Expedition 10 gameplay-to-SFX producer chains](SMB3_EVENT_PRODUCER_CHAINS_20261117.md), [World 1-1 decoder notes](SMB3_WORLD1_1_RECONSTRUCTION.md).
 
-## Findings 77–88 (source inspection)
+## Findings 77–90 (source inspection)
 
 **77 — Block behavior comes from tile ID, hit direction, and a compact dispatch table.** [PRG008 `Level_ActionTiles`, range/hit masks, LATP/LATR](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm#L4828-L5002). `Level_DoBumpBlocks` searches tile-ID intervals with tile-type-specific hit-enable masks and an offset into `LATP_PowerUps` / `LATR_BlockResult`. Movement direction changes which tile ranges are searched; the desert-only pipeworks action is labelled unused. A tile's appearance alone does not determine its interactive behavior.
 
@@ -29,6 +29,29 @@ The source links below point to the pinned disassembly. Companion: [Expedition 1
 **87 — Some block contents depend on Player state rather than ROM tile label alone.** [PRG008 `LATP_Flower`, `LATP_Leaf`, `LATP_CoinStar`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm#L5151-L5230): normal flower/leaf blocks select a mushroom for small Player but flower/leaf for a powered-up Player; Coin/Star behavior selects a star when the Player is star-invincible, otherwise delegates to the coin routine. Source tile metadata identifies a conditional **producer rule**, not necessarily the object that will spawn.
 
 **88 — Per-hit block outcomes depend on direction and Player suit.** [PRG008 `LATP_Brick`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm#L5231-L5285) smashes a standard brick for the tail-attack tile-detect slot or when Player is not small; otherwise the small-Player path selects a non-object result/bounce. The smash path queues a Level 2 crumble sound, seeds brick-fragment animation state and score, and requests a background tile replacement. Preserve independent physical sound, logical tile, particle/fragment and score evidence.
+
+## Further scheduling and probe findings (89–90)
+
+**89 — Logical tile processing and PPU commitment occur in separate execution contexts.** [PRG030 gameplay update](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg030.asm#L2495-L2507) maps PRG29 and calls `BlockChange_Do`, while [PRG031 NMI](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg031.asm#L1533-L1562) invokes `TileChng_VRAMCommit` in the normal video-update path, also in vertical and 32-pixel-partition paths. Thus a tile collision and logical change can be separated from the visible commit by an NMI scheduling boundary. The **exact number of observed display frames of latency is not proven**, because NMI/event phase and the `VBlank_Tick` branch matter. Instrument both routine executions with mapped PC and master clock, not just consecutive screenshots.
+
+**90 — Narrow, source-derived RAM watchlist for future Windows MesenCE probes.** Computed by accumulating the `.ds` declarations from the pinned [`smb3.asm` gameplay `$0500` block](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm), including aliases and skipped bytes, **not read from a live emulator**:
+
+| RAM | Symbol | Role |
+| --- | --- | --- |
+| `$0510` | `Event_Countdown` | First of eight generic counters |
+| `$0516` | `B10Coin_Timer` | Multi-coin time budget |
+| `$0528–$052B` | `Level_BlockChgXHi/XLo/YHi/YLo` | Single pending tile event's aligned coordinates |
+| `$052C–$052D` | `Level_BlkBump_Pos` | Bounce animation countdowns |
+| `$052E–$0530` | `Level_BlkBump` | Bounce slot state |
+| `$0564` | `Level_ChgTileEvent` | Pending tile change type |
+| `$0567` | `Level_PSwitchCnt` | Active switch timer |
+| `$0581` | `B10Coin_Count` | Remaining ten-coin grants |
+| `$0582` | `B10Coin_ID` | OR-folded block identity |
+| `$036C–$036D` | `TileChng_VRAM_H/L` | Pending visible commit address |
+| `$036E–$0371` | `TileChng_Pats[0..3]` | Pending 8x8 visible tile patterns |
+| `$7E02–$7E81` | `Level_BlockGrabHitMem` | Level-junction coin/hidden 1-Up bitmap |
+
+The `$03xx` and `$7Exx` positions are also explicitly documented in the pinned RAM declarations. Interpret snapshots only alongside gameplay context, current mapper state, and matched-frame timing. Use passive Lua write callbacks returning no replacement value.
 
 ## Highest-value native experiments
 
