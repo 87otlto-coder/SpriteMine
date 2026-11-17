@@ -9,7 +9,7 @@ Date: 2026-11-17. Target: **Super Mario Bros. 3 USA PRG1 / Revision A** only.
 - **Not tested:** Native MesenCE, frame/cycle timing, complete final Tile_Mem, PPU nametable, visible bitmap, interactive collisions, seed replay, and actual traversal of either pipe.
 - Companion [World 1-1 construction baseline](SMB3_WORLD1_1_RECONSTRUCTION.md), [block interactions](SMB3_BLOCK_INTERACTION_SPELUNKING_20261117.md), [Expedition 10 event provenance](SMB3_EVENT_PRODUCER_CHAINS_20261117.md). Third-party assembly licensing review remains required before reuse.
 
-## Findings 94–107
+## Findings 94–109
 
 ### 94. Reciprocal World 1-1 main/bonus header pointers — ROM verified
 
@@ -66,6 +66,23 @@ A [general junction](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788d
 ### 107. Full World 1-1 acceptance requires both areas and their state transitions
 
 The immutable ROM and disassembly establish a main/bonus layout-pair target, but not yet its complete authentic tilemap. Proposed acceptance must cover: both headers/streams, exact dispatch and extra-byte grammar; player state and area transition; preserved per-half collected-item bitmap; refreshed object-spawn bookkeeping; conditional tile/PPU output; a captured RNG state, and native MesenCE comparison of both fully generated logical maps. The [primary World 1-1 research document](SMB3_WORLD1_1_RECONSTRUCTION.md) already notes random clouds and incomplete final maps. Do not mark the entire stage complete based on a static panorama or solely the main area.
+
+### 108. Each direction has a different encoded landing recipe — original ROM fields and pinned-source decoder
+
+The main layout contains one junction command at layout offset `0xF5` (ROM file offset `0x1FC90`): it populates junction lookup **slot 8**, with Y/exit descriptor `$42` and X descriptor `$80`. The bonus layout contains one junction command at layout offset `0x49` (file offset `0x1FCF5`): it populates **slot 1**, with Y/exit descriptor `$71` and X descriptor `$19`. These three-byte commands were read directly from the owner's original PRG1 ROM. [`LoadLevel_StoreJctStart`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg014.asm#L5005-L5025) indexes the 16-slot Y/X junction arrays using the low nibble of the first byte; the other two command bytes are the stored Y/X descriptors. [`LevelJct_General`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg026.asm#L1750-L1909) selects the lookup by the **departing** area Player_XHi for horizontal levels and decodes the target Player position.
+
+For a source-position index matching the stored slot, the predicted targets are:
+
+| Route | Departure lookup slot | Target Player world X | Target Player world Y | Pipe exit direction | Starting vertical scroll |
+| --- | ---: | ---: | ---: | --- | --- |
+| World 1-1 → bonus | 8 | `$0088` (136 px) | `$00F0` (240 px) | 2: down | `$B0` |
+| Bonus → World 1-1 | 1 | `$0918` (2328 px) | `$0180` (384 px) | 1: up | `$EF` |
+
+Both descriptors leave vertical-level mode clear. The low X byte gains the decoder's center `$08`; vertical Y positions are selected from `LevelJct_YLHStarts`. These are **source/ROM-derived candidate landing states**, **not observed transition frames**. The entry-path premise (departing Player_XHi=8 or 1), subsequent screen/camera adjustments and actual exit behavior must be confirmed in MesenCE. The main area's source pipe at tile column 141 resides in screen 8, while the bonus room's source ceiling pipes include screen 1, making the keys plausible without proving traversal.
+
+### 109. A level graph edge carries more than destination identity
+
+The two reciprocal link pointers identify target layouts, but each direction also has a different **entry slot**, **X/Y landing recipe**, **pipe-exit direction**, **initial vertical scroll**, and **object pointer**. A future asset catalog should represent an area transition as a directed edge with these fields, separate from the destination's own header and from live player/camera state. This avoids conflating identical rooms entered from different pipes or start positions. Only the two World 1-1 edges above are statically established; broader behavior needs evidence.
 
 ## Narrow native verification plan
 
