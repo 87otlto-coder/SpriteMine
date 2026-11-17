@@ -9,7 +9,7 @@ Date: 2026-11-17. Target: **Super Mario Bros. 3 USA PRG1 / Revision A** only.
 - **Not tested:** Native MesenCE, frame/cycle timing, complete final Tile_Mem, PPU nametable, visible bitmap, interactive collisions, seed replay, and actual traversal of either pipe.
 - Companion [World 1-1 construction baseline](SMB3_WORLD1_1_RECONSTRUCTION.md), [block interactions](SMB3_BLOCK_INTERACTION_SPELUNKING_20261117.md), [Expedition 10 event provenance](SMB3_EVENT_PRODUCER_CHAINS_20261117.md). Third-party assembly licensing review remains required before reuse.
 
-## Findings 94–109
+## Findings 94–112
 
 ### 94. Reciprocal World 1-1 main/bonus header pointers — ROM verified
 
@@ -83,6 +83,31 @@ Both descriptors leave vertical-level mode clear. The low X byte gains the decod
 ### 109. A level graph edge carries more than destination identity
 
 The two reciprocal link pointers identify target layouts, but each direction also has a different **entry slot**, **X/Y landing recipe**, **pipe-exit direction**, **initial vertical scroll**, and **object pointer**. A future asset catalog should represent an area transition as a directed edge with these fields, separate from the destination's own header and from live player/camera state. This avoids conflating identical rooms entered from different pipes or start positions. Only the two World 1-1 edges above are statically established; broader behavior needs evidence.
+
+### 110. Bonus-room ceiling pipes have a short, deterministic 2×2 footprint
+
+The bonus layout's generator IDs `26` and `27` both reach [`LoadLevel_VCeilingPipeRun`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg014.asm#L510-L573). Both source commands have shape low nibble `1`. In this exact case the loop writes one row of vertical shaft tiles and then one row of terminal pipe-cap tiles, each two logical tiles wide: four logical writes per pipe. The commands start at source tile positions `(8,15)` and `(22,15)`, fitting within the bonus room's two horizontal screens. Generator 26 uses cap IDs `$AD/$AE`; generator 27 uses `$B1/$B2`; both use shaft IDs `$BA/$BB`. These IDs are grounded in the pinned [smb3.asm tile constants](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm). **The labels imply different pipe functions, but actual entry/exit interaction is not confirmed here.**
+
+### 111. A complete candidate 864-byte logical bonus map is now derivable with no random tile generator
+
+A private, read-only **research model**, not integrated into SpriteMine, consumed the original bonus stream's 22 instructions in source order; initialized 2×(16×27)=864 logical tile cells to `TILE1_SKY $80`; applied ten `TopDeco` rectangles, nine inclusive coin runs, and two 2×2 ceiling pipes; and treated the one junction record as metadata, not a tile write. The ten rectangles use top and follower tile ID `TILE1_DIAMOND $F0`. The model checks every write remains within the 2-screen, 27-row bounds; it does **not** import any private graphics or output a map to GitHub.
+
+Model results (derived from original ROM command bytes plus pinned source rules, **not observed game RAM**):
+
+| Tile identity | Logical ID | Predicted cell count |
+| --- | --- | ---: |
+| Plains sky | `$80` | 575 |
+| Diamond block | `$F0` | 269 |
+| Coin | `$40` | 12 |
+| Pipe vertical left/right | `$BA/$BB` | 2 each |
+| Pipe cap, variant 1 left/right | `$AD/$AE` | 1 each |
+| Pipe cap, variant 2 left/right | `$B1/$B2` | 1 each |
+
+The model produces 305 total writes to 289 distinct positions, with 16 overlapping rectangle writes that do **not** change an existing non-sky value. All 12 coin positions remain distinct from both the diamond and pipe footprints **in this model**. The model-produced two-screen row-major logical tile array has SHA-256 `c57b72c77899d596745065c90878327993f9a25e6289c0b22d960c58021b088a` (screen 0 hash `08b8f5dc7f0bbfdd60a4ce22c2812c50c5bc534bbabd0eb29e275dd8b575e016`; screen 1 hash `2c4c866f6e77556b78370013cf605af0bd657999dfde5a1f8e63aba3ee7b0a7b`). **This is explicitly a candidate/model hash, not a verified original-ROM decoded tile-map hash**; it requires a native MesenCE `Tile_Mem` comparison before being promoted. The stream has no random-cloud generator, unlike the main World 1-1 layout, so this two-screen first-entry model has no *known tile-construction RNG dependency*. Runtime persistence after collecting coins, unusual initial flags, or other game mutations can still change live output.
+
+### 112. This provides a bounded verification target for the World 1-1 level decoder
+
+The secret-room model is much narrower than a complete main World 1-1 reconstruction. It exercises the **exact original parser grammar**, tile-memory initialization, rectangle iteration, inclusive coin runs, pipe writes, and junction metadata, with all proposed writes in bounds. The next implementable acceptance gate is to compute the 864-byte read-only `Tile_Mem` snapshot immediately after a first bonus-room level load and compare its SHA-256 and individual logical tile values against the **candidate** model, documenting any differences without altering the source ROM. Only after that match should the model be used as a canonical fixture; later rendered pixels still need separate CHR/PPU validation.
 
 ## Narrow native verification plan
 
