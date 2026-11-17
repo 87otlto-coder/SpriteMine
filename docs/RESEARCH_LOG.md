@@ -1,5 +1,24 @@
 # Research log
 
+## 2026-11-17 — Expedition 12: World 1-1 bonus-room and cloud generator
+
+Question: Is World 1-1 a single static room, and can its background be
+reconstructed independently of dynamic game state?
+Observation: Original PRG1 file-offset/hash checks confirm a reciprocal
+main/bonus layout pair. Bonus stream length 77 bytes, 22 commands, 10
+additional width bytes, nine coin runs requesting 12 tiles. Source-derived
+geometry gives 269 distinct diamond cells from 285 requested writes.
+Disassembly's cloud generator consumes shared RNG state, applies skewed
+screen/row mapping and correlates cloud type with column modulo four.
+A/B transition commands statically decode different Player X/Y, scroll,
+and exit-direction recipes. Confidence: high for hashes/pointer bytes and
+metadata-only grammar counts; source-derived for tile write geometry and
+RNG interpretation; unverified for final collision/render, save-state seed,
+runtime entry conditions and actual transition timing. Read
+[World 1-1 bonus and clouds](research/SMB3_WORLD1_1_BONUS_AND_RANDOM_CLOUDS_20261117.md).
+Next: read-only MesenCE RAM/PRG-mapping/PPU captures across both area loads.
+
+
 ## 2026-11-17 — Expedition 10/11: sound producers and live block state
 
 Question: How do SMB3 gameplay triggers feed SFX and live level reconstruction?
