@@ -1,5 +1,22 @@
 # Project status
 
+## 2026-11-17 — World 1-1 two-area layout and RNG cloud archaeology
+
+Read the owner's original, immutable SMB3 PRG1 image **in memory** again;
+the full image and World 1-1 primary stream hashes match prior verified evidence.
+The primary layout and secret bonus room have reciprocal original ROM
+pointers; the 77-byte bonus stream contains 22 commands (ten four-byte
+rectangle generators, nine coin runs, two ceiling pipe generators, one
+junction). The main layout's 60 candidate cloud writes have source-derived
+screen/row/type biases, including column-locked graphic selection and
+potential writes beyond the declared eleven screens. Reconstructed both
+junction landing recipes from source/ROM bytes. Static footprint calculations
+give 12 requested bonus coin tiles and 269 unique diamond-rectangle cells;
+the **final live tilemap and visible PPU output remain unverified**.
+See [Expedition 12](research/SMB3_WORLD1_1_BONUS_AND_RANDOM_CLOUDS_20261117.md).
+No ROM bytes/assets were committed; no MesenCE or native Windows test ran.
+
+
 ## 2026-11-17 — SMB3 gameplay-event producers and block-interaction archaeology
 
 Pinned Southbird source review mapped Level 1 SFX suppression, composite high-bit
