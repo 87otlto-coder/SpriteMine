@@ -1,5 +1,19 @@
 # Project status
 
+## 2026-11-17 — SMB3 gameplay-event producers and block-interaction archaeology
+
+Pinned Southbird source review mapped Level 1 SFX suppression, composite high-bit
+sound-request alias hypotheses, 1-Up reward synchronization, and collected-item
+bitmap behavior. Follow-on block research found finite bounce-object slot gates,
+200-update initial ten-coin timer, OR-folded block ID, single-slot queued tile
+changes, separate logical tile and PPU writes, and P-Switch CHR-bank / collision
+overlays. Sources and native falsification plans are in
+[event producer chains](research/SMB3_EVENT_PRODUCER_CHAINS_20261117.md) and
+[block interactions](research/SMB3_BLOCK_INTERACTION_SPELUNKING_20261117.md).
+All these *new* observations are from public pinned disassembly only: no new
+PRG1 binary verification, native emulator trace, visual validation or test run.
+PRs #19/#20 remain separate and untouched.
+
 ## 2026-11-17 — SMB3 original-ROM SFX data formats and table boundaries
 
 Read the user's verified, unchanged PRG1 ROM in memory and decoded world-map
