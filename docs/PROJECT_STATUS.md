@@ -1,5 +1,20 @@
 # Project status
 
+## 2026-11-17 — SMB3 SFX synthesis and channel-interference spelunking
+
+Traced pinned PRG1 disassembly's Player, Level 1 and Level 2 SFX handlers.
+The jump SFX programs Pulse 1 using a 0x28 source counter and three stages:
+control/sweep 82/A7, 5F/F6 at counter 0x25, and 48/BC at 0x20.
+Unlike SMB3's all-constant-volume music patch block, jump uses and switches
+the NES hardware envelope mode. Found Level 1's protected 1-Up, special
+non-one-hot requests 0x90/0xA0/0xB0, and unguarded Triangle/Noise music
+register writes that may overwrite Level 2 SFX. Player and Level 1 SFX
+completion writes to $4015 can also modify DMC enable state. These are
+**source-derived predictions**, corroborated for hardware semantics by pinned
+MesenCE 2.2.1 and NESdev, **not live observed effects or audio bugs**.
+See [SFX research](research/SMB3_SFX_RUNTIME_SPELUNKING_20261117.md).
+No native debugger, tests or copyrighted audio/game data were used or committed.
+
 ## 2026-11-16 — external authoritative emulator verification
 
 Reviewed the **exact MesenCE 2.2.1 source commit** 20ba206, official Lua API
