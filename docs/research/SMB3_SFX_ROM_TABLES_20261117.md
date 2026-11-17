@@ -153,3 +153,17 @@ NESdev [APU Noise](https://www.nesdev.org/wiki/APU_Noise) confirms `$400C` conta
 ## License and distribution
 
 Source disassembly and emulator implementations are linked for research, not copied into SpriteMine. Do not include third-party assembly, private ROM bytes, copyrighted audio samples, extracted graphics or save states in the public repository. Audit licenses before porting code.
+
+
+## 6. Source event producers and apparent loops (supplementary PRG investigation)
+
+Looking at **gameplay callers**, rather than only the PRG28 audio-engine interpreter, provides additional source-derived provenance:
+
+- In [PRG011's airship world-map movement routine](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg011.asm), the game tests `SndCur_Level2 & 0x08`. If not already active, it ORs `SND_LEVELAIRSHIP` into `Sound_QLevel2` again. The Level 2 airship SFX sets `SFX_Counter4=0x40` on entry. Thus the airship's seemingly continuous noise can be **a series of repeatedly requested, finite effects**, not an internally looping ROM sample or music segment. The caller's updates are conditional on airship world-map movement state. No live loop boundary has been observed.
+- In [PRG008 `Player_TailAttackAnim`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm), a new tail attack queues `SND_LEVELTAILWAG`. The airborne-tail/flutter routine also queues it, but compares the Player sound queue to `SND_PLAYERJUMP` to avoid requesting a tail wag in a particular just-jumped state. This is **gameplay event arbitration before audio-engine arbitration**. The identical sound request can originate from two different animation/gameplay triggers.
+- In [PRG000's suit/shoe damage code](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg000.asm), `SND_LEVELSHOE` is queued at a shoe-loss path. The disassembly also contains a Japanese-version suit-loss code path labelled by Southbird as dead in the US build; do not treat every symbol occurrence as a reachable US PRG1 event without execution evidence.
+- A repository search for the symbol `SND_LEVELUNK` returned declarations and the audio handler in `smb3.asm` and `PRG/prg028.asm`, but **no additional symbol-named gameplay caller**. This is *not* proof the effect is unreachable: literal numeric requests and disassembly omissions remain possible. Its gameplay identity remains unresolved.
+
+This adds a fifth catalog concept to the prior SFX layers: **producer context** (the gameplay routine and condition that queues an event). Two identical request bytes can have distinct triggering contexts; a long audible background SFX can arise from repeated short requests; and symbolic names alone do not establish that a branch is exercised in the verified US PRG1 ROM.
+
+Suggested native evidence for producer attribution: read-only, physically bank-mapped CPU execution probes at just the known producer PCs plus `$04F1–$04F3` queue write callbacks, with frame and cycle numbers. Avoid broad CPU exec tracing. For the airship experiment, separately log `SndCur_Level2` transitions and `SFX_Counter4` resets to detect actual repetition.
