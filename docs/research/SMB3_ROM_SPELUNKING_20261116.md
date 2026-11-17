@@ -13,6 +13,7 @@ This is a **documentation-only, source-derived research increment** on top of dr
 - [ROM-verified SFX bytecode, map effect timelines and adjacent-table reads](SMB3_SFX_ROM_TABLES_20261117.md)
 - [Expedition 10: gameplay-to-sound producer chain and collected-item state](SMB3_EVENT_PRODUCER_CHAINS_20261117.md)
 - [Expedition 11: block-action interpreter, tile/PPU split, ten-coin and P-Switch](SMB3_BLOCK_INTERACTION_SPELUNKING_20261117.md)
+- [Expedition 12: PRG1-verified World 1-1 bonus graph, diamond construction, random-cloud and junction recipes](SMB3_WORLD1_1_BONUS_AND_RANDOM_CLOUDS_20261117.md)
 
 ## Evidence and research continuity
 
