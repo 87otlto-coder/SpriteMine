@@ -4,7 +4,7 @@
 
 The source links below point to the pinned disassembly. Companion: [Expedition 10 gameplay-to-SFX producer chains](SMB3_EVENT_PRODUCER_CHAINS_20261117.md), [World 1-1 decoder notes](SMB3_WORLD1_1_RECONSTRUCTION.md).
 
-## Findings 77–90 (source inspection)
+## Findings 77–93 (source inspection)
 
 **77 — Block behavior comes from tile ID, hit direction, and a compact dispatch table.** [PRG008 `Level_ActionTiles`, range/hit masks, LATP/LATR](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm#L4828-L5002). `Level_DoBumpBlocks` searches tile-ID intervals with tile-type-specific hit-enable masks and an offset into `LATP_PowerUps` / `LATR_BlockResult`. Movement direction changes which tile ranges are searched; the desert-only pipeworks action is labelled unused. A tile's appearance alone does not determine its interactive behavior.
 
@@ -52,6 +52,14 @@ The source links below point to the pinned disassembly. Companion: [Expedition 1
 | `$7E02–$7E81` | `Level_BlockGrabHitMem` | Level-junction coin/hidden 1-Up bitmap |
 
 The `$03xx` and `$7Exx` positions are also explicitly documented in the pinned RAM declarations. Interpret snapshots only alongside gameplay context, current mapper state, and matched-frame timing. Use passive Lua write callbacks returning no replacement value.
+
+## End-to-end coin and World 1-1 implications (91–93)
+
+**91 — The tile-change request doubles as a coin-award signal before the renderer consumes it.** The [PRG008 gameplay tail](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm#L335-L389) calls `Player_Update`, then checks whether `Level_ChgTileEvent == CHNGTILE_DELETECOIN ($01)`. Only on that condition does it add five score units and increment `Coins_Earned` and `Coins_ThisLevel`. A [tile-coin collision](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg008.asm#L4728-L4744) previously queues the deletion, records the block and requests coin SFX. Later, [PRG030](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg030.asm#L2495-L2507) executes `BlockChange_Do` to apply/stage the change, and an eligible [NMI video path](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg031.asm#L1533-L1552) eventually commits 8x8 patterns. This is a source-derived *multi-stage event chain*. If a different producer overwrites the pending event before the coin-award check, the reward could be missed; **reachability and actual ordering under a collision remain unproven**. Distinguish this from block-earned coins, whose `LATP_CoinCommon` increments the counters directly.
+
+**92 — Collected coin logical tiles do not participate in the P-Switch substitution table.** [PRG029](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg029.asm#L2510-L2605) selects logical `TILEA_COINREMOVED` after coin deletion; [PRG000](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/PRG/prg000.asm#L1596-L1623) checks `TILEA_COIN`, `TILEA_BRICK`, `TILEA_MUNCHER` and `TILEA_PSWITCHCOIN`, but **not** `TILEA_COINREMOVED`. Therefore a tile still stored as the removed-coin ID is not converted to brick by this virtual lookup. That is a source-derived logical-state prediction, not a captured render or a proof that every deleted coin follows the same update path.
+
+**93 — World 1-1 already contains useful source-located validation targets.** The existing [World 1-1 report](SMB3_WORLD1_1_RECONSTRUCTION.md) identifies a hidden 1-Up block command at nominal column 90 / row 8 and P-Switch block command at column 127 / row 23, plus coin-run generators. These coordinates were derived from the verified PRG1 source stream, **not** from a native final-tile map. They are suitable prioritized fixtures for validating item memory ($7E02), bounce slots, event/PPU commit, temporary collision substitution and CHR bank $3E after the level decoder is independently established. Avoid inserting a speculative ten-coin block into World 1-1 without source/runtime evidence.
 
 ## Highest-value native experiments
 
