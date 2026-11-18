@@ -30,6 +30,17 @@ def test_dump_comparison_does_not_assume_capture_origin(tmp_path):
         compare_bonus(b"abc", dump)
 
 
+def test_dump_differences_report_screen_major_coordinates(tmp_path):
+    dump = tmp_path / "tiles.bin"
+    data = bytearray(864)
+    data[431], data[432], data[448] = (1, 2, 3)
+    dump.write_bytes(data)
+    report = compare_bonus(bytes(864), dump)
+    assert [(d["screen"], d["row"], d["column"], d["observed"]) for d in report["differences"]] == [
+        (0, 26, 15, 1), (1, 0, 0, 2), (1, 1, 0, 3),
+    ]
+
+
 @pytest.mark.skipif(not os.getenv("SPRITEMINE_TEST_ROM"), reason="Local SMB3 ROM not configured")
 def test_private_bonus_model():
     report, tiles = reconstruct_bonus(load_rom(os.environ["SPRITEMINE_TEST_ROM"]))

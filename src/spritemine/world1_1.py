@@ -90,4 +90,9 @@ def compare_bonus(tiles: bytes, dump: Path) -> dict:
         raise ValueError(f"Tile_Mem dump must be exactly {len(tiles)} bytes")
     mismatches = [i for i, (expected, actual) in enumerate(zip(tiles, observed)) if expected != actual]
     return {"matches": not mismatches, "dump_sha256": sha256(observed).hexdigest(),
-            "mismatch_count": len(mismatches), "first_difference": mismatches[0] if mismatches else None}
+            "mismatch_count": len(mismatches), "first_difference": mismatches[0] if mismatches else None,
+            "differences": [
+                {"offset": i, "screen": i // 432, "row": i % 432 // 16, "column": i % 16,
+                 "model": tiles[i], "observed": observed[i]}
+                for i in mismatches
+            ]}

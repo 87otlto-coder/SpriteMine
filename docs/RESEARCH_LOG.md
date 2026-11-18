@@ -24,3 +24,7 @@ Source code contains debugger-oriented tilemap/sprite/palette access and emulato
 ## 2026-11-18 — Headless implementation and native player replay
 
 Verified all six original-ROM pose fingerprints, revalidated 24 archived A/B/A windows and ran a fresh observer-neutral MesenCE replay. Runtime $EE identifies the recipes at start of frame. The new bitmap decoder reproduced 24 archived RGBA hashes and matched 4,032 native opaque RGB samples. The bonus layout matches the 864-byte model fingerprint. Native pipe and Tile_Mem evidence remain open. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).
+
+## World 1-1 native pipe replay
+
+Native screen-8 Tile_Mem confirms an enterable upper mouth at row 7 and blocked openings at rows 19 and 23. The captured Down attempt left pipe and junction state at zero. See [native pipe approach](research/SMB3_NATIVE_PIPE_APPROACH.md).

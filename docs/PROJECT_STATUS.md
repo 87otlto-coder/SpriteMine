@@ -47,3 +47,7 @@ See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research
 ## Headless SMB3 PRG1 implementation (PR #21)
 
 The review branch provides verified static reconstruction of three canonical player recipes and 24 native player frames through the private MesenCE harness. The scanline compositor has synthetic coverage. The World 1-1 bonus room has a source-derived logical model awaiting a live Tile_Mem comparison. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).
+
+## World 1-1 native pipe replay
+
+A native controller-only replay reaches the blocked lower screen-8 approach and reproduces its state under A/B/A. The upper entry, authentic occlusion and first-entry bonus layout remain open. See [native pipe approach](research/SMB3_NATIVE_PIPE_APPROACH.md).
