@@ -1,5 +1,26 @@
 # Project status
 
+## 2026-11-18 — World 1-1 palette targets, fade state, alpha and indexed framebuffer (Expedition 14)
+
+Pinned SMB3 source establishes distinct Plains target backdrop palette
+indices in World 1-1 main ($3C) versus bonus ($0F), despite a shared
+Plains tileset; both original headers select sprite palette family 8.
+The graphics pipeline keeps separate master target `Pal_Data`, active
+fade/update `Palette_Buffer`, and actual PPU palette RAM. Source
+also traces a $3F11–$3F13 player-suit palette-only recolor; a conditional
+color-rotation effect writes to $3F10 or $3F04 ranges, with PPU palette
+aliasing potentially changing the universal backdrop. Independent
+MesenCE 2.2.1 and NESdev references confirm per-pixel 2-bpp transparency,
+priority and compositing; 9-bit palette+emphasis index encoding and
+configurable RGB/overscan conversion mean screenshots are not canonical
+ROM RGB and do not reveal hidden OAM component identities.
+See [Expedition 14](research/SMB3_PALETTE_RASTER_AND_COMPOSITING_SPELUNKING_20261118.md),
+findings 131–153, with exact source references and a falsifiable
+MesenCE test matrix. This expedition did **not** re-read original
+PRG1 ROM bytes or execute native MesenCE, tests, or screenshot comparison.
+No copyrighted assets committed; PR #19/#20 unaffected.
+
+
 ## 2026-11-18 — PPU/CHR rendering, MMC3 mirroring and HUD scanline split (Expedition 13)
 
 Pinned SMB3 source and **independent MesenCE 2.2.1 MMC3 implementation**
