@@ -48,3 +48,7 @@ The stock Lua 5.4.8 Windows research mock suite and Windows 3.11/3.12 Python job
 Follow docs/ACTIONS_INCIDENT_2026-11-11.md and AGENTS.md before changing or triggering hosted workflows. Never publish ROM data, capture buffers or private assets. Keep source hashes, decoder versions, offsets, MMC3 mapper state, frame/scanline indices, save-state SHA, emulator build and controller input history when evaluating real SMB3 output.
 
 For unresolved cases (sprite priority, per-scanline CHR fetch, sprite limits, transparency behind moving backgrounds, complete animation durations, GUI interaction), mark them not tested or unsupported rather than implicitly passing them.
+
+## Headless SMB3 PRG1 gates
+
+The optional `SPRITEMINE_TEST_ROM` tests include three canonical silhouette fingerprints and the World 1-1 bonus model fingerprint. For the native 24-frame observer A/B/A check and its separate archive comparison, see [headless validation](research/SMB3_HEADLESS_VALIDATION.md).

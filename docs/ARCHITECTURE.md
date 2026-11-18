@@ -30,3 +30,7 @@ A capture session should record ROM hash, emulator binary/version, mode/region, 
 ## Unsupported on purpose
 
 NES 2.0 headers are detected but not parsed. CHR-RAM has no static CHR-ROM atlas. No authentic palette is inferred from raw CHR bytes. Full levels, animations and source music sequences require further research and tests.
+
+## Headless SMB3 reconstruction on PR #21
+
+The package uses the existing immutable ROM loader and CHR bitplane decoder. The player reader owns game-specific recipes and canonical render provenance. The sprite compositor consumes supplied fetch-time CHR pages and indexed background data for one raster line. The optional MesenCE research runner owns replay, observations and native comparisons. The World 1-1 bonus decoder returns a source model and separately compares a caller-supplied Tile_Mem dump. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).

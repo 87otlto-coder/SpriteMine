@@ -43,3 +43,7 @@ The real graphics observations are supported by locally held source state, captu
 5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.
 
 See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
+
+## Headless SMB3 PRG1 implementation (PR #21)
+
+The review branch provides verified static reconstruction of three canonical player recipes and 24 native player frames through the private MesenCE harness. The scanline compositor has synthetic coverage. The World 1-1 bonus room has a source-derived logical model awaiting a live Tile_Mem comparison. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).

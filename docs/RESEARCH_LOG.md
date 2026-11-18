@@ -20,3 +20,7 @@ Source code contains debugger-oriented tilemap/sprite/palette access and emulato
 - https://github.com/nesdev-org/MesenCE
 - https://github.com/TASEmulators/fceux
 - https://github.com/captainsouthbird/smb3 (research reference; licensing review needed before reuse)
+
+## 2026-11-18 — Headless implementation and native player replay
+
+Verified all six original-ROM pose fingerprints, revalidated 24 archived A/B/A windows and ran a fresh observer-neutral MesenCE replay. Runtime $EE identifies the recipes at start of frame. The new bitmap decoder reproduced 24 archived RGBA hashes and matched 4,032 native opaque RGB samples. The bonus layout matches the 864-byte model fingerprint. Native pipe and Tile_Mem evidence remain open. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).
