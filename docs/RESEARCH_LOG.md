@@ -1,5 +1,35 @@
 # Research log
 
+## 2026-11-18 — Expedition 15: final sprite research → implementation handoff
+
+Scope: cap SMB3-only research after establishing *buildable* priority.
+Original ROM: re-read private uploaded ZIP in memory; complete SHA-256
+verified. Recomputed 81 player recipe-offset values, 486 recipe bytes and
+81 CHR offsets with fresh SHA-256 fingerprints. Deterministic CHR decode
+of bank $53 and walk A/B/jump formulas produces 138/174/194 opaque
+pixels per 16x16 mask. Two totals independently match earlier MesenCE
+harness 138/118 and 194/62 counts (earlier runtime evidence not rerun).
+Source inspection reveals $F1 as *nonblank CHR software hide sentinel*,
+six Mario OAM slots starting at $28 (indices 10–15), separate four-sprite
+priority pipe mask at indices 0–3 (pattern $77 behind background), flashing,
+star-palette selection and clipping around HUD. Real pipe effect and
+physical mask opacity are untested; CHR at $53 with pattern $77 is not
+universally solid (77/128 candidate opaque positions). NESdev and pinned
+MesenCE independently specify 8x16 tile-bank selection, sprite priority,
+8-sprite scanline limit and per-line CHR/IRQ behavior.
+MesenCE 2.2.1 Lua API reviewed *directly*: no-side-effect memory types and
+callback support documented; RGB conversion before Lua framebuffer exposure
+confirmed against implementation despite docs calling it ARGB.
+See [Expedition 15 + implementation gates](research/SMB3_SPRITE_PIPE_OCCLUSION_IMPLEMENTATION_GATE_20261118.md).
+Confidence: verified original ROM hashes and modeled 2-bpp candidate;
+source/hardware-backed OAM/priority architecture; NOT tested in fresh
+Windows MesenCE, frame-exact native OAM capture or full visible pixels.
+**Next**: Gate A static code/tests, Gate B minimal read-only live MesenCE
+proof, Gate C natural World 1-1 pipe mask then Gate D bonus-room map.
+Research-only spelunking should stop unless Gate results reveal a specific
+missing dependency.
+
+
 ## 2026-11-18 — Expedition 14: palette and pixel compositor archaeology
 
 Question: Can the original World 1-1 palette, sprite transparency and
