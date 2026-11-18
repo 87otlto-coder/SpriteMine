@@ -5,10 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from .chr import export_chr
 from .player import inspect_recipes, reconstruct_player, validate_player
 from .rom import RomFormatError, load_rom
+from .world1_1 import compare_bonus, reconstruct_bonus
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -30,6 +32,12 @@ def main(argv: list[str] | None = None) -> int:
     sprite.add_argument("--include-pixels", action="store_true", help="Include private indexed pixels")
     validate = sub.add_parser("validate-sprite", help="Compare three canonical ROM-backed silhouettes")
     validate.add_argument("rom")
+    level = sub.add_parser("reconstruct-level", help="Model World 1-1's two-screen bonus room")
+    level.add_argument("rom")
+    level.add_argument("--include-tiles", action="store_true", help="Include private logical tile bytes")
+    compare = sub.add_parser("validate-level", help="Compare the model with a private 864-byte Tile_Mem dump")
+    compare.add_argument("rom")
+    compare.add_argument("tile_mem", type=Path)
     args = parser.parse_args(argv)
     try:
         rom = load_rom(args.rom)
@@ -45,10 +53,18 @@ def main(argv: list[str] | None = None) -> int:
                 result, pixels = reconstruct_player(rom, args.recipe)
                 if args.include_pixels:
                     result["indexed_pixels"] = list(pixels)
-            else:
+            elif args.command == "validate-sprite":
                 result = validate_player(rom)
+            else:
+                result, tiles = reconstruct_bonus(rom)
+                if args.command == "validate-level":
+                    result["comparison"] = compare_bonus(tiles, args.tile_mem)
+                elif args.include_tiles:
+                    result["tiles"] = list(tiles)
             print(json.dumps(result, indent=2, sort_keys=True))
             if args.command == "validate-sprite" and not result["passed"]:
+                return 1
+            if args.command == "validate-level" and not result["comparison"]["matches"]:
                 return 1
         return 0
     except (RomFormatError, OSError, ValueError) as exc:
