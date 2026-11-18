@@ -1,5 +1,30 @@
 # Research log
 
+## 2026-11-18 — Expedition 14: palette and pixel compositor archaeology
+
+Question: Can the original World 1-1 palette, sprite transparency and
+framebuffer be reproduced precisely from ROM source and a screenshot?
+Findings 131–153: Source headers choose distinct Plains palette family
+0 for World 1-1 main (backdrop target $3C) and family 5 for secret
+room (target $0F), with sprite family 8 in both. PRG027 palette loading,
+PRG026 fades/VRAM update bytecode, PRG008 Player color patch and PRG007
+conditional palette rotation reveal multiple palette-state layers.
+MesenCE pinned BaseNesPpu confirms palette mirroring and PPUMASK
+grayscale/emphasis; NesPpu sprite compositor confirms hardware OAM
+priority and opaque-vs-transparent 2-bpp masks; NES default filter has
+a 512-entry color/emphasis LUT and configurable RGB/overscan. A 16-bit
+pre-RGB color-index framebuffer is a candidate validation resource,
+but is not known to be available via Lua and cannot invert composite
+pixels back to original OAM components. Evidence: pinned Southbird
+disassembly, pinned official MesenCE 2.2.1, NESdev PPU references.
+Confidence: source-backed/hardware corroborated, **not newly PRG1
+ROM verified or native runtime tested**. Preserve findings in
+[Expedition 14](research/SMB3_PALETTE_RASTER_AND_COMPOSITING_SPELUNKING_20261118.md).
+Next: record main/bonus palette target vs active/PPU values and PPU
+framebuffer indexes in reproducible Windows A/B/A; trace player recolor,
+PPU $3F10 alias behavior only if naturally triggered.
+
+
 ## 2026-11-18 — Expedition 13: precise background rendering and HUD bank split
 
 Question: How can World 1-1's candidate 16×16 logical tile map be
