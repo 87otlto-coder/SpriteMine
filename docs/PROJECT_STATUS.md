@@ -1,5 +1,27 @@
 # Project status
 
+## 2026-11-18 — PPU/CHR rendering, MMC3 mirroring and HUD scanline split (Expedition 13)
+
+Pinned SMB3 source and **independent MesenCE 2.2.1 MMC3 implementation**
+confirm that horizontal-level rendering expands 27 logical 16×16 rows to
+54 8×8 pattern entries per scrolled column (30+24 across two PPU nametable
+regions), plus a separate 14-byte palette attribute strip.
+MesenCE establishes $A000 bit0=1 as **conventional horizontal mirroring**
+despite opposite terminology in the Southbird disassembly comments; the
+correct physical aliases permit $2000 and $2800 to hold distinct regions.
+The Level_MainLoop cycles the second Plains BG 2-KiB bank through
+$60/$62/$64/$66 every eight frame-counter increments, with P-Switch
+override $3E. At the standard HUD IRQ SMB3 replaces gameplay BG bank
+pair $08/$60..$66 with $5C/$5E and substitutes blank sprite pages $7E.
+**Consequence: a single post-frame mapper snapshot cannot establish
+the banks used by every scanline in the gameplay image.** Full research,
+pinpointed sources and native falsification plan: [Expedition 13](research/SMB3_BACKGROUND_PPU_RENDERING_SPELUNKING_20261118.md).
+This session involved source-code inspection and hardware/emulator code
+cross-check only: **no newly executed PRG1 native MesenCE capture, ROM
+re-read, graphics output comparison or regression test**. No ROM/assets
+committed; PRs #19/#20 unaffected.
+
+
 ## 2026-11-17 — World 1-1 two-area layout and RNG cloud archaeology
 
 Read the owner's original, immutable SMB3 PRG1 image **in memory** again;
