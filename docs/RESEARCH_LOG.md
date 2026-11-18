@@ -1,5 +1,27 @@
 # Research log
 
+## 2026-11-18 — Expedition 13: precise background rendering and HUD bank split
+
+Question: How can World 1-1's candidate 16×16 logical tile map be
+transformed into correct visual pixels, including animation and HUD?
+Evidence: Southbird PRG015/026/030/031 at pinned 09b1bd8 commit,
+MesenCE 2.2.1 MMC3.h pinned 20ba206, NESdev MMC3 mapper documentation.
+Findings 113–130: 27 logical tile rows become 54 8×8 pattern entries
+(30+24 nametable writes); attributes have 14 bytes and four 2-bit
+palette quadrants; initial dirty scene uses 32 column passes; regular
+animation selects second background bank $60/$62/$64/$66 across a 32-counter
+cycle; active P-Switch overrides bank $3E; status bar IRQ changes graphics
+to $5C/$5E plus blank sprite bank $7E; MMC3 $A000 mirroring terminology
+in original source is inverted compared with emulator convention.
+**Critical test gap:** actual per-scanline bank mapping and PPU output
+on the owner's PRG1 remain unmeasured. The ROM and candidate bonus
+tilemap were **not** reread or revalidated during this session.
+See [Expedition 13](research/SMB3_BACKGROUND_PPU_RENDERING_SPELUNKING_20261118.md).
+Next: read-only MesenCE timeline of mapper banks and PPU writes across
+the HUD IRQ; compare staged strips and exact PPU image for bonus and main
+World 1-1, with ROM/save-state/frame provenance.
+
+
 ## 2026-11-17 — Expedition 12: World 1-1 bonus-room and cloud generator
 
 Question: Is World 1-1 a single static room, and can its background be
