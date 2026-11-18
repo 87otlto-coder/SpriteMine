@@ -9,7 +9,7 @@ Date: 2026-11-18. Target: Super Mario Bros. 3 (USA) PRG1 / Revision A, focusing 
 - **Independent hardware references:** [NESdev PPU palettes](https://www.nesdev.org/wiki/PPU_palettes), [PPU rendering](https://www.nesdev.org/wiki/PPU_rendering), [PPU registers](https://www.nesdev.org/wiki/PPU_registers), and [NTSC video](https://www.nesdev.org/wiki/NTSC_video).
 - **Not performed:** No reread of the user's private ROM; no live MesenCE execution, screenshots, native debugger/scanline captures or A/B/A, no test runs, and no ROM/asset commit. Expedition 12 contains prior PRG1 ROM-confirmed World 1-1/bonus headers and candidate map; this expedition reuses those **previously** established source header values without claiming fresh ROM verification.
 
-## Findings 131–150
+## Findings 131–153
 
 ### 131 — World 1-1 main and bonus have different source-selected backdrop entries
 
@@ -25,7 +25,7 @@ When `Pal_Force_Set12` is nonzero, `Setup_PalData` follows an alternative pointe
 
 ### 134 — Palette target, fade/update buffer and actual PPU RAM are distinct provenance states
 
-[`Pal_Data`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm#L2740-L2755) is the 32-byte master target. [`Palette_Buffer`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm#L2050-L2085) (actual declaration in the 0x07C1 region) stores the current/updating palette state; [MesenCE `WritePaletteRam`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/BaseNesPpu.cpp#L85-L106) implements the PPU's own independent $3F00–$3F1F palette storage. SpriteMine must capture which of the three it is showing, especially during level transitions.
+[`Pal_Data`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm#L2740-L2755) is the 32-byte master target. [`Palette_Buffer`](https://github.com/captainsouthbird/smb3/blob/09b1bd81a788de8ceec664a34094e84ddb463117/smb3.asm#L2154-L2163) (actual declaration in the 0x07C1 region) stores the current/updating palette state; [MesenCE `WritePaletteRam`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/BaseNesPpu.cpp#L85-L106) implements the PPU's own independent $3F00–$3F1F palette storage. SpriteMine must capture which of the three it is showing, especially during level transitions.
 
 ### 135 — Shared backdrop entries are explicitly normalized by SMB3
 
@@ -96,6 +96,18 @@ NESdev [PPU palettes](https://www.nesdev.org/wiki/PPU_palettes) and [PPU renderi
 ### 150 — The emulator exposes raw NES palette state and RGB previews as distinct debugger data
 
 Pinned [MesenCE `NesPpuTools::GetPaletteInfo`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/Debugger/NesPpuTools.cpp#L469-L504) reports `MemoryType::NesPaletteRam`, `RawPalette[0..31]` and separately calculated `RgbPalette` entries. This suggests a strong *read-only* validation path for SpriteMine: capture 32 raw palette bytes plus PPUMASK and filter settings from the emulator, and compare independently against predicted `Pal_Data` and observed frame RGB. Do not assume the debugger palette preview alone captures mid-frame palette changes or raw fetch-time mappings.
+
+### 151 — MesenCE retains a 16-bit per-pixel palette-index framebuffer before RGB conversion
+
+[`NesPpu::GetScreenBuffer`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/NesPpu.cpp#L1235-L1251) returns a `uint16_t*` buffer; [`BaseNesPpu::UpdateColorBitMasks`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/BaseNesPpu.cpp#L120-L163) can encode the selected six-bit NES palette color together with three emphasis bits into this representation. [`NesDefaultVideoFilter::DecodePpuBuffer`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/NesDefaultVideoFilter.cpp#L182-L196) then maps these values through the configurable `_calculatedPalette[512]` RGB conversion table. This is a particularly promising **indexed-frame capture surface** for pixel-exact cross-checks, if a supported emulator integration can expose it. **Do not assert that the public MesenCE Lua API directly exposes this internal pointer; integration feasibility remains untested.**
+
+### 152 — MesenCE's video output may be overscan-cropped independently of emulated PPU state
+
+The same `DecodePpuBuffer` reads the raw 256-pixel-wide PPU buffer at offsets shifted by `GetOverscan().Top/Left`, and emits the configured output `FrameInfo.Width×Height`. Consequently a screen PNG can be spatially cropped even when the original emulated PPU image remains a full 256×240 picture. For SpriteMine, compare source coordinates against **uncropped PPU pixel coordinates first**, then apply a separately identified presentation crop. Record output dimensions, overscan settings and video filter in any pixel-exact screenshot acceptance report.
+
+### 153 — A post-composite color-index buffer cannot recover per-sprite alpha and OAM provenance
+
+[`NesPpu::GetPixelColor`](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/NesPpu.cpp#L836-L916) chooses the final background/sprite palette entry before it writes the frame color. An ordinary 16-bit color-index framebuffer therefore records the **selected final color**, not all of the rejected background pixels, overlapping sprite masks, or exact originating OAM component identity. Two opaque sprite pixels and a background pixel can produce the same final index; alpha is not recoverable from the visible image alone. For complete SpriteMine sprite reconstruction, keep a separate time-indexed OAM/CHR/pattern-opacity/priority trace, even when raw indexed framebuffer comparison succeeds.
 
 ## Minimal native verification matrix
 
