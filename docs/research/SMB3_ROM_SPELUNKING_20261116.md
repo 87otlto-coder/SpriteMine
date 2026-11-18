@@ -16,6 +16,7 @@ This is a **documentation-only, source-derived research increment** on top of dr
 - [Expedition 12: PRG1-verified World 1-1 bonus graph, diamond construction, random-cloud and junction recipes](SMB3_WORLD1_1_BONUS_AND_RANDOM_CLOUDS_20261117.md)
 - [Expedition 13: logical tile→PPU strip rendering, authoritative MMC3 mirroring cross-check, CHR animation and status-bar bank split](SMB3_BACKGROUND_PPU_RENDERING_SPELUNKING_20261118.md)
 - [Expedition 14: World 1-1 palette colors, master vs active vs PPU state, fades, sprite alpha and Mesen indexed framebuffer](SMB3_PALETTE_RASTER_AND_COMPOSITING_SPELUNKING_20261118.md)
+- [Expedition 15 (final research gate): original-ROM-verified Mario indexed/alpha pixels, $F1 software suppression, authentic pipe-entrance OAM occlusion, MesenCE Lua access, and prioritized implementation plan](SMB3_SPRITE_PIPE_OCCLUSION_IMPLEMENTATION_GATE_20261118.md)
 
 ## Evidence and research continuity
 
