@@ -1,5 +1,34 @@
 # Project status
 
+## 2026-11-18 — Final spelunking expedition: ROM-verified Mario silhouette and pipe occlusion (Expedition 15)
+
+**Stop research-only expansion; begin bounded implementation.** Re-read the
+owner's original immutable SMB3 US PRG1 ROM in memory; image SHA-256
+`4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579`.
+Refingerprinted 81 source player recipe offsets, 486-byte six-pattern
+recipes, 81 CHR page offsets, and small-player CHR 1-KiB bank $53.
+Independent 2-bpp decode of 16x16 unflipped Mario recipes yields opacity
+counts **138** (walk $3E), **174** (walk $3F), **194** (jump $40); the
+138/118 and 194/62 pairs corroborate earlier accepted private MesenCE
+pixel-count observations, not newly run gameplay evidence. Explicit indexed
+and alpha SHA-256 expectations are in [Expedition 15](research/SMB3_SPRITE_PIPE_OCCLUSION_IMPLEMENTATION_GATE_20261118.md).
+
+Source PRG029 places the default six-player OAM records at $0228-$023F
+(indices 10-15) but writes a separate *four-sprite* higher-priority
+pipe-entrance mask into indices 0-3 using pattern $77 and behind-BG
+priority. The $F1 player recipe sentinel is software-hidden with Y=$F8,
+NOT an intrinsically blank CHR sprite (original CHR data is nonempty).
+We verified MesenCE Lua's supported read-only OAM/PPU/palette surfaces,
+IRQ/NMI/memory callbacks, and that `getScreenBuffer` returns processed
+24-bit RGB, not internal indexed pixel data; write callbacks run *before*
+a write and can change data if the observer returns a value.
+Further work: **Gate A tested static 8x16 decoder**, **Gate B bounded
+read-only A/B/A Lua capture**, **Gate C original pipe occlusion**, then
+**Gate D secret-room level map comparison**. No new MesenCE execution,
+private native A/B/A, PR changes, game-asset commits or copyrighted binary
+publication occurred. Review current implementation branch before work.
+
+
 ## 2026-11-18 — World 1-1 palette targets, fade state, alpha and indexed framebuffer (Expedition 14)
 
 Pinned SMB3 source establishes distinct Plains target backdrop palette
