@@ -76,7 +76,12 @@ def test_scanline_limit_and_clipping(synthetic_rom):
 @pytest.mark.skipif(not os.getenv("SPRITEMINE_TEST_ROM"), reason="Local SMB3 ROM not configured")
 def test_private_original_cli(capsys):
     path = os.environ["SPRITEMINE_TEST_ROM"]
-    assert len(inspect_recipes(load_rom(path))["recipes"]) == 81
+    rom = load_rom(path)
+    assert len(inspect_recipes(rom)["recipes"]) == 81
+    # A hypothetical page $53 in PPU window 5, independently counted from
+    # the raw bitplanes. The actual pipe traversal may map a different page.
+    mask = sprite_pixels(rom, 0x77, (0, 0, 0, 0, 0, 0x53, 0, 0))
+    assert sum(map(bool, mask)) == 88
     outputs = []
     for _ in range(2):
         assert main(["validate-sprite", path]) == 0

@@ -66,6 +66,13 @@ tests cover this interaction, but authentic pipe mask slots and fetch-time
 banks remain unverified. Reproduce the screen-8 traversal and record OAM slots
 0–3 and 10–15, fetch-time CHR banks and background indices across the entrance.
 
+The Expedition 15 hypothetical bank calculation needs a 1 KiB window
+correction. OAM pattern `$77` starts at PPU address `$1760`, which selects
+window 5 and tile offsets `$36/$37` within that window. With physical page
+`$53` hypothetically mapped there, direct original-ROM bitplane counts give
+41 + 47 = 88 opaque pixels. The previous 77-pixel result addressed bytes in
+the next physical page. The actual traversal bank remains unobserved.
+
 The bonus layout model matches the Expedition 12 864-byte screen-major
 fingerprint. It reconstructs the two reciprocal layout/object pointers and the
 bonus generators and junction descriptor. A first-entry live Tile_Mem dump is
