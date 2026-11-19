@@ -213,3 +213,45 @@ def bonus_background_summary(rom: Rom, tiles: bytes, col: int, half: int) -> dic
             "last": hex(attribute_write_addresses((col % 16) // 2)[-1]),
         },
     }
+
+
+def compare_background_staging(
+    expected_patterns: bytes,
+    expected_attributes: bytes,
+    observed_patterns: bytes,
+    observed_attributes: bytes,
+) -> dict:
+    """Compare private captured game staging buffers without assuming their origin.
+
+    A matching snapshot does not independently prove the buffer was captured
+    after the corresponding producer routine or before its PPU commit.
+    """
+    if len(expected_patterns) != 54 or len(observed_patterns) != 54:
+        raise ValueError("Pattern staging buffers must contain exactly 54 bytes")
+    if len(expected_attributes) != 14 or len(observed_attributes) != 14:
+        raise ValueError("Attribute staging buffers must contain exactly 14 bytes")
+
+    def comparison(expected: bytes, observed: bytes) -> dict:
+        differences = [index for index, (a, b) in enumerate(zip(expected, observed))
+                       if a != b]
+        return {
+            "matches": not differences,
+            "length": len(expected),
+            "expected_sha256": sha256(expected).hexdigest(),
+            "observed_sha256": sha256(observed).hexdigest(),
+            "mismatch_count": len(differences),
+            "first_difference": differences[0] if differences else None,
+            "differences": [
+                {"index": i, "expected": expected[i], "observed": observed[i]}
+                for i in differences
+            ],
+        }
+
+    patterns = comparison(expected_patterns, observed_patterns)
+    attributes = comparison(expected_attributes, observed_attributes)
+    return {
+        "matches": patterns["matches"] and attributes["matches"],
+        "capture_provenance_verified": False,
+        "patterns": patterns,
+        "attributes": attributes,
+    }
