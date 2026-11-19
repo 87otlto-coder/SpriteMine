@@ -53,7 +53,7 @@ def test_recorded_raccoon_route_rebuilds_byte_for_byte():
     with pytest.raises(ValueError, match="No controller"):
         recorded_controller_bytes("not a report")
     with pytest.raises(ValueError, match="Invalid controller"):
-        recorded_controller_bytes("## Replay inputs\n" + ("~" * 3) + "text\n3*GG\n" + ("~" * 3))
+        recorded_controller_bytes("## Replay inputs\n" + (chr := chr(96) * 3) + "text\n3*GG\n" + chr)
 
 
 def _private_synthetic_capture(tmp_path: Path, monkeypatch, mismatch=False, missing_attr=False):
