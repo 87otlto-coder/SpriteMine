@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -17,10 +18,25 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+# This whitelist describes only evidence collected on *every* A/B/A leg.
+# The detailed B observer additionally emits bg-NNNN-tiles.bin snapshots;
+# including those B-only files would create a false neutrality failure.
+FRAME_EVIDENCE = re.compile(r"^\d+-(?:start-tiles|end-tiles|end-rgb)\.bin$")
+
+
 def common_signature(folder):
+    """Hash exactly the mutually comparable replay evidence, not B-only probes."""
     return {path.name: digest(path) for path in folder.iterdir()
             if path.name in ("trace.tsv", "controller.tsv")
-            or path.name.endswith(("-rgb.bin", "-tiles.bin"))}
+            or FRAME_EVIDENCE.fullmatch(path.name)}
+
+
+def signature_differences(reference, candidate):
+    """Report real missing/extra/changed *common* evidence without masking it."""
+    return {name: {
+        "reference": reference.get(name), "observed": candidate.get(name)}
+        for name in sorted(reference.keys() | candidate.keys())
+        if reference.get(name) != candidate.get(name)}
 
 
 def event_window(trace):
@@ -43,6 +59,8 @@ def run(args):
     sources = {"rom": args.rom, "emulator": args.emulator, "slot": args.slot,
                "input": args.input, "settings": args.emulator.with_name("settings.json"),
                "script": script}
+    if args.background_staging:
+        sources["background_probe"] = Path(__file__).with_name("background_staging_probe.lua")
     hashes = {key: digest(path) for key, path in sources.items()}
     if hashes["rom"] != ROM_SHA256 or hashes["emulator"] != MESEN_SHA256:
         raise ValueError("Expected verified SMB3 USA PRG1 and MesenCE 2.2.1")
@@ -55,6 +73,12 @@ def run(args):
     if not 0 < count <= 4096:
         raise ValueError("Expected 1–4096 controller poll bytes")
     output = Path(tempfile.mkdtemp(prefix="pipe-replay-", dir=parent))
+    if args.background_staging:
+        # One Lua chunk: the optional observer shares only the base replay's
+        # private read helpers and state, never gameplay mutation callbacks.
+        combined = output / "capture-staging.lua"
+        combined.write_bytes(script.read_bytes() + b"\n" + sources["background_probe"].read_bytes())
+        script = combined
     switches = ["--testRunner", "--timeout=30", "--doNotSaveSettings",
                 "--nes.disableSprites=false", "--nes.removeSpriteLimit=false"]
     def capture(leg, first, last, capture_switches=switches):
@@ -63,7 +87,8 @@ def run(args):
         env = dict(os.environ, SPRITEMINE_PIPE_OUTPUT=str(folder),
                    SPRITEMINE_PIPE_INPUT=str(args.input), SPRITEMINE_PIPE_SLOT=str(args.slot),
                    SPRITEMINE_PIPE_FIRST=str(first), SPRITEMINE_PIPE_LAST=str(last),
-                   SPRITEMINE_PIPE_DETAIL=str(int(leg == "B")))
+                   SPRITEMINE_PIPE_DETAIL=str(int(leg == "B")),
+                   SPRITEMINE_BG_STAGING=str(int(args.background_staging and leg == "B")))
         with (folder / "emulator.log").open("wb") as log:
             subprocess.run([args.emulator, *capture_switches, script, args.rom],
                            cwd=args.emulator.parent, env=env, stdout=log, stderr=subprocess.STDOUT,
@@ -94,7 +119,15 @@ def run(args):
     if any(digest(path) != hashes[key] for key, path in sources.items()):
         raise ValueError("A replay source changed during capture")
     if not signatures[0] == signatures[1] == signatures[2]:
-        raise ValueError(f"Instrumentation altered sampled behavior: {output}")
+        differences = {
+            leg: signature_differences(signatures[0], sig)
+            for leg, sig in zip(("B", "A2"), signatures[1:])
+        }
+        changed = {leg: changes for leg, changes in differences.items() if changes}
+        raise ValueError(
+            f"Instrumentation altered comparable replay evidence: {output}; "
+            f"first differences {str({leg: list(items.items())[:8] for leg, items in changed.items()})[:1400]}"
+        )
     background = None
     if args.background_reference:
         bg_switches = [s.replace("disableSprites=false", "disableSprites=true") for s in switches]
@@ -105,6 +138,15 @@ def run(args):
     report = {"capture_dir": str(output), "input_polls": count, "neutral": True,
               "frame_range": [first, last], "source_sha256": hashes,
               "switches": switches, "reference_sha256": signatures[0]}
+    if args.background_staging:
+        staging = output / "B" / "background-staging.tsv"
+        rows = staging.read_text(encoding="ascii").splitlines()
+        report["background_staging"] = {
+            "observer": "read-only, detailed B leg only",
+            "event_count": len(rows) - 1,
+            "log_sha256": digest(staging),
+            "verified_against_rom_model": False,
+        }
     if background is not None:
         report["background_rgb_sha256"] = {
             key: value for key, value in background.items() if key.endswith("-rgb.bin")
@@ -121,6 +163,8 @@ def main():
         parser.add_argument(f"--{name}", type=int)
     parser.add_argument("--events", action="store_true", help="Discover first pipe and junction before capture")
     parser.add_argument("--background-reference", action="store_true", help="Capture and verify a sprites-hidden RGB reference")
+    parser.add_argument("--background-staging", action="store_true",
+                        help="Passively snapshot completed Plains pattern/attribute producers in B leg")
     try:
         print(json.dumps(run(parser.parse_args()), indent=2))
     except (ValueError, OSError, subprocess.SubprocessError) as exc:

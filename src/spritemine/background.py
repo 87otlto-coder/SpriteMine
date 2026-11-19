@@ -87,6 +87,36 @@ def _packed_attribute(tl: int, tr: int, bl: int, br: int) -> int:
     return (tl | (tr << 2) | (bl << 4) | (br << 6))
 
 
+def scroller_attribute_columns(column: int, direction: int) -> tuple[int, int]:
+    """PRG030's *ordered* attribute source columns, with 8-bit wraparound.
+
+    The second column is not always the physical right neighbor: on one
+    direction/parity combination it comes from an adjacent screen column.
+    Never infer the pair from `column & ~1` in a native capture.
+    """
+    if not 0 <= column <= 255 or direction not in (0, 1):
+        raise ValueError("Expected 8-bit column and scroll direction 0 or 1")
+    first = column if column % 2 == 0 else (column + (-1 if direction == 0 else 15)) & 255
+    second = column if column % 2 else (column + (-15 if direction == 0 else 1)) & 255
+    return first, second
+
+
+def attribute_strip_columns(tiles: bytes, first_col: int, second_col: int) -> bytes:
+    """Model 14 staged attributes from the explicit ordered source pair."""
+    if not 0 <= first_col < 32 or not 0 <= second_col < 32:
+        raise ValueError("Attribute source columns must be within the two-screen bonus room")
+    rows = tuple(range(0, 15, 2)) + tuple(range(15, 26, 2))
+    out = bytearray()
+    for index, row in enumerate(rows):
+        first_top = logical_palette_group(_bonus_tile(tiles, first_col, row))
+        second_top = logical_palette_group(_bonus_tile(tiles, second_col, row))
+        first_bottom = logical_palette_group(_bonus_tile(tiles, first_col, row + 1))
+        second_bottom = logical_palette_group(_bonus_tile(tiles, second_col, row + 1))
+        packed = _packed_attribute(first_top, second_top, first_bottom, second_bottom)
+        out.append(packed & 0x0F if index == 7 else packed)
+    return bytes(out)
+
+
 def attribute_strip(tiles: bytes, left_col: int) -> bytes:
     """14 PPU attributes for a pair of 16-pixel columns in World 1-1.
 
@@ -97,18 +127,7 @@ def attribute_strip(tiles: bytes, left_col: int) -> bytes:
     """
     if not 0 <= left_col <= 30 or left_col & 1:
         raise ValueError("Expected even left logical column 0..30")
-    rows = tuple(range(0, 15, 2)) + tuple(range(15, 26, 2))
-    if len(rows) != 14:
-        raise AssertionError("Wrong PRG030 attribute split")
-    out = bytearray()
-    for i, row in enumerate(rows):
-        tl = logical_palette_group(_bonus_tile(tiles, left_col, row))
-        tr = logical_palette_group(_bonus_tile(tiles, left_col + 1, row))
-        bl = logical_palette_group(_bonus_tile(tiles, left_col, row + 1))
-        br = logical_palette_group(_bonus_tile(tiles, left_col + 1, row + 1))
-        attr = _packed_attribute(tl, tr, bl, br)
-        out.append(attr & 0x0F if i == 7 else attr)
-    return bytes(out)
+    return attribute_strip_columns(tiles, left_col, left_col + 1)
 
 
 def pattern_write_addresses(ppu_column: int) -> tuple[int, ...]:

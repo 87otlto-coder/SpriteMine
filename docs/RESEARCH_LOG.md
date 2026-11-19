@@ -40,3 +40,43 @@ The source-derived bonus-room model matched **864/864** first-entry native logic
 The new headless ROM-backed decoder reads four Plains 256-byte quadrant tables (UL/LL/UR/LR) from immutable original PRG1 file offset `0x1E010`, SHA-256 `c19dfefb08bfdebaa2be3bce01abc590865da46f804ccd36f4b9d96db1bf9362`. Source-derived pattern strips are 54 bytes (first 30 PPU $20xx, then 24 $28xx); 14 attributes group adjacent logical columns with a row14/15 special upper-nibble-only entry, then restart at row15 for the second nametable. Optional private 54/14-byte dump comparator and explicit mapped-CHR indexed tile decoder do not synthesize undocumented runtime states. Independently recomputed first-entry bonus source-model digests are recorded in [SMB3_HEADLESS_BACKGROUND_STAGE.md](research/SMB3_HEADLESS_BACKGROUND_STAGE.md). No copyrighted graphical data was committed.
 
 Synthetic Windows CI on PR #22 [run 44479250342](https://github.com/87otlto-coder/SpriteMine/actions/runs/44479250342) passed on Python 3.11 and 3.12; the private-ROM pytest on owner's F: drive and native MesenCE producer/PPU capture were **not run** in this increment. Confidence: exact original ROM table hash and independent source-model strip hash calculation, not observed PPU output. Next acceptance: instrument `Scroll_DoColumn` and `Scroll_Do_AttrColumn` producer completion with grounded PRG bank, compare true `$0382-$03B7` and `$03BA-$03C7` captures, then trace NMI commits and fetch-time mapped CHR/palette.
+
+
+## 2026-11-19 — Owner static suite passed; passive native producer observation prepared
+
+The owner executed PR #22 in a clean dedicated Windows worktree and verified
+the imported package path pointed to that checkout. The private original-ROM
+background tests were 7/7; the complete Python suite was **33/33**, no skips.
+The source-model fingerprints matched accepted PRG1 data. This is local static
+regression evidence and not a new MesenCE measurement.
+
+Source review for the next native increment confirmed the attribute producer
+may select a nonadjacent logical column depending on parity and
+Scroll_LastDir. A new source-derived ordered-column helper, passive
+producer-completion Lua hook and independent private staging verifier are
+preserved on `feature/smb3-world11-staging-capture`. No actual staging
+capture has been reported yet. The new acceptance gate and exact Windows
+commands are in [native staging guide](research/SMB3_BACKGROUND_NATIVE_STAGING.md).
+
+## 2026-11-19 — Owner native bonus-room producer staging accepted (PR #23)
+
+**Observed via owner-supplied Windows replay and verification output**, not an
+independent re-execution of raw private captures for this documentation update.
+After the B-only diagnostic-file signature filter correction, the previously
+failed capture `pipe-replay-ih9zjv6r` had **0 genuine A/B and A/A2
+differences**. Windows pytest on commit `58fe97a` passed **40/40** using
+the private original SMB3 PRG1 ROM.
+
+Fresh 2,590-poll MesenCE A/B/A replay recorded `neutral: true`, frames
+**450778–450881**, and **66** detailed producer events in private capture
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-hb6hmzft`.
+For eligible native bonus-room logical-map events, **32 × 54-byte
+Scroll_PatStrip = 1,728 bytes**, plus **32 × 14-byte Scroll_AttrStrip = 448
+bytes**, matched the source-modeled original ROM output. **2,176 bytes
+checked, zero byte/metadata discrepancies**; two events were excluded for
+non-bonus/modified map state, not promoted to passes.
+
+**Acceptance is CPU staging only**; no hardware PPU VRAM, CHR fetch-time,
+palette or visible framebuffer claim. Preserved source hashes, event log
+hash, private capture location and next steps:
+[2026-11-19 native staging acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING_ACCEPTANCE_20261119.md).
