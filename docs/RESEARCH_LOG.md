@@ -103,3 +103,22 @@ Synthetic CI: 43 passed / 4 private skips on Python 3.11 and 3.12 in
 https://github.com/87otlto-coder/SpriteMine/actions/runs/44600719808.
 **Native result: pending.** See
 [PPU/CIRAM runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
+
+## 2026-11-19 — PR #24 native PPU observer timeout isolated
+
+Owner's first private Windows test passed **47/47 local pytest** and
+reproduced the 2,590-poll input SHA-256. Discovery and A reached the final
+poll; B advanced to poll **2499** / frame **450814** before returning
+`4294967295`, and A2 did not start. The B trace contained 2,121 register
+observations, 74 physical CIRAM boundary observations and 2 staging
+events. Updated B files spanned approximately 30 seconds; searching its
+emulator log found no explicit Lua or fatal error. Source examination of
+MesenCE `UI/Utilities/TestRunner.cs` established `-1` is its normal
+timeout return value. This is strong evidence of a 30-second instrumented
+B-leg timeout, rather than altered controller gameplay.
+
+Only B when `--ppu-commits` is requested now uses a longer, still
+bounded emulator/Python timeout (180 / 210 seconds). No ROM, controller,
+save-state, callback semantics, or verifier acceptance criterion changed.
+A fresh native capture remains necessary; the prior partial capture is
+**not** a passing native PPU verification.
