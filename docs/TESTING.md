@@ -52,3 +52,17 @@ For unresolved cases (sprite priority, per-scanline CHR fetch, sprite limits, tr
 ## Headless SMB3 PRG1 gates
 
 The optional `SPRITEMINE_TEST_ROM` tests include three canonical silhouette fingerprints and the World 1-1 bonus model fingerprint. For the native 24-frame observer A/B/A check and its separate archive comparison, see [headless validation](research/SMB3_HEADLESS_VALIDATION.md).
+
+## Source-modeled World 1-1 background staging (stacked feature branch)
+
+On branch `feature/smb3-world11-background`, six synthetic tests cover the four table quadrants, 54-byte pattern strips, 14-byte attribute split, nominal PPU commit addresses, MMC3 CIRAM mirroring, explicit 1-KiB physical CHR bank pixel decoding and private-dump comparison. The optional SMB3 PRG1 integration test verifies the 1,024-byte Plains layout table SHA-256 and three computed source-model strip fingerprints. This is not a claim of native PPU capture acceptance.
+
+```powershell
+Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine'
+$env:PYTHONPATH = 'F:\Dev\ROMMAGE\SOURCE\SpriteMine\src'
+$env:SPRITEMINE_TEST_ROM = 'F:\Dev\ROMMAGE\FIXTURE\Super Mario Bros. 3.zip'
+python -m pytest -q tests/test_background.py
+python -m spritemine reconstruct-background $env:SPRITEMINE_TEST_ROM --column 0 --half 0
+```
+
+The `validate-background` command accepts **private** producer-time 54-byte pattern and 14-byte attribute dumps, but no such native measurements have passed yet. Read the exact hook/capture requirements in [SMB3_HEADLESS_BACKGROUND_STAGE.md](research/SMB3_HEADLESS_BACKGROUND_STAGE.md). Public Windows CI runs without the ROM and skips the opt-in private test. Keep raw copyrighted material outside GitHub.
