@@ -21,7 +21,7 @@ def digest(path):
 # This whitelist describes only evidence collected on *every* A/B/A leg.
 # The detailed B observer additionally emits bg-NNNN-tiles.bin snapshots;
 # including those B-only files would create a false neutrality failure.
-FRAME_EVIDENCE = re.compile(r"^\\d+-(?:start-tiles|end-tiles|end-rgb)\\.bin$")
+FRAME_EVIDENCE = re.compile(r"^\d+-(?:start-tiles|end-tiles|end-rgb)\.bin$")
 
 
 def common_signature(folder):
