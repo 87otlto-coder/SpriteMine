@@ -15,6 +15,7 @@ from spritemine.background import (
     background_pattern_pixels,
     bonus_background_summary,
     ciram_offset,
+    compare_background_staging,
     logical_palette_group,
     logical_tile_pixels,
     pattern_strip,
@@ -144,6 +145,26 @@ def test_background_chr_pages_and_16x16_order_are_independent_from_alpha():
         background_pattern_pixels(rom, 0, tuple([999] * 8))
 
 
+def test_private_dump_comparison_is_source_agnostic():
+    patterns = bytes(range(54))
+    attrs = bytes(range(14))
+    ok = compare_background_staging(patterns, attrs, patterns, attrs)
+    assert ok["matches"]
+    assert ok["capture_provenance_verified"] is False
+    assert ok["patterns"]["mismatch_count"] == 0
+    altered = bytearray(patterns)
+    altered[32] ^= 0x01
+    broken = compare_background_staging(patterns, attrs, bytes(altered), attrs[::-1])
+    assert not broken["matches"]
+    assert broken["patterns"]["first_difference"] == 32
+    assert broken["patterns"]["mismatch_count"] == 1
+    assert broken["attributes"]["mismatch_count"] == 14
+    with pytest.raises(ValueError, match="54 bytes"):
+        compare_background_staging(b"", attrs, patterns, attrs)
+    with pytest.raises(ValueError, match="14 bytes"):
+        compare_background_staging(patterns, attrs, patterns, b"")
+
+
 @pytest.mark.skipif(not os.getenv("SPRITEMINE_TEST_ROM"), reason="Private SMB3 ROM not configured")
 def test_private_plains_fingerprint_and_bonus_staging():
     rom = load_rom(os.environ["SPRITEMINE_TEST_ROM"])
@@ -152,6 +173,19 @@ def test_private_plains_fingerprint_and_bonus_staging():
     report, tiles = reconstruct_bonus(rom)
     assert report["map_sha256"] == MODEL_SHA256
     assert len(tiles) == BONUS_BYTES
+    # Independently recomputed from the read-only original ROM and bonus stream,
+    # not copied from the decoder output. Preserve only these SHA-256 values.
+    expected = {
+        (0, 0): ("7cf1d7eb4d234aa4f5e9152bc6b76147b7cb16b2c5d3674519acbfaeeac95bf9",
+                 "7724fed24cee2826840a1934f930cc2e3501ce4f77cdf9c67f5bfd8f14e28e10"),
+        (8, 0): ("15a406545bcdd93afd2e0f14c1ba49d5aae7cbbb2fc9f2be0cb9aaf18588e507",
+                 "db109de9de3cdbfae29f1d665a51fb3d45957818f513fe8677e1de759972eb1c"),
+        (16, 1): ("c0f2eec6558f1cc2867fa9354a4d1a1131a88aeb58a2c5f37e82af378ea3eb0d",
+                  "e337dd9a1999e10e9d1640396d83df5bf78ccd16fa63bac4b51b1c29015b3a1d"),
+    }
+    for (col, half), fingerprints in expected.items():
+        actual = bonus_background_summary(rom, tiles, col, half)
+        assert (actual["pattern_strip_sha256"], actual["attribute_strip_sha256"]) == fingerprints
     for x in (0, 1, 8, 15, 16, 22, 31):
         for half in (0, 1):
             staging = bonus_background_summary(rom, tiles, x, half)
