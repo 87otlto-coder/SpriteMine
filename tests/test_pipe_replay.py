@@ -2,7 +2,7 @@ from hashlib import sha256
 
 import pytest
 
-from research.mesence.pipe_replay import common_signature, event_window, signature_differences
+from research.mesence.pipe_replay import common_signature, event_window, signature_differences, replay_timeouts
 from research.mesence.verify_pipe_mask import stable_chr
 
 
@@ -73,3 +73,12 @@ def test_neutrality_excludes_only_observer_files_and_detects_real_changed_frame(
     assert changed["450860-end-rgb.bin"]["reference"] != changed["450860-end-rgb.bin"]["observed"]
     (observer / "controller.tsv").unlink()
     assert "controller.tsv" in signature_differences(reference, common_signature(observer))
+
+
+def test_only_detailed_ppu_b_leg_gets_extended_bounded_timeout():
+    assert replay_timeouts("B", True) == (180, 210)
+    assert replay_timeouts("discovery", True) == (30, 45)
+    assert replay_timeouts("A", True) == (30, 45)
+    assert replay_timeouts("A2", True) == (30, 45)
+    assert replay_timeouts("B", False) == (30, 45)
+    assert replay_timeouts("background", True) == (30, 45)
