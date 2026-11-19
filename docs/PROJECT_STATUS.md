@@ -1,6 +1,6 @@
 # SpriteMine project status
 
-**Updated: 2026-11-12.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
+**Updated: 2026-11-19.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
 
 ## Merged baseline — main
 
@@ -34,20 +34,18 @@ The real graphics observations are supported by locally held source state, captu
 - Research Windows CI migration [PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) and full-Lua syntax follow-up #12 passed hosted Windows and merged into the research base. Graphics #5 and animation #6 inherited the same Windows policy (maintenance PRs #13/#14), preserving synthetic Lua/MMC3/CHR/RGB tests. GUI #4 inherited Windows-only Qt checks (maintenance PR #11) and is mergeable but remains open for remaining native UI acceptance.
 - An old duplicate artifact-policy workflow run is queued even though later authoritative main runs succeeded; do not conflate the stale queue with current main CI failure.
 
-## Next engineering decisions
+## Current headless engineering decisions (2026-11-19)
 
-1. Keep the approved Windows-only CI policy across main, GUI and research branches, with no redundant push+PR runs; already verified on hosted Windows runners.
-2. Complete native PySide6 GUI acceptance in PR #4 before merging to main. The graphics harness and the three-frame animation timeline now share the consolidated research base. Keep the Phase 4 complete walking/jumping-cycle gate open until a real pose transition and full cycle are validated.
-3. Merge the accepted static GUI and research features through reviewable PRs, recording the exact production integration contract.
-4. Continue Phase 4 with a longer deterministic Mario sequence to observe a real pose transition and its held-frame durations; the verified three-frame hold is not a full animation.
-5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.
+1. Keep development **headless** until the underlying SMB3 decoder and original-emulator validation gates have defensible, reproducible results. The earlier 2026-11-12 UI-first/three-frame worklist is superseded by these results; historical details remain in older research branches.
+2. PR #21 (draft, unmerged) is now the reviewable source of the 81 player recipes, three canonical poses, 24-frame native A/B/A decoder, authentic upper-pipe occlusion subset and native bonus-room **logical tile** acceptance. Do not treat these as merged main features.
+3. Continue with World 1-1 bonus **logical tile to PPU patterns, attributes, palette and scanline CHR mapping**, each independently compared with MesenCE. Extend to the stochastic main level only after the deterministic bonus area is validated through pixel rendering.
+4. PR #19 and #20 are separate long-running research histories with substantial divergence from current main. Review/cherry-pick relevant tested functionality rather than merging either branch indiscriminately. No Qt GUI work in this headless milestone.
+5. Preserve immutable source ROMs and private native captures under F:\\Dev\\ROMMAGE\\FIXTURE; keep Windows-only synthetic CI and distinguish private Windows acceptance from hosted tests.
 
-See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
+## Headless SMB3 PRG1 implementation (PR #21; draft, unmerged)
 
-## Headless SMB3 PRG1 implementation (PR #21)
+**Acceptance as of 2026-11-19:** Gate A passed for the three canonical Small Mario ROM recipes (138/174/194 opaque pixels; all six indexed/alpha SHA-256 fingerprints), and Gate B passed for 24 captured frames 448385–448408 under fresh A/B/A observations. Gate C passed for **7,528 distinguishable native pipe-mask overlap pixels, zero mismatch, across 56 frames**; 644 additional overlaps were ambiguous under RGB comparisons and excluded, so this is **not** whole-frame sprite validation. Gate D passed for **864/864 first-entry bonus-room logical Tile_Mem bytes**, SHA-256 `c57b72c77899d596745065c90878327993f9a25e6289c0b22d960c58021b088a`; background quadrant→pattern, palette attribute and final rendered-pixel validation are **not yet established**.
 
-The review branch provides verified static reconstruction of three canonical player recipes and 24 native player frames through the private MesenCE harness. The scanline compositor has synthetic coverage. The World 1-1 bonus room has a source-derived logical model awaiting a live Tile_Mem comparison. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).
+The original PRG1 controller-only route acquires Mushroom and Leaf, fills P-Meter, flies to the elevated World 1-1 screen-8 pipe, and enters the bonus room. On that route OAM pipe masks use actual 1-KiB CHR page `$04` in PPU window 5 and are 128/128 opaque; the older 88/128 figure is conditional on *hypothetically* mapping page `$53` to window 5. The 2,590 controller poll bytes, savestate/ROM/emulator provenance, bounded replay frames, verified comparisons and limits appear in [native Raccoon pipe report](research/SMB3_NATIVE_RACCOON_PIPE.md). Earlier blocked approach is preserved in [native pipe approach](research/SMB3_NATIVE_PIPE_APPROACH.md).
 
-## World 1-1 native pipe replay
-
-A native controller-only replay reaches the blocked lower screen-8 approach and reproduces its state under A/B/A. The upper entry, authentic occlusion and first-entry bonus layout remain open. See [native pipe approach](research/SMB3_NATIVE_PIPE_APPROACH.md).
+**CI:** current PR #21 commit `1846557529b62dbf4276c9e2b0509721c97065db` passed Windows Python 3.11 and 3.12 in [workflow 44475932602](https://github.com/87otlto-coder/SpriteMine/actions/runs/44475932602). Private native comparisons were executed and documented by the Windows worker, not reproducible in public CI. PR #21 remains draft and unmerged. The next feature branch should deliver testable background expansion and capture-time PPU comparison without altering the accepted replay route.
