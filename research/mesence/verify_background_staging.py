@@ -78,7 +78,10 @@ def verify(rom, capture: Path) -> dict:
         raise ValueError("Native event count differs from replay manifest")
 
     layout = plains_quadrants(rom)
-    counts = Counter()
+    counts = Counter({
+        "pattern_checked": 0, "attribute_checked": 0, "bytes_checked": 0,
+        "mismatches": 0, "metadata_mismatches": 0,
+    })
     comparisons = []
     for event in events:
         key = f'bg-{event["sequence"]:04d}'
