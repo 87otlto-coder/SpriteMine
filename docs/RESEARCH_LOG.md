@@ -20,3 +20,17 @@ Source code contains debugger-oriented tilemap/sprite/palette access and emulato
 - https://github.com/nesdev-org/MesenCE
 - https://github.com/TASEmulators/fceux
 - https://github.com/captainsouthbird/smb3 (research reference; licensing review needed before reuse)
+
+## 2026-11-18 — Headless implementation and native player replay
+
+Verified all six original-ROM pose fingerprints, revalidated 24 archived A/B/A windows and ran a fresh observer-neutral MesenCE replay. Runtime $EE identifies the recipes at start of frame. The new bitmap decoder reproduced 24 archived RGBA hashes and matched 4,032 native opaque RGB samples. The bonus layout matches the 864-byte model fingerprint. Native pipe and Tile_Mem evidence remain open. See [headless validation](research/SMB3_HEADLESS_VALIDATION.md).
+
+## World 1-1 native pipe replay
+
+Native screen-8 Tile_Mem confirms an enterable upper mouth at row 7 and blocked openings at rows 19 and 23. The captured Down attempt left pipe and junction state at zero. See [native pipe approach](research/SMB3_NATIVE_PIPE_APPROACH.md).
+
+## 2026-11-19 — Native Raccoon pipe occlusion and bonus-room logical map
+
+A legitimate **2,590-poll controller-only PRG1 World 1-1 replay** acquired Super Mushroom and Super Leaf, filled P-Meter, flew to the upper screen-8 pipe, triggered the pipe transition and captured the first bonus-room layout immediately after construction. A/B/A timing/controller/tile/RGB snapshots agreed for the bounded native replay. The pipe-mask compositor independently matched **7,528 distinguishable overlapping pixels / zero differences** in 56 compared frames; 644 additional overlap samples were RGB-indistinguishable and excluded. Actual mask pattern `$77` in PPU window 5 used physical CHR page `$04` (128/128 opaque pixels), correcting the older hypothetical `$53` assumption for this native route.
+
+The source-derived bonus-room model matched **864/864** first-entry native logical Tile_Mem bytes. See [reproducible native report](research/SMB3_NATIVE_RACCOON_PIPE.md) and PR #21 at `1846557529b62dbf4276c9e2b0509721c97065db`; [Windows CI](https://github.com/87otlto-coder/SpriteMine/actions/runs/44475932602) passed on Python 3.11 and 3.12. Confidence: high for this captured native route/sample subset and logical Tile_Mem comparison, **not** complete framebuffer, arbitrary pipe routes, original IRQ bank-by-pixel history or background PPU tile/attribute reconstruction. Next: implement independently testable Plains quadrant/pattern/attribute mapping and compare against a bounded first-entry MesenCE strip/PPU capture. Public GitHub excludes original ROM and extracted graphical assets.
