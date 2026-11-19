@@ -61,3 +61,41 @@ Private capture location is returned as capture_dir. Send the compact verifier s
 ## Acceptance and limitations
 
 A pass requires A/B/A neutrality, source hash integrity, accepted CPU staging, matched pattern and attribute bus write sequences, and 0 mismatches between modeled and captured physical CIRAM plus its PPU debug aliases. Every excluded or unmatched event must be counted; no silent positive coverage. Even then, rendered RGB, HUD IRQ fetch-time CHR mapping, palette timing and complete World 1-1 pixel reconstruction remain **unverified**.
+
+## 2026-11-19 Windows PPU probe timeout and bounded fix
+
+The owner ran the initial PR #24 code at commit `0f5a17e`. Local private-ROM
+pytest passed **47/47**, and the controller file reproduced all **2,590 polls**
+with the canonical input SHA-256. The native B leg failed with exit code
+`4294967295` (unsigned `-1`); discovery and A completed and A2 never started.
+
+The preserved private capture is:
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-c62ca5ca`
+
+Read-only owner diagnostics established:
+
+- Discovery/A: 2,590 controller rows, 83,020 controller-bus records each
+- B: **2,499 / 2,590 polls** (through frame **450814**), 80,428 controller-bus
+  records; 2,121 PPU register observations, 74 CIRAM boundary observations
+  (37 paired frames), and two staged producer observations
+- B files updated at **22:00:33**, after its directory was created at
+  **22:00:03**, matching a 30-second execution window
+- No `lua/script/error/timeout/exception/failed/stack/panic` string in
+  B's `emulator.log`; ordinary uninitialized-read warnings also occurred in A
+
+The pinned [MesenCE TestRunner.cs](https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/UI/Utilities/TestRunner.cs)
+initializes exit result to `-1` and returns it when the `--timeout`
+limit expires. **Timeout is therefore strongly supported**, although no
+explicit runtime timeout message was emitted.
+
+The runner now assigns **180-second MesenCE / 210-second Python watchdog**
+limits only to the B leg **when `--ppu-commits` is enabled**. Discovery, A,
+A2, and previous CPU-only staging scenarios preserve the original
+30-second MesenCE / 45-second watchdog limits. This remains a **bounded
+instrumentation-only change**: no original ROM, controller input, savestate,
+PPU state, memory write, or expected byte acceptance was changed.
+
+The fix is unit-tested but a complete new **native** B/A2 run has not yet
+been reported. The previous partial B capture must not be counted as
+a passing PPU/CIRAM gate. Retain the private failed capture for provenance.
+
