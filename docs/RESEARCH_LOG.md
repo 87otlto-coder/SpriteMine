@@ -80,3 +80,26 @@ non-bonus/modified map state, not promoted to passes.
 palette or visible framebuffer claim. Preserved source hashes, event log
 hash, private capture location and next steps:
 [2026-11-19 native staging acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING_ACCEPTANCE_20261119.md).
+
+## 2026-11-19 — Native PPU commit hook identified (source-backed, not yet captured)
+
+Pinned MesenCE 2.2.1 NerPpu::WriteRam and UpdateState show that CPU
+$2007 writes are latched and applied after a short PPU-cycle delay.
+Ordinary nametable writes call mapper WriteVram without firing
+ProcessPpuWrite (NesPpuMemory), so a naive PPU memory callback would
+miss the very writes being validated. For palette $2007 writes,
+ProcessPpuWrite is present. Actual $2007 bus trace and physical CIRAM
+changes have **not yet been observed in a new native run**.
+
+Draft PR #24 adds a passive register observer and independent offline
+verification of the original 54/14-byte staging producers against CPU
+$2007 data-write sequences, frame-boundary physical nametable RAM, and
+mirrored PPU debugger nametable pages. Observations are bounded to the
+established 2,590-poll World 1-1 upper-pipe replay. Source:
+https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/NesPpu.cpp;
+MMC3 mirroring state:
+https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/Mappers/Nintendo/MMC3.h.
+Synthetic CI: 43 passed / 4 private skips on Python 3.11 and 3.12 in
+https://github.com/87otlto-coder/SpriteMine/actions/runs/44600719808.
+**Native result: pending.** See
+[PPU/CIRAM runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
