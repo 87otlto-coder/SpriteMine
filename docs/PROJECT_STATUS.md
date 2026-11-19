@@ -55,3 +55,22 @@ The private original ROM ZIP was independently inspected read-only in this sessi
 The original PRG1 controller-only route acquires Mushroom and Leaf, fills P-Meter, flies to the elevated World 1-1 screen-8 pipe, and enters the bonus room. On that route OAM pipe masks use actual 1-KiB CHR page `$04` in PPU window 5 and are 128/128 opaque; the older 88/128 figure is conditional on *hypothetically* mapping page `$53` to window 5. The 2,590 controller poll bytes, savestate/ROM/emulator provenance, bounded replay frames, verified comparisons and limits appear in [native Raccoon pipe report](research/SMB3_NATIVE_RACCOON_PIPE.md). Earlier blocked approach is preserved in [native pipe approach](research/SMB3_NATIVE_PIPE_APPROACH.md).
 
 **CI:** current PR #21 commit `1846557529b62dbf4276c9e2b0509721c97065db` passed Windows Python 3.11 and 3.12 in [workflow 44475932602](https://github.com/87otlto-coder/SpriteMine/actions/runs/44475932602). Private native comparisons were executed and documented by the Windows worker, not reproducible in public CI. PR #21 remains draft and unmerged. The next feature branch should deliver testable background expansion and capture-time PPU comparison without altering the accepted replay route.
+
+
+## Native Plains staging observer — follow-up branch (2026-11-19)
+
+**Pending owner MesenCE validation; unmerged.** The clean Background-Validation
+checkout ran the complete PR #22 Python suite with the private original ROM:
+**33 passed, 0 failed, 0 skipped** in 1.03 seconds. Its module path resolves to
+that exact checkout. This establishes the static baseline, not native PPU output.
+
+The follow-up `feature/smb3-world11-staging-capture` branch adds an opt-in
+read-only MesenCE producer observer and an independent pattern/attribute buffer
+verifier. It also models PRG030's direction-dependent, sometimes nonadjacent
+attribute source columns. The accepted 2,590-controller-poll replay can be
+recreated directly from the canonical GitHub report without copying opaque
+private input files. Validation requires at least one first-entry native
+pattern producer and one attribute producer with exact byte agreement,
+matching destination metadata and A/B/A neutrality. This is **not yet
+native-verified**. See
+[staging capture and acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING.md).
