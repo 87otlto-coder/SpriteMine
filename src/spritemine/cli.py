@@ -10,6 +10,7 @@ from pathlib import Path
 from .background import (
     attribute_strip,
     bonus_background_summary,
+    compare_background_staging,
     pattern_strip,
     plains_quadrants,
 )
@@ -49,6 +50,12 @@ def main(argv: list[str] | None = None) -> int:
     bg.add_argument("--column", type=int, default=0, help="Logical 16px column, 0..31")
     bg.add_argument("--half", type=int, choices=(0, 1), default=0, help="8px half: 0=left, 1=right")
     bg.add_argument("--include-strips", action="store_true", help="Print private source-derived pattern and attribute bytes")
+    bgcheck = sub.add_parser("validate-background", help="Compare private 54/14-byte MesenCE staging dumps")
+    bgcheck.add_argument("rom")
+    bgcheck.add_argument("pattern_dump", type=Path)
+    bgcheck.add_argument("attribute_dump", type=Path)
+    bgcheck.add_argument("--column", type=int, default=0)
+    bgcheck.add_argument("--half", type=int, choices=(0, 1), default=0)
     args = parser.parse_args(argv)
     try:
         rom = load_rom(args.rom)
@@ -68,13 +75,19 @@ def main(argv: list[str] | None = None) -> int:
                 result = validate_player(rom)
             else:
                 result, tiles = reconstruct_bonus(rom)
-                if args.command == "reconstruct-background":
+                if args.command in ("reconstruct-background", "validate-background"):
                     layout = plains_quadrants(rom)
                     report = bonus_background_summary(rom, tiles, args.column, args.half)
                     report["logical_map_sha256"] = result["map_sha256"]
-                    if args.include_strips:
+                    if args.command == "reconstruct-background" and args.include_strips:
                         report["pattern_strip"] = list(pattern_strip(tiles, layout, args.column, args.half))
                         report["attribute_strip"] = list(attribute_strip(tiles, args.column & ~1))
+                    elif args.command == "validate-background":
+                        report["comparison"] = compare_background_staging(
+                            pattern_strip(tiles, layout, args.column, args.half),
+                            attribute_strip(tiles, args.column & ~1),
+                            args.pattern_dump.read_bytes(), args.attribute_dump.read_bytes(),
+                        )
                     result = report
                 elif args.command == "validate-level":
                     result["comparison"] = compare_bonus(tiles, args.tile_mem)
@@ -83,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(result, indent=2, sort_keys=True))
             if args.command == "validate-sprite" and not result["passed"]:
                 return 1
-            if args.command == "validate-level" and not result["comparison"]["matches"]:
+            if args.command in ("validate-level", "validate-background") and not result["comparison"]["matches"]:
                 return 1
         return 0
     except (RomFormatError, OSError, ValueError) as exc:
