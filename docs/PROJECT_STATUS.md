@@ -57,20 +57,31 @@ The original PRG1 controller-only route acquires Mushroom and Leaf, fills P-Mete
 **CI:** current PR #21 commit `1846557529b62dbf4276c9e2b0509721c97065db` passed Windows Python 3.11 and 3.12 in [workflow 44475932602](https://github.com/87otlto-coder/SpriteMine/actions/runs/44475932602). Private native comparisons were executed and documented by the Windows worker, not reproducible in public CI. PR #21 remains draft and unmerged. The next feature branch should deliver testable background expansion and capture-time PPU comparison without altering the accepted replay route.
 
 
-## Native Plains staging observer — follow-up branch (2026-11-19)
+## Native Plains staging observer — accepted subset (2026-11-19)
 
-**Pending owner MesenCE validation; unmerged.** The clean Background-Validation
-checkout ran the complete PR #22 Python suite with the private original ROM:
-**33 passed, 0 failed, 0 skipped** in 1.03 seconds. Its module path resolves to
-that exact checkout. This establishes the static baseline, not native PPU output.
+**PASS for first-entry World 1-1 bonus-room CPU pattern/attribute staging.**
+The owner's clean Windows `SpriteMine-Background-Validation` worktree at
+`58fe97aca8f7a99771e98dc0e2bbc53acc71c033` ran the complete
+private-ROM pytest suite: **40 passed, 0 failed, 0 skipped**. The corrected
+comparator also rechecked the original failed private run:
+**B: 0 genuine differences; A2: 0 genuine differences**.
 
-The follow-up `feature/smb3-world11-staging-capture` branch adds an opt-in
-read-only MesenCE producer observer and an independent pattern/attribute buffer
-verifier. It also models PRG030's direction-dependent, sometimes nonadjacent
-attribute source columns. The accepted 2,590-controller-poll replay can be
-recreated directly from the canonical GitHub report without copying opaque
-private input files. Validation requires at least one first-entry native
-pattern producer and one attribute producer with exact byte agreement,
-matching destination metadata and A/B/A neutrality. This is **not yet
-native-verified**. See
-[staging capture and acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING.md).
+A fresh 2,590-input-poll MesenCE replay at frames **450778–450881**
+reported `neutral: true`. Its read-only B-leg observer recorded **66**
+Plains producer events, of which **32 pattern strips × 54 bytes (1,728)**
+and **32 attribute strips × 14 bytes (448)** used the matching native
+first-entry bonus logical map. The resulting **2,176/2,176 CPU staging bytes
+matched**, with **zero byte mismatches and zero destination metadata
+mismatches**. **Two events were excluded**, not counted as matches, because
+their map state was not the accepted bonus layout.
+
+Source fingerprints, event-log hash, private `F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-hb6hmzft`
+location, correction history and scope are documented in
+[native staging acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING_ACCEPTANCE_20261119.md).
+These are **owner-observed Windows test results recorded from shell output**;
+the binary capture was not independently rerun for this documentation update.
+PR #23 is still **draft and unmerged**, stacked on PR #22/21.
+
+**Next:** verify PPU writes and CIRAM mapping, fetch-time MMC3 CHR pages and
+palette state, and ultimately compare actual background pixels. CPU staging
+acceptance does **not** establish full visible World 1-1 reconstruction.
