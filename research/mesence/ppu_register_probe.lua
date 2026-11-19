@@ -6,7 +6,7 @@
 do
     if detailed and os.getenv("SPRITEMINE_PPU_COMMITS") == "1" then
         local log = assert(io.open(output .. "/ppu-registers.tsv", "wb"))
-        log:write("sequence\tkind\tframe\tcpu_cycle\tscanline\tppu_cycle\tpoll\tregister\tvalue\tvideo_ram_addr\tbus_addr\ttmp_video_ram_addr\twrite_toggle\tvertical_write\ttileset\n")
+        log:write("sequence\tkind\tframe\tcpu_cycle\tscanline\tppu_cycle\tpoll\tregister\tvalue\tvideo_ram_addr\tbus_addr\ttmp_video_ram_addr\twrite_toggle\tvertical_write\tmirroring_bit\ttileset\n")
         local sequence = 0
         local function observation(kind, address, value)
             if not restored then return end
@@ -15,6 +15,7 @@ do
             local v = assert(state["ppu.videoRamAddr"], "MesenCE missing ppu.videoRamAddr")
             local bus = assert(state["ppu.ppuBusAddress"], "MesenCE missing ppu.ppuBusAddress")
             local tmp = assert(state["ppu.tmpVideoRamAddr"], "MesenCE missing ppu.tmpVideoRamAddr")
+            local mmc3 = assert(state["mapper.regA000"], "MesenCE missing mapper.regA000")
             local toggle = state["ppu.writeToggle"]
             local increment = state["ppu.control.verticalWrite"]
             assert(type(toggle) == "boolean" or type(toggle) == "number",
@@ -29,7 +30,7 @@ do
                 address, value, v, bus, tmp,
                 (toggle == true or toggle == 1) and 1 or 0,
                 (increment == true or increment == 1) and 1 or 0,
-                cpu(0x070A)
+                mmc3 & 1, cpu(0x070A)
             }, "\t"), "\n")
         end
         emu.addMemoryCallback(function(address, value)
@@ -44,6 +45,18 @@ do
         emu.addMemoryCallback(function(address, value)
             observation("status-read", 0x2002, value)
         end, emu.callbackType.read, 0x2002, 0x2002)
+        -- Physical 2KiB CIRAM, not the 4KiB mirrored PPU nametable view.
+        -- These snapshots are B-only and excluded from common A/B/A signatures.
+        local function physical_snapshot(which)
+            if not restored then return end
+            local state = emu.getState()
+            if in_window(state) then
+                save(string.format("ppu-%d-%s-ciram.bin", state.frameCount, which),
+                     read_region(0, 2048, emu.memType.nesNametableRam))
+            end
+        end
+        emu.addEventCallback(function() physical_snapshot("start") end, emu.eventType.startFrame)
+        emu.addEventCallback(function() physical_snapshot("end") end, emu.eventType.endFrame)
         emu.addEventCallback(function() log:close() end, emu.eventType.scriptEnded)
     end
 end
