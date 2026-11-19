@@ -7,6 +7,12 @@ import json
 import sys
 from pathlib import Path
 
+from .background import (
+    attribute_strip,
+    bonus_background_summary,
+    pattern_strip,
+    plains_quadrants,
+)
 from .chr import export_chr
 from .player import inspect_recipes, reconstruct_player, validate_player
 from .rom import RomFormatError, load_rom
@@ -38,6 +44,11 @@ def main(argv: list[str] | None = None) -> int:
     compare = sub.add_parser("validate-level", help="Compare the model with a private 864-byte Tile_Mem dump")
     compare.add_argument("rom")
     compare.add_argument("tile_mem", type=Path)
+    bg = sub.add_parser("reconstruct-background", help="Model bonus-room Plains PPU staging strips")
+    bg.add_argument("rom")
+    bg.add_argument("--column", type=int, default=0, help="Logical 16px column, 0..31")
+    bg.add_argument("--half", type=int, choices=(0, 1), default=0, help="8px half: 0=left, 1=right")
+    bg.add_argument("--include-strips", action="store_true", help="Print private source-derived pattern and attribute bytes")
     args = parser.parse_args(argv)
     try:
         rom = load_rom(args.rom)
@@ -57,7 +68,15 @@ def main(argv: list[str] | None = None) -> int:
                 result = validate_player(rom)
             else:
                 result, tiles = reconstruct_bonus(rom)
-                if args.command == "validate-level":
+                if args.command == "reconstruct-background":
+                    layout = plains_quadrants(rom)
+                    report = bonus_background_summary(rom, tiles, args.column, args.half)
+                    report["logical_map_sha256"] = result["map_sha256"]
+                    if args.include_strips:
+                        report["pattern_strip"] = list(pattern_strip(tiles, layout, args.column, args.half))
+                        report["attribute_strip"] = list(attribute_strip(tiles, args.column & ~1))
+                    result = report
+                elif args.command == "validate-level":
                     result["comparison"] = compare_bonus(tiles, args.tile_mem)
                 elif args.include_tiles:
                     result["tiles"] = list(tiles)
