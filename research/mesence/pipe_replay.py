@@ -55,12 +55,16 @@ def run(args):
     parent = (args.root / "FIXTURE" / "SMB3" / "RuntimeInvestigation").resolve(strict=True)
     if any((p / ".git").exists() for p in (parent, *parent.parents)):
         raise ValueError("Captures must remain outside Git checkouts")
+    if args.ppu_commits and not args.background_staging:
+        raise ValueError("--ppu-commits requires --background-staging for source event linkage")
     script = Path(__file__).with_suffix(".lua")
     sources = {"rom": args.rom, "emulator": args.emulator, "slot": args.slot,
                "input": args.input, "settings": args.emulator.with_name("settings.json"),
                "script": script}
     if args.background_staging:
         sources["background_probe"] = Path(__file__).with_name("background_staging_probe.lua")
+    if args.ppu_commits:
+        sources["ppu_register_probe"] = Path(__file__).with_name("ppu_register_probe.lua")
     hashes = {key: digest(path) for key, path in sources.items()}
     if hashes["rom"] != ROM_SHA256 or hashes["emulator"] != MESEN_SHA256:
         raise ValueError("Expected verified SMB3 USA PRG1 and MesenCE 2.2.1")
@@ -77,7 +81,10 @@ def run(args):
         # One Lua chunk: the optional observer shares only the base replay's
         # private read helpers and state, never gameplay mutation callbacks.
         combined = output / "capture-staging.lua"
-        combined.write_bytes(script.read_bytes() + b"\n" + sources["background_probe"].read_bytes())
+        content = script.read_bytes() + b"\n" + sources["background_probe"].read_bytes()
+        if args.ppu_commits:
+            content += b"\n" + sources["ppu_register_probe"].read_bytes()
+        combined.write_bytes(content)
         script = combined
     switches = ["--testRunner", "--timeout=30", "--doNotSaveSettings",
                 "--nes.disableSprites=false", "--nes.removeSpriteLimit=false"]
@@ -88,7 +95,8 @@ def run(args):
                    SPRITEMINE_PIPE_INPUT=str(args.input), SPRITEMINE_PIPE_SLOT=str(args.slot),
                    SPRITEMINE_PIPE_FIRST=str(first), SPRITEMINE_PIPE_LAST=str(last),
                    SPRITEMINE_PIPE_DETAIL=str(int(leg == "B")),
-                   SPRITEMINE_BG_STAGING=str(int(args.background_staging and leg == "B")))
+                   SPRITEMINE_BG_STAGING=str(int(args.background_staging and leg == "B")),
+                   SPRITEMINE_PPU_COMMITS=str(int(args.ppu_commits and leg == "B")))
         with (folder / "emulator.log").open("wb") as log:
             subprocess.run([args.emulator, *capture_switches, script, args.rom],
                            cwd=args.emulator.parent, env=env, stdout=log, stderr=subprocess.STDOUT,
@@ -147,6 +155,16 @@ def run(args):
             "log_sha256": digest(staging),
             "verified_against_rom_model": False,
         }
+    if args.ppu_commits:
+        registers = output / "B" / "ppu-registers.tsv"
+        with registers.open("rb") as stream:
+            record_count = sum(1 for _ in stream) - 1
+        report["ppu_register_trace"] = {
+            "observer": "CPU PPU register writes; not hardware-completed VRAM notifications",
+            "event_count": record_count,
+            "log_sha256": digest(registers),
+            "ppu_commit_verified": False,
+        }
     if background is not None:
         report["background_rgb_sha256"] = {
             key: value for key, value in background.items() if key.endswith("-rgb.bin")
@@ -165,6 +183,8 @@ def main():
     parser.add_argument("--background-reference", action="store_true", help="Capture and verify a sprites-hidden RGB reference")
     parser.add_argument("--background-staging", action="store_true",
                         help="Passively snapshot completed Plains pattern/attribute producers in B leg")
+    parser.add_argument("--ppu-commits", action="store_true",
+                        help="Record read-only CPU PPU register write intent and prewrite PPU state in B leg")
     try:
         print(json.dumps(run(parser.parse_args()), indent=2))
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
