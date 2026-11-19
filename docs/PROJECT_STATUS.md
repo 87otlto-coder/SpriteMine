@@ -110,3 +110,22 @@ conservatively. Synthetic hosted Windows CI passed on Python 3.11/3.12
 https://github.com/87otlto-coder/SpriteMine/actions/runs/44600719808.
 The private Windows PPU observer and verifier are **not yet run**. See
 [PPU/CIRAM runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
+
+### PPU native B-leg timeout diagnosis — 2026-11-19
+
+The first private Windows PR #24 native capture **did not complete**:
+discovery/A reached 2,590/2,590 input polls, but heavily instrumented B
+stopped at poll **2,499**, frame **450814**, after approximately 30 seconds.
+The trace had 2,121 PPU register observations and 74 physical CIRAM
+boundary records; no runtime error text was found in the searched log.
+Pinned MesenCE TestRunner.cs returns `-1` on its 30-second timeout,
+matching the observed unsigned Windows exit code `4294967295`.
+The root cause is therefore strongly consistent with B's execution limit.
+A2 never began, so **PPU native acceptance remains pending**.
+
+A bounded fix extends only B's instrumented Mesen timeout to 180 seconds
+and Python watchdog to 210 seconds; discovery/A/A2 and older CPU-staging
+behavior retain their previous limits. The new regression test ensures
+only B receives the extension. Private evidence remains under
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-c62ca5ca`;
+see [PPU native runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
