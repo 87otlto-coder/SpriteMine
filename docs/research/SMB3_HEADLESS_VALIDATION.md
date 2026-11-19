@@ -58,26 +58,12 @@ The displayed reference is video-filtered RGB24. CHR matching is scoped to the
 observed player components. One repeated timing sample measured A/B/A at
 1.621/1.407/1.424 seconds, which is wall-clock evidence only.
 
-## Outstanding gates
+## Native pipe and bonus logical-map acceptance (2026-11-19)
 
-The scanline compositor selects among the first eight in-range OAM entries,
-then applies background priority to the winning nonzero sprite pixel. Synthetic
-tests cover this interaction, but authentic pipe mask slots and fetch-time
-banks remain unverified. Reproduce the screen-8 traversal and record OAM slots
-0–3 and 10–15, fetch-time CHR banks and background indices across the entrance.
+**Gate C passed, scoped:** original controller-only 2,590-poll World 1-1 flight/piped entrance. Actual pipe-mask OAM pattern `$77`, behind-background attributes `$20`, CHR 1-KiB physical page `$04` in PPU window 5 produced 128/128 opaque pattern pixels on the compared fetches. The independent scanline compositor matched **7,528 distinguishable overlapping native RGB samples** over 56 frames with zero mismatches. Another 644 overlaps were indistinguishable under filtered RGB and were not counted as verified. This does not certify entire frames or other pipe routes.
 
-The Expedition 15 hypothetical bank calculation needs a 1 KiB window
-correction. OAM pattern `$77` starts at PPU address `$1760`, which selects
-window 5 and tile offsets `$36/$37` within that window. With physical page
-`$53` hypothetically mapped there, direct original-ROM bitplane counts give
-41 + 47 = 88 opaque pixels. The previous 77-pixel result addressed bytes in
-the next physical page. The actual traversal bank remains unobserved.
+**Gate D passed, logical Tile_Mem only:** original first bonus-room post-layout hook produced two 432-byte screens matching **all 864 model bytes** and SHA-256 `c57b72c77899d596745065c90878327993f9a25e6289c0b22d960c58021b088a`. The CLI `validate-level` can independently report differences but cannot authenticate a supplied dump's provenance. The native replay and generated private dump are documented in [SMB3_NATIVE_RACCOON_PIPE.md](SMB3_NATIVE_RACCOON_PIPE.md). The earlier [blocked lower-pipe approach](SMB3_NATIVE_PIPE_APPROACH.md) remains a useful negative test.
 
-The bonus layout model matches the Expedition 12 864-byte screen-major
-fingerprint. It reconstructs the two reciprocal layout/object pointers and the
-bonus generators and junction descriptor. A first-entry live Tile_Mem dump is
-needed to validate the model. Supply the two 432-byte screens in screen-major
-order to `python -m spritemine validate-level $rom <private-dump>`. The CLI
-reports byte agreement and the first differing offset. It cannot authenticate
-the dump's capture provenance. Main-area clouds need RNG state and ordering.
-Quadrant mapping, background CHR, palette attributes and PPU strips remain open.
+**Still unverified:** native logical-to-quadrant/pattern map, `Scroll_PatStrip` (54 bytes), `Scroll_AttrStrip` (14 bytes), effective PPU nametable/attribute writes, active CHR per scanline, and whole-background indexed/RGB pixel matches. Main World 1-1 uses an RNG-dependent cloud generator and remains separate.
+
+The previously reported **88/128** opacity for `$77` was a **hypothetical** physical CHR page `$53` mapped into PPU window 5. It is not the real pipe capture result. Current PR #21 Windows CI passed on commit `1846557`: https://github.com/87otlto-coder/SpriteMine/actions/runs/44475932602. The native A/B/A and copyrighted game evidence are private and not reproduced in CI.
