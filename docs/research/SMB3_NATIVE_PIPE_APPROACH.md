@@ -74,3 +74,7 @@ alone do not establish fetch-time CHR for every pixel.
 For a future successful replay, compare the resulting 864-byte layout-complete
 dump with `python -m spritemine validate-level $rom $dump`. All differences
 are reported with screen, row, column, and expected and observed byte values.
+
+## Native upper entry follow-up
+
+The [Raccoon flight replay](SMB3_NATIVE_RACCOON_PIPE.md) subsequently entered the upper mouth. Gate C passed for the sampled entrance overlap and Gate D passed for the logical 864-byte map. Background pattern, quadrant and attribute validation remains open.
