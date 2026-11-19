@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -17,10 +18,25 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+# This whitelist describes only evidence collected on *every* A/B/A leg.
+# The detailed B observer additionally emits bg-NNNN-tiles.bin snapshots;
+# including those B-only files would create a false neutrality failure.
+FRAME_EVIDENCE = re.compile(r"^\\d+-(?:start-tiles|end-tiles|end-rgb)\\.bin$")
+
+
 def common_signature(folder):
+    """Hash exactly the mutually comparable replay evidence, not B-only probes."""
     return {path.name: digest(path) for path in folder.iterdir()
             if path.name in ("trace.tsv", "controller.tsv")
-            or path.name.endswith(("-rgb.bin", "-tiles.bin"))}
+            or FRAME_EVIDENCE.fullmatch(path.name)}
+
+
+def signature_differences(reference, candidate):
+    """Report real missing/extra/changed *common* evidence without masking it."""
+    return {name: {
+        "reference": reference.get(name), "observed": candidate.get(name)}
+        for name in sorted(reference.keys() | candidate.keys())
+        if reference.get(name) != candidate.get(name)}
 
 
 def event_window(trace):
@@ -103,7 +119,15 @@ def run(args):
     if any(digest(path) != hashes[key] for key, path in sources.items()):
         raise ValueError("A replay source changed during capture")
     if not signatures[0] == signatures[1] == signatures[2]:
-        raise ValueError(f"Instrumentation altered sampled behavior: {output}")
+        differences = {
+            leg: signature_differences(signatures[0], sig)
+            for leg, sig in zip(("B", "A2"), signatures[1:])
+        }
+        changed = {leg: changes for leg, changes in differences.items() if changes}
+        raise ValueError(
+            f"Instrumentation altered comparable replay evidence: {output}; "
+            f"first differences {str({leg: list(items.items())[:8] for leg, items in changed.items()})[:1400]}"
+        )
     background = None
     if args.background_reference:
         bg_switches = [s.replace("disableSprites=false", "disableSprites=true") for s in switches]
