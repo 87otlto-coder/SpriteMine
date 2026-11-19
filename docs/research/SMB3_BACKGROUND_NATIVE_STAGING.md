@@ -1,6 +1,6 @@
 # SMB3 PRG1 — Native World 1-1 bonus PPU staging acceptance
 
-**Status:** passive observer and deterministic verifier implemented; **native producer equality not yet established**.
+**Status:** native first-entry bonus CPU staging **PASSED on owner's Windows replay (2026-11-19)**: 32 × 54-byte pattern and 32 × 14-byte attribute strips; 2,176 bytes matched, zero differences, two events excluded. Final PPU and RGB remain unverified. See [the evidence checkpoint](SMB3_BACKGROUND_NATIVE_STAGING_ACCEPTANCE_20261119.md).
 
 This is a focused follow-up to the verified 2,590-poll Raccoon Mario route in
 [SMB3_NATIVE_RACCOON_PIPE.md](SMB3_NATIVE_RACCOON_PIPE.md) and the static
