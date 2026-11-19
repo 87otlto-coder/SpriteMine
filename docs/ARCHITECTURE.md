@@ -55,3 +55,19 @@ on native first-entry bonus Tile_Mem fingerprints and the A/B/A replay
 integrity report. These data are **CPU staging state**, not proof of final
 PPU nametable, fetch-time CHR mapping, or rendered pixels. See
 [staging guide](research/SMB3_BACKGROUND_NATIVE_STAGING.md).
+
+## PPU commit and CIRAM acceptance boundary (draft PR #24)
+
+Native 54/14-byte CPU staging acceptance does not establish that those
+bytes were committed to hardware nametable RAM. The MesenCE nametable
+write path through $2007 is delayed and does not emit the usual Lua
+NesPpuMemory ProcessPpuWrite callback. A B-only read-only research probe
+therefore captures the CPU register request, the PPU prewrite address/bus,
+MMC3 $A000 mirroring bit and physical NesNametableRam snapshots.
+
+The verifier first binds matching CPU producer buffers to real $2007
+write sequences, then compares the modeled physical 2-KiB CIRAM state
+and all 4-KiB PPU nametable aliases at frame boundaries. This is an
+explicit research component independent of Qt, raw ROM extraction and
+sprite/OAM composition. The native gate remains open until original
+PRG1 MesenCE traces pass; no final RGB, CHR fetch or palette claim.

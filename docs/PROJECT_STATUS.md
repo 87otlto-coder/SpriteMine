@@ -85,3 +85,47 @@ PR #23 is still **draft and unmerged**, stacked on PR #22/21.
 **Next:** verify PPU writes and CIRAM mapping, fetch-time MMC3 CHR pages and
 palette state, and ultimately compare actual background pixels. CPU staging
 acceptance does **not** establish full visible World 1-1 reconstruction.
+
+## World 1-1 bonus PPU register and physical CIRAM gate — draft PR #24 (2026-11-19)
+
+PR #24 is stacked on draft PR #23 and **has not passed native validation**.
+The previous owner-observed CPU staging acceptance remains **2,176/2,176 bytes
+matched**; this result is preserved separately and is NOT a claim of PPU
+nametable or pixel equality.
+
+The next headless increment instruments the pinned MesenCE CPU $2000/$2005/
+$2006/$2007 PPU register write path, records prewrite PPU address and MMC3
+mirroring state, and captures physical 2 KiB CIRAM at bounded start/end
+frames. Its independent verifier correlates 54-byte/14-byte first-entry
+producers with real $2007 writes, tests nametable changes under actual
+mirroring, and compares the complete 4 KiB PPU debug nametable view to physical
+CIRAM aliases.
+
+Critical source correction: ordinary nametable writes do NOT invoke the
+MesenCE NesPpuMemory ProcessPpuWrite Lua callback; that notification is present
+on the palette path. PR #24 therefore uses CPU register callbacks and
+post-write physical RAM, and handles the $2007 delayed-write semantics
+conservatively. Synthetic hosted Windows CI passed on Python 3.11/3.12
+(**43 passed, 4 private-fixture skips** per version) at
+https://github.com/87otlto-coder/SpriteMine/actions/runs/44600719808.
+The private Windows PPU observer and verifier are **not yet run**. See
+[PPU/CIRAM runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
+
+### PPU native B-leg timeout diagnosis — 2026-11-19
+
+The first private Windows PR #24 native capture **did not complete**:
+discovery/A reached 2,590/2,590 input polls, but heavily instrumented B
+stopped at poll **2,499**, frame **450814**, after approximately 30 seconds.
+The trace had 2,121 PPU register observations and 74 physical CIRAM
+boundary records; no runtime error text was found in the searched log.
+Pinned MesenCE TestRunner.cs returns `-1` on its 30-second timeout,
+matching the observed unsigned Windows exit code `4294967295`.
+The root cause is therefore strongly consistent with B's execution limit.
+A2 never began, so **PPU native acceptance remains pending**.
+
+A bounded fix extends only B's instrumented Mesen timeout to 180 seconds
+and Python watchdog to 210 seconds; discovery/A/A2 and older CPU-staging
+behavior retain their previous limits. The new regression test ensures
+only B receives the extension. Private evidence remains under
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-c62ca5ca`;
+see [PPU native runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
