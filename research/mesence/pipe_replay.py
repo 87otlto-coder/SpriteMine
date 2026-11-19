@@ -39,6 +39,17 @@ def signature_differences(reference, candidate):
         if reference.get(name) != candidate.get(name)}
 
 
+def replay_timeouts(leg, ppu_commits):
+    """Bound MesenCE and Python watchdogs separately for the expensive B-only probe.
+
+    The ordinary discovery/A/A2 behavior retains the established short limit.
+    The extra Lua state and physical CIRAM reads are activated only in B.
+    """
+    if leg == "B" and ppu_commits:
+        return 180, 210
+    return 30, 45
+
+
 def event_window(trace):
     """Bound the first pipe and following junction observed at input polls."""
     rows = [tuple(map(int, line.split("\t"))) for line in trace]
@@ -89,6 +100,11 @@ def run(args):
     switches = ["--testRunner", "--timeout=30", "--doNotSaveSettings",
                 "--nes.disableSprites=false", "--nes.removeSpriteLimit=false"]
     def capture(leg, first, last, capture_switches=switches):
+        mesen_timeout, watchdog_timeout = replay_timeouts(leg, args.ppu_commits)
+        effective_switches = [
+            f"--timeout={mesen_timeout}" if option.startswith("--timeout=") else option
+            for option in capture_switches
+        ]
         folder = output / leg
         folder.mkdir()
         env = dict(os.environ, SPRITEMINE_PIPE_OUTPUT=str(folder),
@@ -98,9 +114,10 @@ def run(args):
                    SPRITEMINE_BG_STAGING=str(int(args.background_staging and leg == "B")),
                    SPRITEMINE_PPU_COMMITS=str(int(args.ppu_commits and leg == "B")))
         with (folder / "emulator.log").open("wb") as log:
-            subprocess.run([args.emulator, *capture_switches, script, args.rom],
+            subprocess.run([args.emulator, *effective_switches, script, args.rom],
                            cwd=args.emulator.parent, env=env, stdout=log, stderr=subprocess.STDOUT,
-                           creationflags=subprocess.CREATE_NO_WINDOW, timeout=45, check=True)
+                           creationflags=subprocess.CREATE_NO_WINDOW,
+                           timeout=watchdog_timeout, check=True)
         signature = common_signature(folder)
         trace = (folder / "trace.tsv").read_text(encoding="ascii").splitlines()
         if len(trace) != count:
@@ -145,7 +162,9 @@ def run(args):
             raise ValueError(f"Background-only replay altered sampled game state: {output}")
     report = {"capture_dir": str(output), "input_polls": count, "neutral": True,
               "frame_range": [first, last], "source_sha256": hashes,
-              "switches": switches, "reference_sha256": signatures[0]}
+              "switches": switches,
+              "instrumented_b_timeout_seconds": replay_timeouts("B", args.ppu_commits),
+              "reference_sha256": signatures[0]}
     if args.background_staging:
         staging = output / "B" / "background-staging.tsv"
         rows = staging.read_text(encoding="ascii").splitlines()
