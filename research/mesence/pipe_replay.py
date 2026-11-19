@@ -157,12 +157,17 @@ def run(args):
         }
     if args.ppu_commits:
         registers = output / "B" / "ppu-registers.tsv"
+        boundaries = output / "B" / "ppu-ciram-boundaries.tsv"
         with registers.open("rb") as stream:
             record_count = sum(1 for _ in stream) - 1
+        with boundaries.open("rb") as stream:
+            boundary_count = sum(1 for _ in stream) - 1
         report["ppu_register_trace"] = {
-            "observer": "CPU PPU register writes; not hardware-completed VRAM notifications",
+            "observer": "CPU prewrite PPU register trace and postwrite physical CIRAM",
             "event_count": record_count,
             "log_sha256": digest(registers),
+            "boundary_count": boundary_count,
+            "boundary_log_sha256": digest(boundaries),
             "ppu_commit_verified": False,
         }
     if background is not None:
