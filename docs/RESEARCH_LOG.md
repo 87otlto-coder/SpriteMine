@@ -57,3 +57,26 @@ producer-completion Lua hook and independent private staging verifier are
 preserved on `feature/smb3-world11-staging-capture`. No actual staging
 capture has been reported yet. The new acceptance gate and exact Windows
 commands are in [native staging guide](research/SMB3_BACKGROUND_NATIVE_STAGING.md).
+
+## 2026-11-19 — Owner native bonus-room producer staging accepted (PR #23)
+
+**Observed via owner-supplied Windows replay and verification output**, not an
+independent re-execution of raw private captures for this documentation update.
+After the B-only diagnostic-file signature filter correction, the previously
+failed capture `pipe-replay-ih9zjv6r` had **0 genuine A/B and A/A2
+differences**. Windows pytest on commit `58fe97a` passed **40/40** using
+the private original SMB3 PRG1 ROM.
+
+Fresh 2,590-poll MesenCE A/B/A replay recorded `neutral: true`, frames
+**450778–450881**, and **66** detailed producer events in private capture
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-hb6hmzft`.
+For eligible native bonus-room logical-map events, **32 × 54-byte
+Scroll_PatStrip = 1,728 bytes**, plus **32 × 14-byte Scroll_AttrStrip = 448
+bytes**, matched the source-modeled original ROM output. **2,176 bytes
+checked, zero byte/metadata discrepancies**; two events were excluded for
+non-bonus/modified map state, not promoted to passes.
+
+**Acceptance is CPU staging only**; no hardware PPU VRAM, CHR fetch-time,
+palette or visible framebuffer claim. Preserved source hashes, event log
+hash, private capture location and next steps:
+[2026-11-19 native staging acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING_ACCEPTANCE_20261119.md).
