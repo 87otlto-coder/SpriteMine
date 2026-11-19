@@ -83,7 +83,7 @@ hash, private capture location and next steps:
 
 ## 2026-11-19 — Native PPU commit hook identified (source-backed, not yet captured)
 
-Pinned MesenCE 2.2.1 NerPpu::WriteRam and UpdateState show that CPU
+Pinned MesenCE 2.2.1 NesPpu::WriteRam and UpdateState show that CPU
 $2007 writes are latched and applied after a short PPU-cycle delay.
 Ordinary nametable writes call mapper WriteVram without firing
 ProcessPpuWrite (NesPpuMemory), so a naive PPU memory callback would
