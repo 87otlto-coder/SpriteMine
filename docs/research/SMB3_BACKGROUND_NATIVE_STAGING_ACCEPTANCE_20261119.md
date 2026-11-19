@@ -30,7 +30,7 @@ The native verifier's declared scope is `first-entry bonus logical map -> CPU PP
 
 ## Evidence fingerprint inventory (SHA-256)
 
-The replay report records the following six source hashes; these are identifiers and **not** copies of private assets:
+The replay report records seven source hashes plus a separate staging-event log hash. These are identifiers, **not** copies of private assets:
 
 | Source | SHA-256 |
 | --- | --- |
