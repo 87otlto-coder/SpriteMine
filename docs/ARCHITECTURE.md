@@ -42,3 +42,16 @@ The verified native World 1-1 flight enters the upper screen-8 pipe with genuine
 `source layout record -> validated logical 16x16 tiles -> Plains four-quadrant 8x8 pattern references -> 8-pixel scrolling strips -> PPU attribute bytes -> frame/scanline-specific MMC3 CHR-ROM pages -> 2bpp indexed background pixels -> active PPU palette -> optional filtered RGB comparison`.
 
 Keep logical tile memory, staged game scroll buffers, current physical PPU nametable memory, mapper register history and final RGB separately versioned. Do not infer final native pixels from the validated 864-byte logical tile map or from post-IRQ CHR mappings. The standard horizontal code prepares 54-byte pattern strips (30+24 split between `$20xx`/`$28xx`) and 14-byte attribute strips. Exact native strip, attribute, current-page and rendered-pixel validation is the next milestone, with tests backed by synthetic fixtures and private ROM/hash expectations.
+
+
+## Native Plains producer probes (unmerged, headless)
+
+A separate optional research observer samples CPU Scroll_PatStrip
+($0382-$03B7) and Scroll_AttrStrip ($03BA-$03C7) immediately after their
+respective producers complete, using read-only debugger reads. It records the
+two explicit attribute source columns chosen by scroll direction/parity,
+rather than assuming consecutive columns. Exact comparisons are conditional
+on native first-entry bonus Tile_Mem fingerprints and the A/B/A replay
+integrity report. These data are **CPU staging state**, not proof of final
+PPU nametable, fetch-time CHR mapping, or rendered pixels. See
+[staging guide](research/SMB3_BACKGROUND_NATIVE_STAGING.md).
