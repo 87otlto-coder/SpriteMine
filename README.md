@@ -79,3 +79,9 @@ GitHub Actions policy is **Windows-only** following the 11 November incident. Ne
 - [Windows testing guidance](docs/TESTING.md)
 - [Research log](docs/RESEARCH_LOG.md)
 - [Engineering instructions](AGENTS.md)
+
+## Current headless development branches (2026-11-19)
+
+**This section describes unmerged feature branches, not main.** [Draft PR #21](https://github.com/87otlto-coder/SpriteMine/pull/21) implements and independently verifies 81 player animation recipes, 3 canonical Mario poses, a 24-frame native replay, 7,528 distinguishable authentic pipe-occlusion pixel comparisons with zero mismatches, and a byte-identical 864-byte native first-entry World 1-1 bonus **logical** map. It does not validate arbitrary character assemblies or the full level framebuffer. See [native runbook](docs/research/SMB3_NATIVE_RACCOON_PIPE.md).
+
+The stacked `feature/smb3-world11-background` branch adds an independent **headless source model** for Plains' four 256-byte quadrant tables, 54-byte pattern strips, 14-byte packed attribute strips, PPU write locations, explicit mapped CHR-pixel decoding and private staging-buffer comparison. This **has not yet passed native MesenCE pattern/attribute/PPU validation**. See [background staging acceptance requirements](docs/research/SMB3_HEADLESS_BACKGROUND_STAGE.md). Preserve the existing Windows-only, private-ROM/no-asset-commits policy; no graphical interface is being built in this increment.
