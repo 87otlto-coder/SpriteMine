@@ -45,18 +45,23 @@ do
         emu.addMemoryCallback(function(address, value)
             observation("status-read", 0x2002, value)
         end, emu.callbackType.read, 0x2002, 0x2002)
+        local boundaries = assert(io.open(output .. "/ppu-ciram-boundaries.tsv", "wb"))
+        boundaries:write("frame\tboundary\tcpu_cycle\tmirroring_bit\n")
         -- Physical 2KiB CIRAM, not the 4KiB mirrored PPU nametable view.
         -- These snapshots are B-only and excluded from common A/B/A signatures.
         local function physical_snapshot(which)
             if not restored then return end
             local state = emu.getState()
             if in_window(state) then
+                local reg = assert(state["mapper.regA000"], "Missing MMC3 mirroring state")
                 save(string.format("ppu-%d-%s-ciram.bin", state.frameCount, which),
                      read_region(0, 2048, emu.memType.nesNametableRam))
+                boundaries:write(table.concat({state.frameCount, which,
+                    clock(state), reg & 1}, "\t"), "\n")
             end
         end
         emu.addEventCallback(function() physical_snapshot("start") end, emu.eventType.startFrame)
         emu.addEventCallback(function() physical_snapshot("end") end, emu.eventType.endFrame)
-        emu.addEventCallback(function() log:close() end, emu.eventType.scriptEnded)
+        emu.addEventCallback(function() log:close(); boundaries:close() end, emu.eventType.scriptEnded)
     end
 end
