@@ -80,3 +80,103 @@ non-bonus/modified map state, not promoted to passes.
 palette or visible framebuffer claim. Preserved source hashes, event log
 hash, private capture location and next steps:
 [2026-11-19 native staging acceptance](research/SMB3_BACKGROUND_NATIVE_STAGING_ACCEPTANCE_20261119.md).
+
+## 2026-11-19 — Native PPU commit hook identified (source-backed, not yet captured)
+
+Pinned MesenCE 2.2.1 NesPpu::WriteRam and UpdateState show that CPU
+$2007 writes are latched and applied after a short PPU-cycle delay.
+Ordinary nametable writes call mapper WriteVram without firing
+ProcessPpuWrite (NesPpuMemory), so a naive PPU memory callback would
+miss the very writes being validated. For palette $2007 writes,
+ProcessPpuWrite is present. Actual $2007 bus trace and physical CIRAM
+changes have **not yet been observed in a new native run**.
+
+Draft PR #24 adds a passive register observer and independent offline
+verification of the original 54/14-byte staging producers against CPU
+$2007 data-write sequences, frame-boundary physical nametable RAM, and
+mirrored PPU debugger nametable pages. Observations are bounded to the
+established 2,590-poll World 1-1 upper-pipe replay. Source:
+https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/NesPpu.cpp;
+MMC3 mirroring state:
+https://github.com/nesdev-org/MesenCE/blob/20ba206cef5ba207c21203176d02cb9f43dda9fb/Core/NES/Mappers/Nintendo/MMC3.h.
+Synthetic CI: 43 passed / 4 private skips on Python 3.11 and 3.12 in
+https://github.com/87otlto-coder/SpriteMine/actions/runs/44600719808.
+**Native result: pending.** See
+[PPU/CIRAM runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
+
+## 2026-11-19 — PR #24 native PPU observer timeout isolated
+
+Owner's first private Windows test passed **47/47 local pytest** and
+reproduced the 2,590-poll input SHA-256. Discovery and A reached the final
+poll; B advanced to poll **2499** / frame **450814** before returning
+`4294967295`, and A2 did not start. The B trace contained 2,121 register
+observations, 74 physical CIRAM boundary observations and 2 staging
+events. Updated B files spanned approximately 30 seconds; searching its
+emulator log found no explicit Lua or fatal error. Source examination of
+MesenCE `UI/Utilities/TestRunner.cs` established `-1` is its normal
+timeout return value. This is strong evidence of a 30-second instrumented
+B-leg timeout, rather than altered controller gameplay.
+
+Only B when `--ppu-commits` is requested now uses a longer, still
+bounded emulator/Python timeout (180 / 210 seconds). No ROM, controller,
+save-state, callback semantics, or verifier acceptance criterion changed.
+A fresh native capture remains necessary; the prior partial capture is
+**not** a passing native PPU verification.
+
+## 2026-11-21 — Independently matched original-ROM producer → $2007 → CIRAM
+
+Reviewed the owner-uploaded complete private `B.zip`, replay
+`pipe-replay-xbhs6ijw`, plus the original user-supplied ROM image.
+SHA-256 of the raw ROM matched PRG1 and Plains table fingerprint;
+314 common evidence files in each of A, B and A2 matched. The original
+Plains source model independently generated **2,176 byte-identical
+pattern/attribute staging bytes** for 64 eligible producer events;
+2 nonbonus logical-map events were excluded. All 64 producer uploads
+matched nonoverlapping observed $2007 requests and original-ROM-derived
+PPU targets. Three uploads cross a frame boundary (15, 34, 63).
+
+Replaying the **5,491 observed nametable CPU write intentions**
+reproduced all **104 captured physical 2 KiB CIRAM end-frame
+snapshots** with **zero byte differences** (212,992 compared).
+All 425,984 PPU debug nametable alias-byte comparisons also matched
+observed MMC3 mirroring. The captured CPU PPU register trace has
+10,430 records.
+
+The original post-capture Python verifier failed only because direct
+script invocation lacked the repository root on `sys.path`.
+The new code fixes that and corrects its false assumptions that
+hardware-valid writes must be in VBlank and that uploads cannot straddle
+frame boundaries. Hosted Windows synthetic CI passed **46 tests, 4
+private-fixture skips** per Python 3.11/3.12, run 44906486710.
+
+This establishes **offline source/CPU-bus/physical-CIRAM frame-end
+agreement**, not complete on-scanline PPU write timing or final
+rendered graphics. Complete hashes, scope, limits and private
+reproduction path in
+[archive revalidation](research/SMB3_NATIVE_PPU_CIRAM_ARCHIVE_REVALIDATION_20261121.md).
+
+### 2026-11-21 — Owner Windows native PPU/CIRAM CLI acceptance: PASS
+
+Windows clean detached checkout `a375cd09a6aa19dd2cebce6df37cfcba8cd5ab14`
+executed **51 passed, 0 failed** private-ROM pytest tests, then independently
+ran the corrected `verify_ppu_commit_trace.py` against the already completed
+private replay `pipe-replay-xbhs6ijw` without restarting the emulator.
+The verifier returned **`passed: true`**, with:
+
+- `pattern_matched: 32`, `attribute_matched: 32`; `matched_bytes: 2176`
+- `frame_spanning_transfers: 3`; `excluded_non_bonus_map: 2`
+- `nametable_writes: 5491`
+- `frames_checked: 104` (`frames_with_nametable_writes: 42`)
+- `bytes_checked: 212992`, `physical_mismatches: 0`
+- `alias_samples: 425984`, `alias_mismatches: 0`
+
+Private JSON evidence:
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw\ppu-verification-postfix.json`.
+The owner provided complete console output; the private JSON file is
+**not committed to GitHub**, and it was not remounted for a second code
+execution during this documentation change.
+
+**Gate accepted for the sampled World 1-1 bonus-room CPU write requests and
+end-frame physical CIRAM.** This does **not** establish per-dot PPU timing,
+fetch-time CHR selection, palette/RGB rendering, complete World 1-1 terrain,
+other areas, or finished GUI functionality. PR #24 remains draft/unmerged.

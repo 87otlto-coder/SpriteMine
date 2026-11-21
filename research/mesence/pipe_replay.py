@@ -39,6 +39,17 @@ def signature_differences(reference, candidate):
         if reference.get(name) != candidate.get(name)}
 
 
+def replay_timeouts(leg, ppu_commits):
+    """Bound MesenCE and Python watchdogs separately for the expensive B-only probe.
+
+    The ordinary discovery/A/A2 behavior retains the established short limit.
+    The extra Lua state and physical CIRAM reads are activated only in B.
+    """
+    if leg == "B" and ppu_commits:
+        return 180, 210
+    return 30, 45
+
+
 def event_window(trace):
     """Bound the first pipe and following junction observed at input polls."""
     rows = [tuple(map(int, line.split("\t"))) for line in trace]
@@ -55,12 +66,16 @@ def run(args):
     parent = (args.root / "FIXTURE" / "SMB3" / "RuntimeInvestigation").resolve(strict=True)
     if any((p / ".git").exists() for p in (parent, *parent.parents)):
         raise ValueError("Captures must remain outside Git checkouts")
+    if args.ppu_commits and not args.background_staging:
+        raise ValueError("--ppu-commits requires --background-staging for source event linkage")
     script = Path(__file__).with_suffix(".lua")
     sources = {"rom": args.rom, "emulator": args.emulator, "slot": args.slot,
                "input": args.input, "settings": args.emulator.with_name("settings.json"),
                "script": script}
     if args.background_staging:
         sources["background_probe"] = Path(__file__).with_name("background_staging_probe.lua")
+    if args.ppu_commits:
+        sources["ppu_register_probe"] = Path(__file__).with_name("ppu_register_probe.lua")
     hashes = {key: digest(path) for key, path in sources.items()}
     if hashes["rom"] != ROM_SHA256 or hashes["emulator"] != MESEN_SHA256:
         raise ValueError("Expected verified SMB3 USA PRG1 and MesenCE 2.2.1")
@@ -77,22 +92,32 @@ def run(args):
         # One Lua chunk: the optional observer shares only the base replay's
         # private read helpers and state, never gameplay mutation callbacks.
         combined = output / "capture-staging.lua"
-        combined.write_bytes(script.read_bytes() + b"\n" + sources["background_probe"].read_bytes())
+        content = script.read_bytes() + b"\n" + sources["background_probe"].read_bytes()
+        if args.ppu_commits:
+            content += b"\n" + sources["ppu_register_probe"].read_bytes()
+        combined.write_bytes(content)
         script = combined
     switches = ["--testRunner", "--timeout=30", "--doNotSaveSettings",
                 "--nes.disableSprites=false", "--nes.removeSpriteLimit=false"]
     def capture(leg, first, last, capture_switches=switches):
+        mesen_timeout, watchdog_timeout = replay_timeouts(leg, args.ppu_commits)
+        effective_switches = [
+            f"--timeout={mesen_timeout}" if option.startswith("--timeout=") else option
+            for option in capture_switches
+        ]
         folder = output / leg
         folder.mkdir()
         env = dict(os.environ, SPRITEMINE_PIPE_OUTPUT=str(folder),
                    SPRITEMINE_PIPE_INPUT=str(args.input), SPRITEMINE_PIPE_SLOT=str(args.slot),
                    SPRITEMINE_PIPE_FIRST=str(first), SPRITEMINE_PIPE_LAST=str(last),
                    SPRITEMINE_PIPE_DETAIL=str(int(leg == "B")),
-                   SPRITEMINE_BG_STAGING=str(int(args.background_staging and leg == "B")))
+                   SPRITEMINE_BG_STAGING=str(int(args.background_staging and leg == "B")),
+                   SPRITEMINE_PPU_COMMITS=str(int(args.ppu_commits and leg == "B")))
         with (folder / "emulator.log").open("wb") as log:
-            subprocess.run([args.emulator, *capture_switches, script, args.rom],
+            subprocess.run([args.emulator, *effective_switches, script, args.rom],
                            cwd=args.emulator.parent, env=env, stdout=log, stderr=subprocess.STDOUT,
-                           creationflags=subprocess.CREATE_NO_WINDOW, timeout=45, check=True)
+                           creationflags=subprocess.CREATE_NO_WINDOW,
+                           timeout=watchdog_timeout, check=True)
         signature = common_signature(folder)
         trace = (folder / "trace.tsv").read_text(encoding="ascii").splitlines()
         if len(trace) != count:
@@ -137,7 +162,9 @@ def run(args):
             raise ValueError(f"Background-only replay altered sampled game state: {output}")
     report = {"capture_dir": str(output), "input_polls": count, "neutral": True,
               "frame_range": [first, last], "source_sha256": hashes,
-              "switches": switches, "reference_sha256": signatures[0]}
+              "switches": switches,
+              "instrumented_b_timeout_seconds": replay_timeouts("B", args.ppu_commits),
+              "reference_sha256": signatures[0]}
     if args.background_staging:
         staging = output / "B" / "background-staging.tsv"
         rows = staging.read_text(encoding="ascii").splitlines()
@@ -146,6 +173,21 @@ def run(args):
             "event_count": len(rows) - 1,
             "log_sha256": digest(staging),
             "verified_against_rom_model": False,
+        }
+    if args.ppu_commits:
+        registers = output / "B" / "ppu-registers.tsv"
+        boundaries = output / "B" / "ppu-ciram-boundaries.tsv"
+        with registers.open("rb") as stream:
+            record_count = sum(1 for _ in stream) - 1
+        with boundaries.open("rb") as stream:
+            boundary_count = sum(1 for _ in stream) - 1
+        report["ppu_register_trace"] = {
+            "observer": "CPU prewrite PPU register trace and postwrite physical CIRAM",
+            "event_count": record_count,
+            "log_sha256": digest(registers),
+            "boundary_count": boundary_count,
+            "boundary_log_sha256": digest(boundaries),
+            "ppu_commit_verified": False,
         }
     if background is not None:
         report["background_rgb_sha256"] = {
@@ -165,6 +207,8 @@ def main():
     parser.add_argument("--background-reference", action="store_true", help="Capture and verify a sprites-hidden RGB reference")
     parser.add_argument("--background-staging", action="store_true",
                         help="Passively snapshot completed Plains pattern/attribute producers in B leg")
+    parser.add_argument("--ppu-commits", action="store_true",
+                        help="Record read-only CPU PPU register write intent and prewrite PPU state in B leg")
     try:
         print(json.dumps(run(parser.parse_args()), indent=2))
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
