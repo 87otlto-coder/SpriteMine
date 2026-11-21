@@ -1,6 +1,40 @@
 # SpriteMine project status
 
-**Updated: 2026-11-19.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
+**Updated: 2026-11-22.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
+
+## Latest status — tested headless research versus integrated product
+
+**Core SMB3 PPU/CIRAM gate accepted:** Owner's Windows test at commit
+`a375cd0` reported **51/51 passed**, followed by offline native
+`verify_ppu_commit_trace.py` returning **`passed: true`** on the preserved
+A/B/A World 1-1 bonus-room capture. Accepted were 32 pattern + 32 attribute
+uploads (2,176 bytes), 5,491 modeled nametable requests, 104 physical CIRAM
+frames/212,992 byte comparisons and 425,984 mirrored nametable comparisons,
+**all zero mismatches**. See the end of this document for chronological details.
+
+**New RGB viewport gate on stacked draft PR #25:** A separate source-derived
+offline prototype decoded original ROM CHR with physical CIRAM, captured
+MMC3 register-write mapping, native scroll and palette state, and an external
+MesenCE default 2C02 RGB profile. It matched **638,976 / 638,976
+visible gameplay RGB pixels**, across **13 frames 450869–450881** and
+**256×192 pixels per frame**, with no mismatch. The native PPU debugger
+CHR bytes served only as an independent bank cross-check, not the source of
+rendered pixels. PPU-cycle timing, HUD, active OAM composition and other areas
+remain out of scope.
+
+The equivalent code has been committed on [draft PR #25](https://github.com/87otlto-coder/SpriteMine/pull/25)
+with synthetic hosted Windows tests. **Owner Windows acceptance of the
+final newly committed RGB CLI has not yet occurred.** The original ROM,
+native capture and extracted graphics remain private in F:\Dev\ROMMAGE\FIXTURE.
+See [RGB gate](research/SMB3_VISIBLE_BACKGROUND_NATIVE_GATE.md) and
+[stacked integration plan](RENDERING_INTEGRATION_PLAN.md).
+
+**Production integration:** Phase 0 alone is merged to main. PRs #21–#25
+are stacked/unmerged; initial GUI PR #4 also remains unmerged pending
+native UI acceptance. No complete sprite/animation/level/audio/catalog/installer
+milestone is claimed. Older date-stamped "pending" sections below describe
+the gates at those historical checkpoints; the latest accepted status above
+takes precedence.
 
 ## Merged baseline — main
 
