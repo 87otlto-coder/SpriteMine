@@ -1,6 +1,6 @@
 # SMB3 PRG1 — Native PPU register and CIRAM verification
 
-**Current status: implemented; native Windows acceptance pending.** This is PR #24, stacked on accepted CPU staging PR #23. The prior native result was 2,176/2,176 CPU staging bytes, not PPU output.
+**Current status (2026-11-21): independent offline original-ROM/PPU/CIRAM archive acceptance PASS for the sampled 104 frames; corrected official CLI still needs to be run against the existing private F: capture.** This is PR #24, stacked on CPU staging PR #23. The owner-uploaded evidence was independently checked for 2,176 staging bytes, 64 CPU $2007 producer uploads and 104/104 physical CIRAM snapshots with zero byte differences. See [original-ROM archive revalidation](SMB3_NATIVE_PPU_CIRAM_ARCHIVE_REVALIDATION_20261121.md). This does not establish individual hardware write-cycle timing or visible RGB.
 
 ## Source-grounded instrumentation
 
@@ -99,3 +99,56 @@ The fix is unit-tested but a complete new **native** B/A2 run has not yet
 been reported. The previous partial B capture must not be counted as
 a passing PPU/CIRAM gate. Retain the private failed capture for provenance.
 
+
+
+## Existing capture: corrected standalone verifier only
+
+The owner's replay `pipe-replay-xbhs6ijw` **already completed**. No new emulator
+replay or controller generation is needed to run the post-fix CLI. The direct
+script now adds the repo root to `sys.path` when invoked as a file; the
+original `ModuleNotFoundError: No module named 'research'` is regression-tested.
+
+~~~powershell
+$ErrorActionPreference = 'Stop'
+Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-Background-Validation'
+$root = 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-Background-Validation'
+$python = Join-Path $root '.venv\Scripts\python.exe'
+$capture = 'F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw'
+$rom = 'F:\Dev\ROMMAGE\FIXTURE\Super Mario Bros. 3.zip'
+
+if (git status --porcelain) { throw 'Worktree has uncommitted changes.' }
+git fetch origin
+if ($LASTEXITCODE -ne 0) { throw 'Fetch failed.' }
+git switch --detach origin/feature/smb3-world11-ppu-write-trace
+if ($LASTEXITCODE -ne 0) { throw 'Checkout failed.' }
+$env:PYTHONPATH = Join-Path $root 'src'
+$env:SPRITEMINE_TEST_ROM = $rom
+& $python -m pytest -q
+if ($LASTEXITCODE -ne 0) { throw 'Regression test failed.' }
+
+$lines = & $python (Join-Path $root 'research\mesence\verify_ppu_commit_trace.py') $rom $capture
+$verificationExit = $LASTEXITCODE
+if (-not $lines) { throw 'Verifier emitted no report.' }
+$report = ($lines -join "`n") | ConvertFrom-Json
+$reportPath = Join-Path $capture 'ppu-verification-postfix.json'
+($lines -join "`n") | Set-Content -LiteralPath $reportPath -Encoding utf8
+Write-Host "PPU verifier accepted: $($report.passed)"
+Write-Host "Report: $reportPath"
+$report.producer_commits.counts | Format-List
+$report.memory | Format-List
+if ($verificationExit -ne 0 -or $report.passed -ne $true) {
+    throw 'Offline PPU/CIRAM verification did not pass. Preserve report.'
+}
+~~~
+
+The output should reflect the independently observed archive data:
+**64 producer uploads / 2,176 bytes**, **3 uploads spanning a frame boundary**,
+**5,491 modeled nametable requests**, **104 eligible physical CIRAM
+frames**, **zero physical mismatches**, and **zero PPU nametable alias
+mismatches**. The current private-ROM regression expectation is
+**50 passed** (hosted Windows CI had 46 passed + 4 private skips).
+
+These expected numbers are evidence-based predictions, **not** a substituted
+record of the still-pending corrected standalone CLI. In particular, an
+archive comparison does not confirm actual per-PPU-cycle write completion
+or fetch-time CHR/palette state.
