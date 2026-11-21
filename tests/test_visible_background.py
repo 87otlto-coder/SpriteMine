@@ -134,6 +134,7 @@ def test_full_offline_rgb_gate_and_one_pixel_tamper(tmp_path, monkeypatch):
         "ppu.mask.backgroundMask=false\n"
         "ppu.control.backgroundPatternAddr=0\n"
         "ppu.mask.grayscale=false\n"
+        "ppu.paletteRamMask=63\n"
         "ppu.intensifyColorBits=0\n"
         "ppu.tmpVideoRamAddr=0\n"
         "ppu.xScroll=0\n"
