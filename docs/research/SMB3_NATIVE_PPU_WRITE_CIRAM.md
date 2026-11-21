@@ -143,10 +143,11 @@ if ($verificationExit -ne 0 -or $report.passed -ne $true) {
 
 The output should reflect the independently observed archive data:
 **64 producer uploads / 2,176 bytes**, **3 uploads spanning a frame boundary**,
-**5,491 modeled nametable requests**, **104 eligible physical CIRAM
+**5,491 modeled nametable requests**, **104 independently checked physical CIRAM
 frames**, **zero physical mismatches**, and **zero PPU nametable alias
 mismatches**. The current private-ROM regression expectation is
-**50 passed** (hosted Windows CI had 46 passed + 4 private skips).
+**51 passed** (the extra test checks write-free physical CIRAM frames;
+hosted CI had 47 public passes and 4 private skips after this update).
 
 These expected numbers are evidence-based predictions, **not** a substituted
 record of the still-pending corrected standalone CLI. In particular, an
