@@ -3,7 +3,10 @@
 import csv
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -70,11 +73,21 @@ def test_ciram_write_mirroring_and_debug_alias(bit, first, second):
     assert check.compare_ciram_frame(before, bytes(after), [a])["mismatches"] == 1
 
 
-def test_nonrendering_state_required_even_when_pixel_memory_did_not_change():
+def test_visible_scanline_is_not_automatically_rejected_when_rendering_is_off():
     before = bytes([0] * 2048)
     data = _write()
     data["scanline"] = 160
-    assert not check.compare_ciram_frame(before, before, [data])["eligible"]
+    # Historical conservative vblank-only helper remains for diagnostics.
+    assert check._safe_vram_write(data) is None
+    # CPU write request is not itself proof of hardware write completion:
+    # mismatching post-frame CIRAM must still fail.
+    mismatch = check.compare_ciram_frame(before, before, [data])
+    assert mismatch["eligible"] and not mismatch["matches"]
+    after = bytearray(before)
+    after[ciram_offset(0x2000, mirroring="horizontal")] = 0x33
+    assert check.compare_ciram_frame(before, bytes(after), [data])["matches"]
+    data["bus_addr"] ^= 1
+    assert not check.compare_ciram_frame(before, bytes(after), [data])["eligible"]
     with pytest.raises(ValueError, match="exactly 2 KiB"):
         check.compare_ciram_frame(b"", before, [])
 
@@ -187,3 +200,46 @@ def test_missing_or_changed_native_manifest_fails_closed(tmp_path, monkeypatch):
     (folder / "ppu-registers.tsv").write_bytes(b"bad")
     with pytest.raises(ValueError, match="fingerprint mismatch"):
         check.verify(rom, capture)
+
+
+def test_cpu_producer_upload_may_straddle_frame_boundary(tmp_path, monkeypatch):
+    tilemem = bytes([0x80] * 864)
+    monkeypatch.setattr(check, "MODEL_SHA256", sha256(tilemem).hexdigest())
+    (tmp_path / "bg-0001-tiles.bin").write_bytes(tilemem)
+    targets = pattern_write_addresses(3)
+    values = bytes((i + 17) % 256 for i in range(len(targets)))
+    (tmp_path / "bg-0001-pattern.bin").write_bytes(values)
+    events = [{
+        "sequence": 1, "kind": "pattern", "frame": 450861,
+        "cpu_cycle": 100, "tileset": 1, "last_ppu_column": 3,
+    }]
+    writes = []
+    for i, (address, value) in enumerate(zip(targets, values), 1):
+        row = _write(
+            frame=450861 if i < 45 else 450862,
+            cycle=100 + i, addr=address, value=value, inc=1,
+        )
+        row["sequence"] = i
+        writes.append(row)
+    result = check.matched_producer_segments(events, writes, tmp_path)
+    assert result["counts"]["pattern_matched"] == 1
+    assert result["counts"]["matched_bytes"] == 54
+    assert result["counts"]["frame_spanning_transfers"] == 1
+    assert result["records"][0]["commit_last_frame"] == 450862
+    writes[-1]["value"] ^= 1
+    bad = check.matched_producer_segments(events, writes, tmp_path)
+    assert bad["counts"]["pattern_not_observed"] == 1
+
+
+def test_standalone_cli_resolves_research_package_with_src_only_pythonpath(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    script = root / "research" / "mesence" / "verify_ppu_commit_trace.py"
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(root / "src")
+    result = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        cwd=tmp_path, env=env, text=True, capture_output=True,
+        timeout=15, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "capture" in result.stdout
