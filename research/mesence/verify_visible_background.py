@@ -133,14 +133,14 @@ def verify(rom, capture: Path, palette_source: Path,
     pages_by_frame = _start_mmc3_pages(folder / "events.tsv", frames)
     mirroring = _boundary_mirroring(folder / "ppu-ciram-boundaries.tsv")
     writes = _load_tsv(folder / "ppu-registers.tsv", REG_FIELDS, sequence=True)
-    visible_palette_writes = {
+    visible_ppu_writes = {
         row["frame"] for row in writes
         if row["kind"] == "write" and row["register"] == 0x2007
         and 0 <= row["scanline"] < HEIGHT
-        and 0x3F00 <= (row["video_ram_addr"] & 0x3FFF) < 0x4000
+        and 0x2000 <= (row["video_ram_addr"] & 0x3FFF) < 0x4000
     }
-    if visible_palette_writes.intersection(frames):
-        raise ValueError("Palette RAM was written during sampled gameplay scanlines")
+    if visible_ppu_writes.intersection(frames):
+        raise ValueError("PPU nametable/palette writes during sampled visible scanlines")
     details = []
     samples = 0
     differences = 0
@@ -155,12 +155,12 @@ def verify(rom, capture: Path, palette_source: Path,
         if any(state.get(k) != final_state.get(k) for k in (
             "ppu.mask.backgroundEnabled", "ppu.mask.backgroundMask",
             "ppu.control.backgroundPatternAddr", "ppu.mask.grayscale",
-            "ppu.intensifyColorBits",
+            "ppu.paletteRamMask", "ppu.intensifyColorBits",
         )):
             raise ValueError(f"Unsupported change in PPU rendering state at {frame}")
-        if state.get("ppu.mask.grayscale") != "false" or int(
-            state.get("ppu.intensifyColorBits", "-1")
-        ) != 0:
+        if (state.get("ppu.mask.grayscale") != "false"
+                or int(state.get("ppu.paletteRamMask", "-1")) != 63
+                or int(state.get("ppu.intensifyColorBits", "-1")) != 0):
             raise ValueError(f"Grayscale/emphasis rendering unsupported at frame {frame}")
         if state.get("ppu.mask.backgroundEnabled") != "true":
             raise ValueError(f"Background rendering disabled at frame {frame}")
