@@ -182,3 +182,19 @@ def test_full_offline_rgb_gate_and_one_pixel_tamper(tmp_path, monkeypatch):
     snapshot.write_bytes(mapped_tampered)
     with pytest.raises(ValueError, match="CHR register history"):
         vb.verify(sample, capture, profile_cpp, first=450869, last=450869)
+
+    # Visible $2007 nametable writes require scanline-aware reconstruction;
+    # they must not slip into this fixed-CIRAM viewport acceptance gate.
+    snapshot.write_bytes(mapped + mapped_nt)
+    reg = folder / "ppu-registers.tsv"
+    fields = dict(
+        sequence=1, kind="write", frame=450869, cpu_cycle=1000,
+        scanline=120, ppu_cycle=50, poll=1, register=0x2007,
+        value=7, video_ram_addr=0x2000, bus_addr=0x2000,
+        tmp_video_ram_addr=0x2000, write_toggle=0,
+        vertical_write=0, mirroring_bit=1, tileset=1,
+    )
+    with reg.open("a", encoding="ascii") as stream:
+        stream.write("\t".join(str(fields[key]) for key in REG_FIELDS) + "\n")
+    with pytest.raises(ValueError, match="visible scanlines"):
+        vb.verify(sample, capture, profile_cpp, first=450869, last=450869)
