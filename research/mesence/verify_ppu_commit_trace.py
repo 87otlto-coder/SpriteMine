@@ -291,12 +291,16 @@ def verify(rom, capture: Path) -> dict:
         counters["alias_mismatches"] += alias["mismatches"]
         frame_writes = [r for r in regs if r["frame"] == frame]
         comparison = compare_ciram_frame(before, after, frame_writes)
-        if comparison["eligible"] and comparison["applied_nametable_writes"]:
+        if comparison["eligible"]:
+            # Include write-free frames: unexplained physical changes must
+            # still fail rather than disappearing from the evidence denominator.
             counters["frames_checked"] += 1
             counters["bytes_checked"] += len(after)
             counters["nametable_writes"] += comparison["applied_nametable_writes"]
             counters["physical_mismatches"] += comparison["mismatches"]
-        elif not comparison["eligible"]:
+            if comparison["applied_nametable_writes"]:
+                counters["frames_with_nametable_writes"] += 1
+        else:
             counters["frames_excluded_unsafe_write"] += 1
         results.append({
             "frame": frame, "mirroring_bit": right["mirroring_bit"],
@@ -309,7 +313,9 @@ def verify(rom, capture: Path) -> dict:
         and c.get("attribute_matched", 0) > 0
         and c.get("pattern_not_observed", 0) == 0
         and c.get("attribute_not_observed", 0) == 0
-        and counters["frames_checked"] > 0
+        and counters["frames_checked"] == end - start + 1
+        and counters["frames_with_nametable_writes"] > 0
+        and counters["frames_excluded_unsafe_write"] == 0
         and counters["physical_mismatches"] == 0
         and counters["alias_mismatches"] == 0
     )
