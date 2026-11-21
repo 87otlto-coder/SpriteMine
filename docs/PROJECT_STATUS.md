@@ -157,3 +157,29 @@ post-fix invocation against the existing F: capture. PR #24 remains
 **draft/unmerged**. Individual PPU-cycle write timing, per-write
 rendering-mask state, CHR fetch mapping and final RGB pixels are
 **not** established.
+
+### 2026-11-21 — Owner Windows native PPU/CIRAM CLI acceptance: PASS
+
+Windows clean detached checkout `a375cd09a6aa19dd2cebce6df37cfcba8cd5ab14`
+executed **51 passed, 0 failed** private-ROM pytest tests, then independently
+ran the corrected `verify_ppu_commit_trace.py` against the already completed
+private replay `pipe-replay-xbhs6ijw` without restarting the emulator.
+The verifier returned **`passed: true`**, with:
+
+- `pattern_matched: 32`, `attribute_matched: 32`; `matched_bytes: 2176`
+- `frame_spanning_transfers: 3`; `excluded_non_bonus_map: 2`
+- `nametable_writes: 5491`
+- `frames_checked: 104` (`frames_with_nametable_writes: 42`)
+- `bytes_checked: 212992`, `physical_mismatches: 0`
+- `alias_samples: 425984`, `alias_mismatches: 0`
+
+Private JSON evidence:
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw\ppu-verification-postfix.json`.
+The owner provided complete console output; the private JSON file is
+**not committed to GitHub**, and it was not remounted for a second code
+execution during this documentation change.
+
+**Gate accepted for the sampled World 1-1 bonus-room CPU write requests and
+end-frame physical CIRAM.** This does **not** establish per-dot PPU timing,
+fetch-time CHR selection, palette/RGB rendering, complete World 1-1 terrain,
+other areas, or finished GUI functionality. PR #24 remains draft/unmerged.
