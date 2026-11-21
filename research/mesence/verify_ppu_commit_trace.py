@@ -17,6 +17,13 @@ from collections import Counter
 from hashlib import sha256
 import json
 from pathlib import Path
+import sys
+
+# Direct Windows invocation ("python research\\mesence\\verify_ppu_commit_trace.py")
+# has research/mesence, not repository root, on sys.path. Preserve both CLI
+# and package import paths without changing the caller's current directory.
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from spritemine.background import (
     attribute_write_addresses, ciram_offset, pattern_write_addresses,
@@ -70,6 +77,21 @@ def _check_register_rows(rows: list[dict]) -> None:
             raise ValueError(f"Malformed PPU register event #{row['sequence']}")
 
 
+def _observed_vram_intent(row: dict) -> tuple[int, int] | None:
+    """Identify the *CPU request*, not the hardware completion of a PPU write.
+
+    $2007 writes may legally happen with rendering disabled at visible scanlines.
+    Their physical effects must be checked against the captured CIRAM snapshots,
+    rather than inferred from a hard-coded vertical-blank window.
+    """
+    if row["kind"] != "write" or row["register"] != 0x2007:
+        return None
+    addr = row["video_ram_addr"] & 0x3FFF
+    if row["bus_addr"] != addr:
+        return None
+    return addr, row["value"]
+
+
 def _safe_vram_write(row: dict) -> tuple[int, int] | None:
     """Return CPU data write effective PPU address/value in non-rendering period.
 
@@ -87,7 +109,12 @@ def _safe_vram_write(row: dict) -> tuple[int, int] | None:
 
 
 def compare_ciram_frame(before: bytes, after: bytes, writes: list[dict]) -> dict:
-    """Reconstruct 2 KiB nametable state from all recorded safe CPU $2007 writes."""
+    """Model observed CPU $2007 requests; compare their effects against native CIRAM.
+
+    This proves agreement at the next captured boundary, not per-PPU-cycle
+    write completion. Requests at visible scanlines are not automatically
+    invalid: SMB3 deliberately disables rendering for dirty redraws.
+    """
     if len(before) != 2048 or len(after) != 2048:
         raise ValueError("Physical CIRAM must be exactly 2 KiB")
     out = bytearray(before)
@@ -95,9 +122,9 @@ def compare_ciram_frame(before: bytes, after: bytes, writes: list[dict]) -> dict
     for row in writes:
         if row["register"] != 0x2007 or row["kind"] != "write":
             continue
-        access = _safe_vram_write(row)
+        access = _observed_vram_intent(row)
         if access is None:
-            return {"eligible": False, "reason": "PPU data write not safe for delayed bus modeling"}
+            return {"eligible": False, "reason": "CPU PPU register address/bus mismatch"}
         addr, value = access
         if 0x3000 <= addr < 0x3F00:
             addr -= 0x1000
@@ -136,9 +163,11 @@ def compare_nametable_alias(ppu: bytes, physical: bytes, mirroring_bit: int) -> 
 def matched_producer_segments(staging: list[dict], regs: list[dict], folder: Path) -> dict:
     """Locate complete 54/14-byte register writes after matching producer events.
 
-    All candidate records must be on the same native frame, be in a safe
-    non-rendering period, and address the expected PPU locations. Each CPU
-    write can substantiate at most one producer event.
+    A complete producer upload may straddle one video-frame boundary.
+    Source-defined PPU addresses and values must all match CPU write requests.
+    Hardware memory effects are *separately* checked against captured CIRAM
+    frames; the register callback itself is pre-write. Each CPU request can
+    substantiate at most one producer event.
     """
     writes = [r for r in regs if r["kind"] == "write" and r["register"] == 0x2007]
     used: set[int] = set()
@@ -175,10 +204,10 @@ def matched_producer_segments(staging: list[dict], regs: list[dict], folder: Pat
             candidate = writes[i:i + len(values)]
             if candidate[0]["cpu_cycle"] < event["cpu_cycle"]:
                 continue
-            if len({row["frame"] for row in candidate}) != 1:
+            if candidate[-1]["frame"] - candidate[0]["frame"] > 1:
                 continue
             if all(
-                _safe_vram_write(row) == (address, value)
+                _observed_vram_intent(row) == (address, value)
                 and row["vertical_write"] == vertical
                 for row, address, value in zip(candidate, target, values)
             ):
@@ -190,9 +219,12 @@ def matched_producer_segments(staging: list[dict], regs: list[dict], folder: Pat
         used.update(range(start, start + len(values)))
         counts[kind + "_matched"] += 1
         counts["matched_bytes"] += len(values)
+        if candidate[-1]["frame"] != candidate[0]["frame"]:
+            counts["frame_spanning_transfers"] += 1
         records.append({
             "event": name, "kind": kind, "producer_frame": event["frame"],
             "commit_frame": writes[start]["frame"],
+            "commit_last_frame": writes[start + len(values) - 1]["frame"],
             "first_cpu_cycle": writes[start]["cpu_cycle"],
             "last_cpu_cycle": writes[start + len(values) - 1]["cpu_cycle"],
             "bytes": len(values), "first_ppu_address": hex(target[0]),
@@ -285,6 +317,8 @@ def verify(rom, capture: Path) -> dict:
         "passed": passes,
         "scope": "bonus CPU staging -> $2007 write intent -> physical CIRAM frames",
         "native_final_rgb_or_fetch_time_chr_verified": False,
+        "per_write_ppu_cycle_completion_verified": False,
+        "rendering_state_at_each_write_captured": False,
         "capture_neutral": True,
         "staging_passed": True,
         "ppu_source_provenance": manifest["source_sha256"],
