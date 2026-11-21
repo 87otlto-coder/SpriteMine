@@ -182,6 +182,8 @@ def test_full_ppu_pipeline_synthetic_and_fail_closed(tmp_path, monkeypatch):
     assert result["producer_commits"]["counts"]["matched_bytes"] == 68
     assert result["memory"]["nametable_writes"] == 68
     assert result["memory"]["frames_checked"] == 1
+    assert result["memory"]["frames_with_nametable_writes"] == 1
+    assert result["memory"]["bytes_checked"] == 2048
     assert result["memory"]["alias_samples"] == 4096
     assert result["memory"]["alias_mismatches"] == 0
     assert not result["native_final_rgb_or_fetch_time_chr_verified"]
@@ -243,3 +245,15 @@ def test_standalone_cli_resolves_research_package_with_src_only_pythonpath(tmp_p
     )
     assert result.returncode == 0, result.stderr
     assert "capture" in result.stdout
+
+
+def test_no_write_frame_still_requires_identical_physical_ciram():
+    before = bytes(2048)
+    assert check.compare_ciram_frame(before, before, [])["matches"]
+    after = bytearray(before)
+    after[700] = 1
+    delta = check.compare_ciram_frame(before, bytes(after), [])
+    assert delta["eligible"]
+    assert delta["applied_nametable_writes"] == 0
+    assert not delta["matches"]
+    assert delta["mismatches"] == 1
