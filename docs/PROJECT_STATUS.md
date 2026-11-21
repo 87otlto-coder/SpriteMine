@@ -129,3 +129,31 @@ behavior retain their previous limits. The new regression test ensures
 only B receives the extension. Private evidence remains under
 `F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-c62ca5ca`;
 see [PPU native runbook](research/SMB3_NATIVE_PPU_WRITE_CIRAM.md).
+
+### Original-ROM native PPU archive revalidation — 2026-11-21
+
+The owner provided a complete private `B.zip` from the previously
+successful 2,590-poll, frames 450778–450881, World 1-1 bonus-room A/B/A
+replay. Independent offline analysis of this ZIP and the user-supplied
+original USA PRG1 ROM establishes **314/314 matching common evidence
+hashes per A/B/A leg**, **32 source-modeled pattern + 32 attribute CPU
+producer strips (2,176/2,176 original-ROM-derived bytes)**, and **64/64
+corresponding nonoverlapping CPU $2007 upload sequences with exact
+addresses, values and increment modes**. Three uploads genuinely span
+frame boundaries (events 15, 34, 63).
+
+Applying **5,491** logged nametable write requests under the observed
+MMC3 mapping reproduced **104/104 physical 2 KiB CIRAM end-frame
+snapshots, 212,992/212,992 byte comparisons**, with **0 differences**.
+The 4 KiB PPU debug nametable view agreed with CIRAM mirroring for
+**425,984/425,984 bytes** across the same 104 frames.
+
+The independent reanalysis is detailed in
+[2026-11-21 PPU/CIRAM archive evidence](research/SMB3_NATIVE_PPU_CIRAM_ARCHIVE_REVALIDATION_20261121.md).
+The **raw ZIP, ROM and buffers stay private**. These are original owner
+MesenCE observations rechecked offline, not another emulator replay.
+The corrected formal standalone verifier still requires an actual
+post-fix invocation against the existing F: capture. PR #24 remains
+**draft/unmerged**. Individual PPU-cycle write timing, per-write
+rendering-mask state, CHR fetch mapping and final RGB pixels are
+**not** established.
