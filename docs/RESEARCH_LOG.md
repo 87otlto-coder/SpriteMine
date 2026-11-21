@@ -122,3 +122,35 @@ bounded emulator/Python timeout (180 / 210 seconds). No ROM, controller,
 save-state, callback semantics, or verifier acceptance criterion changed.
 A fresh native capture remains necessary; the prior partial capture is
 **not** a passing native PPU verification.
+
+## 2026-11-21 — Independently matched original-ROM producer → $2007 → CIRAM
+
+Reviewed the owner-uploaded complete private `B.zip`, replay
+`pipe-replay-xbhs6ijw`, plus the original user-supplied ROM image.
+SHA-256 of the raw ROM matched PRG1 and Plains table fingerprint;
+314 common evidence files in each of A, B and A2 matched. The original
+Plains source model independently generated **2,176 byte-identical
+pattern/attribute staging bytes** for 64 eligible producer events;
+2 nonbonus logical-map events were excluded. All 64 producer uploads
+matched nonoverlapping observed $2007 requests and original-ROM-derived
+PPU targets. Three uploads cross a frame boundary (15, 34, 63).
+
+Replaying the **5,491 observed nametable CPU write intentions**
+reproduced all **104 captured physical 2 KiB CIRAM end-frame
+snapshots** with **zero byte differences** (212,992 compared).
+All 425,984 PPU debug nametable alias-byte comparisons also matched
+observed MMC3 mirroring. The captured CPU PPU register trace has
+10,430 records.
+
+The original post-capture Python verifier failed only because direct
+script invocation lacked the repository root on `sys.path`.
+The new code fixes that and corrects its false assumptions that
+hardware-valid writes must be in VBlank and that uploads cannot straddle
+frame boundaries. Hosted Windows synthetic CI passed **46 tests, 4
+private-fixture skips** per Python 3.11/3.12, run 44906486710.
+
+This establishes **offline source/CPU-bus/physical-CIRAM frame-end
+agreement**, not complete on-scanline PPU write timing or final
+rendered graphics. Complete hashes, scope, limits and private
+reproduction path in
+[archive revalidation](research/SMB3_NATIVE_PPU_CIRAM_ARCHIVE_REVALIDATION_20261121.md).
