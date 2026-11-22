@@ -239,3 +239,19 @@ The four available replay staging logs each contain the same main-area
 observation near the pipe: frame 450781, column 134, left half only. They
 supply no complete main-area column in that window and no upload for the
 anchored pipe at columns 141–142.
+
+### Earlier main-area staging replay
+
+A bounded replay over frames 450080–450200 passed A/B/A neutrality and
+recorded both pattern halves for columns 130–146. The pipe columns were
+recorded as 141 left/right at 450162/450165 and 142 left/right at
+450169/450172, before the junction. Palette RAM agreed at all four frame
+starts. Mapped CHR windows 2 and 3 changed between the columns, but every
+referenced 16-byte pattern agreed between the two distinct snapshots.
+This is a start-snapshot comparison. It does not establish in-frame stability.
+
+The existing observer saves only the first 864 bytes of logical memory.
+That size covers two logical screens, leaving the logical tile IDs for these
+main-area columns out of the per-event snapshots. The current importer
+therefore cannot establish their logical palette assignments or accept this
+capture as a complete main-area map.
