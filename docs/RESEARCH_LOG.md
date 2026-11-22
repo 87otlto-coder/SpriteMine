@@ -180,3 +180,36 @@ execution during this documentation change.
 end-frame physical CIRAM.** This does **not** establish per-dot PPU timing,
 fetch-time CHR selection, palette/RGB rendering, complete World 1-1 terrain,
 other areas, or finished GUI functionality. PR #24 remains draft/unmerged.
+
+## 2026-11-22 — Original-ROM independent visible World 1-1 bonus-background RGB
+
+Using the private, complete `pipe-replay-xbhs6ijw` owner MesenCE A/B/A
+capture and original USA PRG1 ROM, independently reconstructed
+**13 consecutive frames 450869–450881** at **256×192 visible gameplay
+pixels per frame** (**638,976/638,976 exact RGB pixels, zero differences**).
+The first narrow result was **47,616/47,616** on frame 450880
+(columns 8–255), followed by a complete gameplay viewport including
+left-edge masking. This was **offline private original-ROM analysis**, not a
+new MesenCE emulator run.
+
+Source inputs: original ROM CHR, *physical* 2 KiB CIRAM start-frame
+snapshots and MMC3 mirroring, register-replayed `$8000/$8001` CHR bank
+mapping (8,9,96,97,0,4,34,79 for these 13 frame starts), PPU scrolling
+register X=8 / Y=239 and native palette RAM. Bank assignments were
+compared independently against mapped PPU debug CHR snapshots, but those
+mapped snapshots were not used to draw the modeled RGB pixels. Palette
+RGB conversion used a separately held pinned MesenCE 2C02 default table,
+not an extracted screenshot or built-in proprietary code table.
+
+ROM/CHR/CIRAM source modeling matched the native screen RGB exactly
+under this scoped viewport; the HUD/IRQ split starts at scanline 192,
+and per-dot timing/other areas were not tested. The implementation,
+negative synthetic tests and private offline Windows CLI are in
+[draft PR #25](https://github.com/87otlto-coder/SpriteMine/pull/25).
+The committed CLI was **subsequently accepted** by the owner on Windows
+PowerShell 5.1 at `a462499`: **61 passed**, then
+`verify_visible_background.py` returned **`passed: true`**,
+13 frames, 638,976 compared RGB pixels, **0 mismatches**.
+Private report: `F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw\visible-background-verification.json`.
+The capture was reused without another emulator replay. Read the
+[RGB gate](research/SMB3_VISIBLE_BACKGROUND_NATIVE_GATE.md).
