@@ -15,6 +15,7 @@ from spritemine.stage_gif import (
 def test_scene_recipe_all_elements_wrap_at_exact_48_frame_seam():
     recipe=default_recipe()
     assert recipe['frames']==48
+    assert recipe['frame_duration_ms']==80  # GIF time uses 10ms units
     validate_animation_periods(recipe)
     assert recipe['source_class']=='composed/edited'
     wrong=copy.deepcopy(recipe)
