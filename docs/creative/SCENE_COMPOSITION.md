@@ -156,3 +156,19 @@ tests the native mask model and is independent of the scene compositor.
 The main-area world anchors can align a future comparison with an
 independently supplied scene. They do not establish scene pixel fidelity
 or coverage outside the sampled pipe.
+
+### Native vertical alignment cross-check
+
+In the earlier lower approach, frame 449473 shows the two blocked pipe
+openings at capture rows 65 and 129. The recorded logical map independently
+places them at tile rows 19 and 23, which start at world rows 304 and 368.
+Both landmarks give world Y origin 239. The start-of-frame PPU state also
+records local fetch Y 239. The blocked openings occupy the logical tile
+span starting at capture X 124, giving world X origin 2132, consistent with
+PPU local fetch X 84 in this part of the map. Individual border pixels may
+be transparent and should not be used as tile boundaries.
+
+A native-to-native cross-check of the upper pipe crops from frames 450778
+and 450840 found identical RGB for all 1,024 pixels in the anchored
+32-by-32 rectangle. This establishes a consistent native reference in
+that rectangle. Compositor fidelity requires a separate scene input.
