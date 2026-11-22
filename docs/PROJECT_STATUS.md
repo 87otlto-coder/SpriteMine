@@ -87,3 +87,33 @@ bonus-room composition and final complete GIF acceptance remain open. This
 milestone is **not complete**. See
 [the compiler runbook](../tools/m1_world11/README.md) and
 [scene composition documentation](creative/SCENE_COMPOSITION.md).
+
+
+## Original goal-card roulette and animated full-stage preview (draft PR #32)
+
+[Draft PR #32](https://github.com/87otlto-coder/SpriteMine/pull/32) (stacked on
+[PR #31](https://github.com/87otlto-coder/SpriteMine/pull/31), then
+[PR #29](https://github.com/87otlto-coder/SpriteMine/pull/29)) adds the
+headless source-backed 4-phase World 1-1 background animation and the original
+3-symbol end-level roulette. The result is a **private, full-width looping GIF**
+(2,816 × 432; 12 distinct frames; 130 ms per frame; 1,560 ms combined loop),
+plus numbered PNGs, editable recipe and deterministic SHA-256 manifests.
+
+The card uses original ROM OAM 8x16 pattern indices $51/$53/$55 (mirrored
+second half), captured sprite palettes 1/2/1, and source placement (2688,336)
+from object record $41,$A8,$15. Original disassembly routine
+`EndLevelCard_Untouched` changes the card every 8 game ticks (~133.1 ms
+NTSC). These assets are **decoded privately from the user's original PRG1 ROM**,
+not copied from the compressed gameplay recording or hand-drawn.
+
+On 2026-11-22: 9 local targeted tests passed with private source data; the
+12-frame GIF and corresponding PNG RGB pixels matched exactly, and two exports
+produced the same GIF SHA-256. GitHub CI is synthetic, with private integration
+tests skipped. The owner H.264 recording demonstrates the same mushroom,
+flower and star visually, but is not a lossless native-frame validation.
+
+**M1 is not yet accepted:** full-level geometry and dynamic CHR coverage are
+provisional; randomized clouds, enemy/object motions and the collected card
+fanfare / end sequence remain open. The completed private output is an
+animation-preview milestone, not a fully verified final World 1-1 scene.
+Runbook: [goal roulette](../tools/m1_world11/GOAL_ROULETTE.md).
