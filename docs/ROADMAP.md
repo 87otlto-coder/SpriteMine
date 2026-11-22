@@ -2,6 +2,8 @@
 
 **North star:** browse SMB3 resources, extract/capture usable assets, **compile and animate compositions**, preview real results and export wallpapers, animations and audio. Deliver **finished creative files** before deepening ROM reconstruction. See [product direction](PRODUCT_DIRECTION.md) and [AGENTS.md](../AGENTS.md).
 
+**Owner M1 revision (2026-11-22) overrides the earlier section-GIF criteria below:** a complete **11-screen × 27-row main World 1-1** panorama (nominal **2,816×432** logical pixels), including vertical world/scroll coverage, correct art/placement and no texture defects, must precede animation. The entire level is one stationary scene (no repeated sections); Mario none or one; **enemies last**. Existing enemy object records are already documented in `W101O` research, but not in GIF code. See [full-level acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md).
+
 **Active target:** **Super Mario Bros. 3 — USA PRG1 / Revision A** only. **Headless-first, output-first**: a functional CLI plus generated preview is fine before PySide6. The previous eight-phase research/level-decoding/UI-first ladder is retired as the *product development order*; its verified work is retained as reusable technical evidence.
 
 | Order | Creative milestone | Required user-visible deliverable | Acceptance gate |

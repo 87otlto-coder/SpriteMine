@@ -2,6 +2,8 @@
 
 ## Current product mission — CREATIVE PRODUCTION FIRST (2026-11-22)
 
+**Owner M1 revision (2026-11-22) overrides the earlier section-GIF criteria below:** a complete **11-screen × 27-row main World 1-1** panorama (nominal **2,816×432** logical pixels), including vertical world/scroll coverage, correct art/placement and no texture defects, must precede animation. The entire level is one stationary scene (no repeated sections); Mario none or one; **enemies last**. Existing enemy object records are already documented in `W101O` research, but not in GIF code. See [full-level acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md).
+
 **Owner-approved realignment:** SpriteMine is a Windows-first **creative asset extraction, composition, animation and export kit**, starting only with **Super Mario Bros. 3 (US PRG1 / Revision A)**. Our goal is to produce usable animated stages/wallpapers, sprites and audio — **not** to reverse engineer the whole game.
 
 **Required reading:** [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md) is the authoritative product brief; [docs/ROADMAP.md](docs/ROADMAP.md) defines the current output-first milestone sequence. These override stale research-first directives in older PRs, docs and chat threads. Prior verified research remains valid, but it is supporting infrastructure, not the goal.
