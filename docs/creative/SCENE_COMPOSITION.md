@@ -117,3 +117,9 @@ full-level coverage by itself.
 
 Direct reading of emulator staging TSVs, runtime CHR bank resolution and native
 World 1-1 visual acceptance remain outside the adapter's verified coverage.
+
+Native MesenCE reference dumps can be read directly. Use `"format": "rgb24"`
+and `"size": [256, 240]` for a full native RGB frame. For either format, set
+`"sha256"` to require an exact source fingerprint. Comparison results include
+the observed digest. Provide the playfield crop and both world scroll axes
+explicitly. A raw frame or staging event alone cannot establish those offsets.

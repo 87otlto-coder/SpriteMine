@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import io
 import json
 import tempfile
 from pathlib import Path
@@ -76,6 +77,24 @@ def adapt(descriptor, destination):
     return destination / "recipe.json"
 
 
+def read_reference(root, check):
+    """Read a PNG or packed, row-major RGB24 reference and retain its hash."""
+    data = local_file(root, check["file"]).read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    if check.get("sha256", digest) != digest:
+        raise ValueError("reference SHA-256 mismatch")
+    format_name = check.get("format", "png")
+    if format_name == "rgb24":
+        width, height = integers(check["size"], 2, "RGB24 size")
+        if min(width, height) < 1 or len(data) != width * height * 3:
+            raise ValueError("RGB24 data length differs from its declared dimensions")
+        return Image.frombytes("RGB", (width, height), data), digest
+    if format_name != "png":
+        raise ValueError(f"unsupported reference format: {format_name}")
+    with Image.open(io.BytesIO(data), formats=["PNG"]) as image:
+        return image.convert("RGB"), digest
+
+
 def compare_viewports(recipe, references):
     """Compare declared viewport rectangles at explicit ticks and camera offsets."""
     scene = Scene.load(recipe)
@@ -88,12 +107,12 @@ def compare_viewports(recipe, references):
         x, y, width, height = integers(check["crop"], 4, "reference crop")
         tick, = integers([check["tick"]], 1, "reference tick")
         wx, wy = viewport_to_world((x, y), check["scroll"], check.get("origin", [0, 0]))
-        with Image.open(local_file(root, check["file"]), formats=["PNG"]) as image:
-            if min(x, y) < 0 or min(width, height) < 1 or (
-                x + width > image.width or y + height > image.height
-            ):
-                raise ValueError("reference crop lies outside its PNG")
-            expected = image.convert("RGB").crop((x, y, x + width, y + height))
+        image, digest = read_reference(root, check)
+        if min(x, y) < 0 or min(width, height) < 1 or (
+            x + width > image.width or y + height > image.height
+        ):
+            raise ValueError("reference crop lies outside its image")
+        expected = image.crop((x, y, x + width, y + height))
         if min(wx, wy) < 0 or wx + width > scene.size[0] or wy + height > scene.size[1]:
             raise ValueError("reference viewport lies outside the scene")
         actual = scene.render(tick).crop((wx, wy, wx + width, wy + height))
@@ -102,7 +121,8 @@ def compare_viewports(recipe, references):
         red, green, blue = delta.split()
         changed = ImageChops.lighter(ImageChops.lighter(red, green), blue)
         results.append({
-            "reference": check["file"], "tick": tick, "world_rect": [wx, wy, width, height],
+            "reference": check["file"], "reference_sha256": digest,
+            "tick": tick, "world_rect": [wx, wy, width, height],
             "pixels": width * height,
             "mismatched_pixels": width * height - changed.histogram()[0],
             "mismatch_bounds_in_crop": bounds,

@@ -62,6 +62,24 @@ def test_adapt_chr_local_capture_and_compare_scrolled_references(tmp_path):
     assert result["mismatched_pixels"] == 1
     assert result["mismatch_bounds_in_crop"] == (0, 0, 1, 1)
 
+    raw_reference = reference.tobytes()
+    (source / "ref1.bin").write_bytes(raw_reference)
+    checks[1].update(
+        file="ref1.bin", format="rgb24", size=[12, 10],
+        sha256=hashlib.sha256(raw_reference).hexdigest(),
+    )
+    write_json(refs, {"checks": checks})
+    result = compare_viewports(recipe, refs)[1]
+    assert result["mismatched_pixels"] == 1
+    assert result["reference_sha256"] == checks[1]["sha256"]
+    (source / "ref1.bin").write_bytes(raw_reference[:-1])
+    with pytest.raises(ValueError, match="SHA-256"):
+        compare_viewports(recipe, refs)
+    checks[1].pop("sha256")
+    write_json(refs, {"checks": checks})
+    with pytest.raises(ValueError, match="data length"):
+        compare_viewports(recipe, refs)
+
     desc["assets"]["stripe"]["chr"]["offsets"] = [16]
     write_json(descriptor, desc)
     with pytest.raises(ValueError, match="outside its source"):
