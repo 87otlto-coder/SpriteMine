@@ -85,3 +85,16 @@ def test_adapt_chr_local_capture_and_compare_scrolled_references(tmp_path):
     with pytest.raises(ValueError, match="outside its source"):
         adapt(descriptor, tmp_path / "bad")
     assert not (tmp_path / "bad").exists()
+
+
+def test_reference_world_anchor_and_hud_boundary():
+    from spritemine.scene_input import reference_world_origin
+
+    check = {"anchor": {"capture": [10, 11], "world": [300, 207]},
+             "playfield": [0, 0, 256, 192]}
+    assert reference_world_origin(check, (8, 16, 16, 16)) == (298, 212)
+    assert reference_world_origin(check, (0, 191, 1, 1)) == (290, 387)
+    with pytest.raises(ValueError, match="playfield boundary"):
+        reference_world_origin(check, (0, 191, 1, 2))
+    with pytest.raises(ValueError, match="choose either"):
+        reference_world_origin({**check, "scroll": [0, 0]}, (0, 0, 1, 1))

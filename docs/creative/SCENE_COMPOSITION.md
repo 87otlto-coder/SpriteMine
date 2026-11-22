@@ -123,3 +123,16 @@ and `"size": [256, 240]` for a full native RGB frame. For either format, set
 `"sha256"` to require an exact source fingerprint. Comparison results include
 the observed digest. Provide the playfield crop and both world scroll axes
 explicitly. A raw frame or staging event alone cannot establish those offsets.
+
+For aligned comparisons, optionally declare `"playfield": [0, 0, 256, 192]`
+to reject crops that extend into the HUD of a capture with that boundary.
+Use the boundary verified for the selected capture. To align by a measured
+point, supply `"anchor": {"capture": [x, y], "world": [wx, wy]}` in place
+of scroll and origin. The points must refer to the same location in the
+same scene and frame.
+
+PPU scroll describes the nametable address space. The 13 accepted bonus-area
+reference frames record PPU coordinates (8, 239) at start, in base nametable
+0. That gives the hardware fetch origin but supplies no mapping to the
+main area's world coordinates. A world comparison needs a verified world
+anchor or camera origin from the corresponding capture.

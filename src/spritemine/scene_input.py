@@ -95,6 +95,22 @@ def read_reference(root, check):
         return image.convert("RGB"), digest
 
 
+def reference_world_origin(check, crop):
+    """Resolve crop placement via explicit scroll or a measured world anchor."""
+    x, y, width, height = crop
+    if "playfield" in check:
+        left, top, field_width, field_height = integers(check["playfield"], 4, "playfield")
+        if (min(field_width, field_height) < 1 or x < left or y < top
+                or x + width > left + field_width or y + height > top + field_height):
+            raise ValueError("reference crop crosses the declared playfield boundary")
+    if "anchor" not in check:
+        return viewport_to_world((x, y), check["scroll"], check.get("origin", [0, 0]))
+    if "scroll" in check or "origin" in check:
+        raise ValueError("choose either a world anchor or scroll and origin")
+    anchor = check["anchor"]
+    return viewport_to_world((x, y), anchor["world"], anchor["capture"])
+
+
 def compare_viewports(recipe, references):
     """Compare declared viewport rectangles at explicit ticks and camera offsets."""
     scene = Scene.load(recipe)
@@ -106,7 +122,7 @@ def compare_viewports(recipe, references):
     for check in checks:
         x, y, width, height = integers(check["crop"], 4, "reference crop")
         tick, = integers([check["tick"]], 1, "reference tick")
-        wx, wy = viewport_to_world((x, y), check["scroll"], check.get("origin", [0, 0]))
+        wx, wy = reference_world_origin(check, (x, y, width, height))
         image, digest = read_reference(root, check)
         if min(x, y) < 0 or min(width, height) < 1 or (
             x + width > image.width or y + height > image.height
