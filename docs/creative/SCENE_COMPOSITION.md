@@ -84,3 +84,36 @@ hidden reset, byte-identical repeat exports, decoded frame timing and RGB
 round-trip, and nominal 2,816 × 432 export bounds. Synthetic checks provide no
 World 1-1 placement, texture, timing, or coverage evidence. The private
 World 1-1 panorama and full animated export remain open acceptance gates.
+
+## Local NES graphics and viewport comparison
+
+The adapter accepts a normalized descriptor with the same fields as recipe
+version 1. A PNG asset can point to a local capture or animation frame.
+For packed NES CHR bytes, set the asset file to a local binary, add
+`chr: {"offsets": [0, 16, 32, 48], "grid": [2, 2]}` and supply the
+four-entry RGBA palette. Offsets are byte positions in the specified
+binary. The grid lays out 8 × 8 patterns in row-major order. Use explicit alpha
+for the zero index where applicable. Upstream data supplies bank resolution,
+logical tile rows, animation schedules and capture alignment. The bundle
+contains hashes and keeps the original files untouched.
+
+```powershell
+Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-Composition'
+$env:PYTHONPATH = 'src'
+python -m spritemine.scene_input adapt $descriptor $bundle
+python -m spritemine.scene_input compare (Join-Path $bundle 'recipe.json') $references
+```
+
+Set `$descriptor` and `$references` to private JSON paths and `$bundle` to a new
+output directory. Each entry in the reference JSON's `checks` array gives
+`file` (relative PNG path), `tick`, `crop` (x, y, width, height in capture pixels),
+`scroll` (x, y), and optionally `origin` (x, y). Use synchronized reference
+captures containing the same intended layers and omit any HUD from the crop.
+The comparator reports each mapped world rectangle, differing pixel count,
+and local mismatch bounds. Exit 0 means all listed crops matched, 1 means
+at least one differed, and 2 indicates invalid input. Coverage is exactly the
+set of submitted crops and ticks. A pass does not establish full-screen or
+full-level coverage by itself.
+
+Direct reading of emulator staging TSVs, runtime CHR bank resolution and native
+World 1-1 visual acceptance remain outside the adapter's verified coverage.
