@@ -17,6 +17,36 @@ Primary milestone remains **Super Mario Bros. 3 USA PRG1 / Revision A**. The cur
 
 **No percentage of total game assets is claimed.** A single thoroughly verified level/bonus subset is not a measure of global coverage.
 
+## Read-only branch and CI integration preflight — 2026-11-22
+
+The branch topology was checked via GitHub's commit comparison API
+against current `main`. The five headless PRs have **strict linear
+ancestry**, with each containing all commits from its preceding branch:
+
+| PR | Branch relationship | Last checked hosted Windows CI |
+| --- | --- | --- |
+| [#21](https://github.com/87otlto-coder/SpriteMine/pull/21) | `main` → `feature/smb3-headless-player` | PASS, run `44477955575` |
+| [#22](https://github.com/87otlto-coder/SpriteMine/pull/22) | #21 → `feature/smb3-world11-background` | PASS, run `44479504307` |
+| [#23](https://github.com/87otlto-coder/SpriteMine/pull/23) | #22 → `feature/smb3-world11-staging-capture` | PASS, run `44514569132` |
+| [#24](https://github.com/87otlto-coder/SpriteMine/pull/24) | #23 → `feature/smb3-world11-ppu-write-trace` | PASS, run `44958745616` |
+| [#25](https://github.com/87otlto-coder/SpriteMine/pull/25) | #24 → `feature/smb3-world11-visible-background` | PASS on accepted implementation, run `44959428665`; newer documentation-only CI may recur |
+
+All five are currently **open drafts**, not merged to `main`.
+Comparisons show no unrelated binary source or private fixture files among
+their changed paths. This is a **merge planning preflight**, not a substitute
+for final review or `main`-branch regression checks.
+
+The existing static PySide6 explorer [PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4)
+**has diverged from `main` (17 commits ahead, 4 behind)**. It must
+be rebased or carefully reimplemented onto the final integrated code before
+merging, and its prior Windows smoke results **do not** satisfy the
+pending native interaction/export/error-path acceptance.
+
+**Next decision:** integrate the headless stack in dependency order only
+after review and checks, then reconcile the GUI branch. Do not blindly
+merge PR #4 and do not merge divergent animation research PRs #19/#20
+as part of this narrow sprint.
+
 ## Review/merge sequence (one controlled integration sprint)
 
 1. **PR #25 native CLI gate — accepted 2026-11-22.** The owner ran the exact committed offline verifier at `a462499` against the existing private replay and original PRG1 ROM with pinned local MesenCE RGB source, obtaining **61 passed** and **13 frames / 638,976 exact RGB pixels, 0 mismatches**. The JSON report is preserved privately in `FIXTURE`. This acceptance is limited to the 256×192 bonus gameplay viewport.
