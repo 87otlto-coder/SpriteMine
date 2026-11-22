@@ -1,23 +1,31 @@
 # SpriteMine engineering instructions (source of truth)
 
-## Mission and boundaries
-Be SpriteMine's technical lead. Build a Windows-first local NES asset explorer and reconstruction application. The **first and only active game milestone is Super Mario Bros. 3 (US PRG1 / Revision A)**. Avoid expansion to other games, consoles, AI recognition, or speculative abstractions before this milestone is validated. The owner makes product decisions; make routine engineering decisions proactively.
+## Current product mission — CREATIVE PRODUCTION FIRST (2026-11-22)
+
+**Owner-approved realignment:** SpriteMine is a Windows-first **creative asset extraction, composition, animation and export kit**, starting only with **Super Mario Bros. 3 (US PRG1 / Revision A)**. Our goal is to produce usable animated stages/wallpapers, sprites and audio — **not** to reverse engineer the whole game.
+
+**Required reading:** [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md) is the authoritative product brief; [docs/ROADMAP.md](docs/ROADMAP.md) defines the current output-first milestone sequence. These override stale research-first directives in older PRs, docs and chat threads. Prior verified research remains valid, but it is supporting infrastructure, not the goal.
+
+**FIRST deliverable:** a **compiled, animated, seamlessly looping World 1-1 stage GIF**, constructed with a repeatable headless browse → extract/capture → compose → animate → preview → export workflow. It must be a visually inspected, playable GIF, not merely tests, JSON, screenshots, or a PPU validation report. Do not prioritize UI or audio until this first creative output is accepted.
+
+Be SpriteMine's technical lead and make routine implementation decisions proactively. Avoid unrelated games, consoles, AI recognition or needless abstraction.
 
 ## Working rules
-- At the start of every development task, inspect repository branches, history, README, `docs/PROJECT_STATUS.md`, and relevant files. Treat GitHub as authoritative over chat memory.
-- Before a change, identify the active phase and unverified dependencies. Prefer experiments over assumptions.
+- At the start of every development task, inspect branch/PR history and read **this file, `docs/PRODUCT_DIRECTION.md`, `docs/ROADMAP.md`, `docs/PROJECT_STATUS.md`**, and the most recent creative outputs. Treat GitHub as authoritative over chat memory.
+- Identify the **next working exported asset** and a minimal blocker before researching internals. Prefer using existing ROM decoders, emulator capture, manual composition and visual QA rather than recreating gameplay or PPU details.
 - Never modify a source ROM. Never commit or distribute ROMs, extracted copyrighted assets, save states, or captures. Verify Git status before committing.
 - Preserve source SHA-256, ROM offsets/bank mappings, frame and scanline indices, decoder versions, emulator states, and controller input histories as applicable.
-- Label asset evidence `raw`, `captured`, or `decoded`. Never claim an OAM component is a character; distinguish hardware sprites from visible pixels. Screenshot stitching is not level decoding.
+- Preserve evidence labels `raw`, `captured` and `decoded`; label creative assemblies `composed/edited`. Never claim an OAM component is a full character; distinguish native captured art from constructed animation. Screenshot assembly may be valid **creative composition**, but must not be called complete decoded level data.
 - Grayscale CHR visualizations are not authentic NES colors. Preserve palette and sprite transparency explicitly when rendering live assets.
 - Keep extraction code separate from UI; isolate emulator integration behind an adapter. MesenCE is a candidate, not an assumed stable drop-in API.
-- Validate game-specific decoding against the provided verified SMB3 ROM; don't invent memory locations, game objects, byte mappings, or asset names.
+- Validate game-specific decoders used in exports against the verified SMB3 ROM; don't invent memory mappings or native asset identities. **Do not require exact game-internal reconstruction** when a captured or hand-assembled asset meets the visual/audio acceptance requirement with honest provenance.
 - Check licenses before copying third-party code. Pay particular attention to MesenCE GPLv3 and SMB3 disassembly redistribution limitations.
 
 ## Implementation workflow
 - Use `feature/*` branches for implementation and `research/*` branches for experiments. Prefer PRs targeting `main`; never push directly to `main` without explicit instruction.
-- Make small reviewable commits, add deterministic tests, and document behaviors/unsupported cases. Maintain a running research log with evidence and unanswered questions.
-- Complete means implemented, tested, reproducible, and documented, with SMB3 observations where relevant. CI success cannot substitute for physical Windows/emulator validation.
+- Make small reviewable commits, add deterministic tests, and document behaviors/unsupported cases. Preserve historical research evidence but prioritize work on the creative output pipeline.
+- Complete for a production milestone means an **actual playable/visible/audible exported file**, inspected for visual/audio quality, with an editable/reproducible recipe and provenance. Tests and private Windows validation support this; neither alone is a finished deliverable.
+- **Research gate:** Before investigating deeper ROM/PPU/gameplay internals, identify the specific blocked output, a simpler extraction/capture/manual alternative, the smallest experiment needed, and how its result will improve the current export. If this cannot be answered, defer research.
 - Update `docs/PROJECT_STATUS.md` after substantive changes; update `docs/ROADMAP.md`, `docs/DECISIONS.md`, and these instructions if the approach changes. Keep the `docs/PROJECT_INSTRUCTIONS.md` ChatGPT summary aligned.
 - Give complete copy-paste PowerShell commands with explicit working directories and expected outcomes. Report what changed, what passed, what is unresolved, and what comes next. Avoid emojis.
 
@@ -26,7 +34,9 @@ Be SpriteMine's technical lead. Build a Windows-first local NES asset explorer a
 Keep all SpriteMine development and research under F:\Dev\ROMMAGE:
 - SOURCE: production Git checkouts, research code, development scripts, and docs.
 - TOOLS: MesenCE emulator binaries and supporting debugging utilities.
-- FIXTURE: immutable original ROMs, save states, raw captures, private reports, and extracted game graphics.
+- FIXTURE: immutable original ROMs, save states, raw captures, validation fixtures, and extracted game graphics.
+- OUTPUT: playable generated GIFs, wallpaper videos, audio exports and editable compositions.
+- REPORTS: private visual/audio QA notes and progress/coverage summaries.
 
 Use explicit absolute PowerShell paths. Do not create unrelated Git checkouts
 or copyrighted capture/output folders under the user's HOME directory.
@@ -34,17 +44,19 @@ The main production source checkout is F:\Dev\ROMMAGE\SOURCE\SpriteMine.
 A separate existing research checkout may still be under TOOLS, as documented
 in the relevant historical research procedure.
 
-## Milestone ladder
-0. ROM/ZIP loader, hashes, independent CHR 2bpp tests and deterministic bank exports.
-1. Controlled emulator test: OAM, palettes, CHR mapping, screen, state, frame identifiers and basic audio.
-2. Windows static tile/palette explorer UI.
-3. Hardware sprite inspection and complete sprite reconstruction.
-4. Reproducible transparent animation capture and export.
-5. SMB3 level decoder and verified World 1-1.
-6. Organized audio workbench; original sequence decoding remains research.
-7. Integrated, validated SMB3 Windows release and evidence-based coverage reporting.
+## Active creative milestone ladder — supersedes previous research phase order
 
-**Prioritize a working, accurate SMB3 tool over a generalized NES ripper.**
+**M1 (active):** Headless World 1-1 **compiled animated stage GIF**. Browse/extract/capture game graphics, compose a scene from independent layers/objects, animate at least two independently controlled elements, preview and export a seamless playable GIF. Save a reusable composition recipe, output and provenance. No GUI prerequisite and **no full level/gameplay decoder prerequisite**.
+
+**M2:** Music + SFX extraction/capture, playback, trim/loop and WAV (optionally FLAC) exports. Deliver at least one playable music loop and one sound effect, with provenance. Full music sequence disassembly is optional.
+
+**M3:** Reusable asset/project library, browse/search, sprite sheets/GIF/APNG and wallpaper-friendly exports (MP4/WebM when practical). Reuse earlier GIF/audio assets in a second composition.
+
+**M4:** PySide6 Windows creative interface over working headless tools. ROM → browse → compose → preview → GIF/audio export; native Windows acceptance and packaging.
+
+The previously verified ROM/CHR, MMC3, PPU/CIRAM and 13-frame RGB research in unmerged PRs #21–#25 is valuable reusable code, **not** a requirement to deepen the reverse engineering or blindly merge all research branches first. Build a creative output from the smallest usable pieces.
+
+**Prioritize demonstrable creative outputs over comprehensive game internals.**
 
 ## GitHub Actions storage and repository governance
 
