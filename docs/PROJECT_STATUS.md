@@ -62,3 +62,28 @@ The local composition branch adds a recipe-driven PNG/GIF renderer and
 terrain-aware motion tracks. Windows verification covers synthetic inputs and
 exports. See the [scene composition guide](creative/SCENE_COMPOSITION.md).
 [World 1-1 acceptance](https://github.com/87otlto-coder/SpriteMine/pull/28) remains open.
+
+## First source-driven World 1-1 main-area build (draft PR #31)
+
+[Draft PR #31](https://github.com/87otlto-coder/SpriteMine/pull/31), based on
+PR #29, adds a private-ROM-only headless compiler for the full 176 × 27 logical
+World 1-1 canvas, a frame-local PPU/palette-aware metatile renderer, version-1
+private scene recipes, source provenance and visual reference tests. The ROM,
+extracted artwork and independent game captures stay out of GitHub.
+
+Local private verification on 2026-11-22: 15 Python tests passed; a bounded
+pipe-floor screenshot crop matched 7,680 / 7,680 displayed pixels; a compressed
+recording of the late-pipe scene put 45,758 / 46,176 compared pixels within 50
+RGB units per channel (mouse excluded); the goal black/sky silhouette matched
+4,960 / 4,960 classified pixels. **Only the first result is an exact screenshot
+pixel check.** The video-derived checks are approximate and must **not** be
+counted as lossless native RGB24 coverage. The game's black zigzag goal edge and
+outlined black goal scene are authentic, not rendering corruption.
+
+The model executes 84 / 86 parsed commands, with randomized-cloud placement
+unresolved. Big-block shadows and goal geometry are still provisional until
+lossless native map validation. Dynamic CHR mapping, animation, enemy tracks,
+bonus-room composition and final complete GIF acceptance remain open. This
+milestone is **not complete**. See
+[the compiler runbook](../tools/m1_world11/README.md) and
+[scene composition documentation](creative/SCENE_COMPOSITION.md).
