@@ -305,3 +305,19 @@ unknown. Cross-frame imports require matching palette RAM and pattern-table
 selection, and compare the 16-byte CHR patterns each upload actually references.
 Repeated uploads and paired halves must agree. Snapshot agreement is evidence
 about frame-start data. Fetch-time stability requires a separate trace.
+
+### Four-column native reference readiness
+
+A three-frame A/B/A replay at 450181–450183 passed neutrality and produced a
+paired sprites-disabled reference. The lower pipe landmarks independently
+align the native crops to world camera origins (2049,239), (2052,239), and
+(2054,239). Across columns 140–143 and world rows 240–431, sprites-on and
+sprites-off crops match for all 36,864 pixel samples. The aligned crops
+also agree across the three background captures. The earlier PPU trace
+places the first pertinent register changes after the visible part of
+scanline 192 in these frames. No sprite masking is needed for these crops.
+
+The upper and middle native references use the previously checked world
+origins (2148,0) and (2173,150). This gives native reference coverage over
+all 108 cells in the four-column region. Compositor comparison remains
+verified for the existing two-column render only.
