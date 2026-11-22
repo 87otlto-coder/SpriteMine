@@ -22,10 +22,14 @@ CHR bytes served only as an independent bank cross-check, not the source of
 rendered pixels. PPU-cycle timing, HUD, active OAM composition and other areas
 remain out of scope.
 
-The equivalent code has been committed on [draft PR #25](https://github.com/87otlto-coder/SpriteMine/pull/25)
-with synthetic hosted Windows tests. **Owner Windows acceptance of the
-final newly committed RGB CLI has not yet occurred.** The original ROM,
-native capture and extracted graphics remain private in F:\Dev\ROMMAGE\FIXTURE.
+The equivalent code is on [draft PR #25](https://github.com/87otlto-coder/SpriteMine/pull/25).
+**Owner Windows acceptance PASSED on 2026-11-22** at commit `a462499`:
+**61/61 private-ROM tests**, followed by the committed CLI returning
+**`passed: true`, 13 frames, 638,976 RGB pixels, 0 mismatches**.
+The JSON report remains private under
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw\visible-background-verification.json`.
+The original ROM, native capture and extracted graphics remain private in
+F:\Dev\ROMMAGE\FIXTURE.
 See [RGB gate](research/SMB3_VISIBLE_BACKGROUND_NATIVE_GATE.md) and
 [stacked integration plan](RENDERING_INTEGRATION_PLAN.md).
 
