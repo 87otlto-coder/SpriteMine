@@ -47,12 +47,19 @@ def collect_columns(folder, frame, screens, log_hash):
             raise ValueError(f"inconsistent Plains pattern stage at event {sequence}")
         stem = f"bg-{sequence:04d}"
         patterns = (folder / f"{stem}-pattern.bin").read_bytes()
-        logical = (folder / f"{stem}-tiles.bin").read_bytes()
-        if len(patterns) != ROWS * 2 or len(logical) != screens * COLUMNS_PER_SCREEN * ROWS:
+        column_dump = folder / f"{stem}-column-ids.bin"
+        logical = None
+        if column_dump.is_file():
+            ids = column_dump.read_bytes()
+        else:
+            logical = (folder / f"{stem}-tiles.bin").read_bytes()
+            if len(logical) != screens * COLUMNS_PER_SCREEN * ROWS:
+                raise ValueError(f"unexpected pattern or logical length at event {sequence}")
+            screen, local = divmod(column, COLUMNS_PER_SCREEN)
+            start = screen * COLUMNS_PER_SCREEN * ROWS + local
+            ids = logical[start:start + ROWS * COLUMNS_PER_SCREEN:COLUMNS_PER_SCREEN]
+        if len(patterns) != ROWS * 2 or len(ids) != ROWS:
             raise ValueError(f"unexpected pattern or logical length at event {sequence}")
-        screen, local = divmod(column, COLUMNS_PER_SCREEN)
-        start = screen * COLUMNS_PER_SCREEN * ROWS + local
-        ids = logical[start:start + ROWS * COLUMNS_PER_SCREEN:COLUMNS_PER_SCREEN]
         key = (column, half)
         if key in halves and halves[key] != (patterns, ids):
             raise ValueError(f"conflicting pattern uploads for column {column}, half {half}")
@@ -60,7 +67,8 @@ def collect_columns(folder, frame, screens, log_hash):
         sources[str(sequence)] = {
             "column": column, "half": half, "cpu_cycle": event["cpu_cycle"],
             "frame": frame, "junction_flag": event["junction_flag"],
-            "patterns_sha256": fingerprint(patterns), "logical_sha256": fingerprint(logical),
+            "patterns_sha256": fingerprint(patterns), "logical_sha256": fingerprint(logical) if logical is not None else None,
+            "column_ids_sha256": fingerprint(ids),
         }
     if not halves:
         raise ValueError("no supported pattern uploads at the selected staging frame")
@@ -108,21 +116,28 @@ def import_staging(capture, frame, graphics_frame, profile, destination, *, scre
     if len(rgb) != 192:
         raise ValueError("expected 192-byte RGB profile")
     halves, sources = {}, {}
-    snapshot = ppu[:8192], palette, base
     for selected in frames:
+        staged, events = collect_columns(folder, selected, screens, log_hash)
         if len(frames) > 1:
             other_ppu, other_palette, other_base, _ = read_graphics(folder, selected)
-            if (other_ppu[:8192], other_palette, other_base) != snapshot:
+            offsets = {base + pattern * 16 for patterns, _ in staged.values()
+                       for pattern in patterns}
+            if (other_palette != palette or other_base != base or any(
+                other_ppu[offset:offset + 16] != ppu[offset:offset + 16]
+                for offset in offsets
+            )):
                 raise ValueError(f"incompatible graphics snapshot at frame {selected}")
-        staged, events = collect_columns(folder, selected, screens, log_hash)
         for key, value in staged.items():
             if key in halves and halves[key] != value:
                 raise ValueError(f"conflicting pattern uploads for column {key[0]}, half {key[1]}")
             halves[key] = value
         sources.update(events)
-    identities = {(event["logical_sha256"], event["junction_flag"]) for event in sources.values()}
-    if len(frames) > 1 and len(identities) != 1:
+    logical_hashes = {event["logical_sha256"] for event in sources.values()
+                      if event["logical_sha256"] is not None}
+    junctions = {event["junction_flag"] for event in sources.values()}
+    if len(frames) > 1 and (len(logical_hashes) > 1 or len(junctions) != 1):
         raise ValueError("cross-frame uploads have inconsistent logical map or junction")
+
     columns = screens * COLUMNS_PER_SCREEN
     tiles = [[None] * columns for _ in range(ROWS)]
     assets = {}

@@ -131,6 +131,16 @@ def test_native_staging_to_scene_exports_and_coverage(tmp_path):
         import_staging(capture, 7, 7, profile, tmp_path / "changed-map", screens=1,
                        additional_frames=[8])
 
+    for sequence in range(1, 5):
+        (folder / f"bg-{sequence:04d}-column-ids.bin").write_bytes(bytes([128]) * 27)
+    snapshot = bytearray((folder / "7-start-ppu.bin").read_bytes())
+    snapshot[0] = 255  # An unreferenced graphics window can change.
+    (folder / "8-start-ppu.bin").write_bytes(snapshot)
+    sparse = import_staging(capture, 7, 7, profile, tmp_path / "sparse", screens=11,
+                            additional_frames=[8])
+    assert Scene.load(sparse).render(0).getpixel((64, 416)) == (9, 0, 0)
+    assert coverage(sparse)["rows"][26][5]["tiles"] == []
+
     (folder / "bg-0002-pattern.bin").write_bytes(bytes(53))
     with pytest.raises(ValueError, match="pattern or logical length"):
         import_staging(capture, 7, 7, profile, tmp_path / "invalid", screens=1)

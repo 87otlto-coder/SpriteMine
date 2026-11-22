@@ -295,3 +295,13 @@ bounding box intersects the same cell on the same tick, the cell stays
 unverified even when another reference matches it. This gate checks the
 declared canvas and ticks. Compare those against the milestone scope before
 treating a pass as acceptance of the entire level.
+
+### Sparse logical-column captures
+
+The importer accepts a 27-byte `bg-*-column-ids.bin` sidecar for a pattern
+event. If the sidecar is absent, it reads the existing full-map dump format.
+A sidecar resolves only its recorded column. Unrecorded columns remain
+unknown. Cross-frame imports require matching palette RAM and pattern-table
+selection, and compare the 16-byte CHR patterns each upload actually references.
+Repeated uploads and paired halves must agree. Snapshot agreement is evidence
+about frame-start data. Fetch-time stability requires a separate trace.
