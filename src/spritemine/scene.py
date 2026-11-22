@@ -107,6 +107,7 @@ class Scene:
     def __init__(self, recipe, directory):
         if recipe["version"] != 1:
             raise ValueError("unsupported scene recipe version")
+        self.staging_provenance = recipe.get("staging_provenance")
         self.size = integers(recipe["size"], 2, "world size")
         self.ticks, self.tick_ms = integers(
             [recipe["ticks"], recipe["tick_ms"]], 2, "timing"

@@ -172,3 +172,58 @@ A native-to-native cross-check of the upper pipe crops from frames 450778
 and 450840 found identical RGB for all 1,024 pixels in the anchored
 32-by-32 rectangle. This establishes a consistent native reference in
 that rectangle. Compositor fidelity requires a separate scene input.
+
+## Direct MesenCE CPU-staging input and inspection
+
+The importer uses the existing neutral A/B/A replay layout from PR #23.
+It consumes the hashed `B/background-staging.tsv`, paired 54-byte pattern
+strips and screen-major `bg-*-tiles.bin` snapshots for one staging frame.
+Patterns are arranged as 16 × 16 metatiles over all 27 logical rows. Only
+columns with agreeing left and right uploads are populated. Null cells
+preserve unobserved columns. The importer reads the selected graphics
+frame's mapped PPU CHR windows, palette bytes and PPU state. Use a local
+192-byte RGB profile containing 64 consecutive RGB triplets.
+
+```powershell
+Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine-Composition'
+$env:PYTHONPATH = 'src'
+python -m spritemine.native_staging $capture $stagingFrame $graphicsFrame $profile $bundle --screens $screens
+python -m spritemine.scene_export (Join-Path $bundle 'recipe.json') $exports
+python -m spritemine.scene_coverage (Join-Path $bundle 'recipe.json') $coverage --references $references
+```
+
+Use fresh output directories. The selected capture needs a logical dump of the
+declared screen count. Choose the graphics frame using independent stability
+evidence for the target scene. Window hashes identify the captured mapping;
+they do not identify physical ROM bank numbers when the capture lacks that
+association. The importer uses the logical tile palette group and captured
+palette RAM. Attribute-commit equivalence, mid-frame mapper changes, HUD and
+sprites are outside this importer. The existing independent verifiers remain
+the authority for their respective capture gates. The generated recipe can
+accept additional PNG assets, foreground layers and independently timed
+tracks through the normal compositor schema.
+
+Coverage writes JSON and a text grid. Each cell lists resolved grid tiles,
+ticks at which matching crop rectangles cover the entire cell, and ticks
+whose mismatch bounding rectangles overlap it. Failed comparisons retain
+their exact pixel count and bounding rectangle. Match evidence applies to
+the listed ticks and to the supplied reference classification. Tile occupancy
+excludes stamps and tracks. No references means no matched cells.
+
+## Milestone 1 integration order
+
+The owner-confirmed [PR #28 requirements](https://github.com/87otlto-coder/SpriteMine/pull/28)
+govern M1. First review the entire 11-screen, 27-row main-area static scene
+(2,816 × 432 logical pixels) with an unknown-cell ledger and no Mario or enemies.
+Validate terrain, pipes, blocks, plants, scenery, priority and camera alignment
+against native gameplay regions. Then independently animate the observed
+objects in a stationary seamless GIF, with at most one Mario. Integrate
+enemies last. The bonus area has its own coverage and the creative GIF in
+PR #27 remains a prototype.
+
+The existing W101O records describe placements, including 14 enemies and an
+end card. Once the source coordinates and frame assets are available, use an
+explicit world anchor per placement and attach a track. Existing motion
+supports edge turns, falling, hopping and hidden resets. Explicit cels permit
+source-derived timing without expanding into a gameplay simulator. Distinguish
+recorded source behavior from authored loop and reset behavior.

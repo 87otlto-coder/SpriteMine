@@ -62,6 +62,8 @@ def export(recipe, directory):
             for name in ("static.png", "scene.gif")
         },
     }
+    if scene.staging_provenance is not None:
+        manifest["staging_provenance"] = scene.staging_provenance
     (directory / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
