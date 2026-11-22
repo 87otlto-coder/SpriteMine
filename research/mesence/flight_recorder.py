@@ -135,7 +135,8 @@ def capture(args):
     env = dict(os.environ, SMFR_OUTPUT=str(folder), SMFR_INTERVAL=str(args.interval),
                SMFR_CHECKPOINT=str(args.checkpoint), SMFR_FRAMES=str(args.frames),
                SMFR_MAX_BYTES=str(args.max_mib * 1048576), SMFR_EVENTS=str(int(args.events)),
-               SMFR_EVENT_CAP=str(args.event_cap), SMFR_STOP=str(int(args.headless)))
+               SMFR_EVENT_CAP=str(args.event_cap),
+               SMFR_TRIGGER_WRITE="" if args.trigger_write is None else str(args.trigger_write), SMFR_STOP=str(int(args.headless)))
     command = [str(args.emulator), "--doNotSaveSettings"]
     if args.headless:
         command += ["--testRunner", f"--timeout={args.timeout}"]
@@ -199,13 +200,17 @@ def main():
                                      ("frames", 3600, 1, 216000), ("max-mib", 64, 1, 1024),
                                      ("event-cap", 32, 1, 256), ("timeout", 120, 1, 7200)]:
         run.add_argument("--" + name, type=bounded(low, high), default=default)
-    run.add_argument("--events", action="store_true")
+    event_mode = run.add_mutually_exclusive_group()
+    event_mode.add_argument("--events", action="store_true")
+    event_mode.add_argument("--trigger-write", type=lambda value: int(value, 0))
     run.add_argument("--headless", action="store_true", help="Test runner; no controller automation")
     inspect = sub.add_parser("inspect")
     inspect.add_argument("capture", type=Path)
     args = parser.parse_args()
     try:
         if args.action == "capture":
+            if args.trigger_write is not None and not 0 <= args.trigger_write <= 65535:
+                parser.error("--trigger-write must be a 16-bit CPU address")
             capture(args)
         else:
             print(json.dumps(summarize(args.capture), indent=2))

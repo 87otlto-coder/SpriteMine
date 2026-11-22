@@ -151,3 +151,10 @@ It compares A/B/A (recorder off/on/off), controller/timing logs, 104 start/end
 logical snapshots, 104 RGB frames, and 12 independently read memory snapshots.
 Run results are in [the validation note](MESENCE_FLIGHT_RECORDER_VALIDATION.md).
 Private sessions, ROM, states and captures stay under `FIXTURE`, never Git/CI.
+
+## Write-triggered recording
+
+Use `--trigger-write 0x0380` to record writes to a specific CPU address.
+The recorder includes the triggering write and retains up to the event cap
+per frame. This mode observes the selected address only. It is an alternative
+to the periodic write and execution bursts enabled by `--events`.

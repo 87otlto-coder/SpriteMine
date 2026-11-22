@@ -112,3 +112,13 @@ None coincided with a verified commit. The default snapshots therefore
 bracket the updates, while the targeted PPU trace supplies exact write
 timing and attribution. This check uses archived sessions and launches
 no new replay.
+
+### Write-triggered replay check
+
+With `--trigger-write 0x0380`, the recorder observed the four target
+staging writes in frames 450162, 450165, 450169 and 450172. Each
+address, value and CPU cycle agreed with the independent staging log.
+All 326 replay reference files matched across A/B/A, and all 12 independent
+memory snapshots matched. The capture compressed to 208,753 bytes. The address
+watch records CPU staging triggers. The separate PPU trace establishes
+the eventual hardware commits.

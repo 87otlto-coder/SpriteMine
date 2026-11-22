@@ -9,6 +9,13 @@ local checkpoint = number("CHECKPOINT", 300, 1, 36000)
 local maxFrames = number("FRAMES", 3600, 1, 216000)
 local maxBytes = number("MAX_BYTES", 67108864, 1048576, 1073741824)
 local eventCap = number("EVENT_CAP", 32, 1, 256)
+local triggerAddress = os.getenv("SMFR_TRIGGER_WRITE")
+if triggerAddress and triggerAddress ~= "" then
+    triggerAddress = number("TRIGGER_WRITE", 0, 0, 65535)
+else
+    triggerAddress = nil
+end
+local triggerHook
 local eventsEnabled = os.getenv("SMFR_EVENTS") == "1"
 local output = assert(os.getenv("SMFR_OUTPUT"), "Set SMFR_OUTPUT to a new directory")
 local path = output .. "/capture.jsonl"
@@ -51,6 +58,9 @@ end
 local function finish(reason)
     if closed then return end
     removeHooks()
+    if triggerHook then
+        emu.removeMemoryCallback(triggerHook, emu.callbackType.write, triggerAddress, triggerAddress)
+    end
     -- Reserved footer space keeps the disk budget a hard bound.
     assert(file:write(json({type="end", reason=reason, ticks=tick, samples=sequence,
         pending_events_discarded=next(burst) ~= nil}) .. "\n"))
@@ -62,7 +72,7 @@ local function stamp(s)
         scanline=s["ppu.scanline"], ppu_cycle=s["ppu.cycle"], tick=tick}
 end
 local function arm()
-    if not eventsEnabled then return end
+    if not eventsEnabled or triggerAddress then return end
     burst, totals = {}, {write=0, exec=0}
     for _, kind in ipairs({"write", "exec"}) do
         local retained = 0
@@ -97,7 +107,8 @@ end
 regions.nesPpuDebug = {size=0x3000, memory=assert(emu.memType.nesPpuDebug)}
 assert(write({type="header", schema=1, evidence="captured", rom=emu.getRomInfo(),
     interval=interval, checkpoint=checkpoint, max_frames=maxFrames, max_bytes=maxBytes,
-    event_cap=eventCap, event_mode=eventsEnabled and "one-frame-bursts" or "off",
+    event_cap=eventCap, trigger_write=triggerAddress,
+    event_mode=triggerAddress and "write-triggered" or (eventsEnabled and "one-frame-bursts" or "off"),
     regions=regions, omitted=omitted, state=initial}))
 file:flush()
 local function snapshot(s)
@@ -138,11 +149,22 @@ end
 for _, kind in ipairs({"reset", "stateLoaded"}) do
     emu.addEventCallback(function() forceFull=true end, emu.eventType[kind])
 end
+if triggerAddress then
+    triggerHook = emu.addMemoryCallback(function(address, value)
+        totals.write = (totals.write or 0) + 1
+        if totals.write <= eventCap then
+            local event = stamp(emu.getState())
+            event.address, event.value, event.kind = address, value, "write"
+            burst["write" .. totals.write] = event
+        end
+    end, emu.callbackType.write, triggerAddress, triggerAddress)
+end
 emu.addEventCallback(function()
     if closed then return end
     tick = tick + 1
-    local s = (next(hooks) or forceFull or (tick-1) % interval == 0) and emu.getState()
-    if next(hooks) then
+    local activeBurst = next(hooks) or next(burst)
+    local s = (activeBurst or forceFull or (tick-1) % interval == 0) and emu.getState()
+    if activeBurst then
         removeHooks()
         if not write({type="burst", time=stamp(s), events=burst, event_totals=totals}) then
             burst, totals = {}, {}; finish("byte_limit"); return

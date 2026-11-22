@@ -18,7 +18,9 @@ def main():
     for name in ("emulator", "rom", "slot", "input", "driver", "output"):
         parser.add_argument("--" + name, type=lambda p: Path(p).resolve(), required=True)
     parser.add_argument("--interval", type=int, default=30)
-    parser.add_argument("--events", action="store_true")
+    event_mode = parser.add_mutually_exclusive_group()
+    event_mode.add_argument("--events", action="store_true")
+    event_mode.add_argument("--trigger-write", type=lambda value: int(value, 0))
     args = parser.parse_args()
     if any((p / ".git").exists() for p in (args.output, *args.output.parents)):
         raise ValueError("Keep private evidence outside Git")
@@ -57,7 +59,8 @@ def main():
                    SMFR_OUTPUT=str(dest), SMFR_SCRIPT=str(sources["recorder"]),
                    SMFR_INTERVAL=str(args.interval), SMFR_CHECKPOINT="300", SMFR_FRAMES="2589",
                    SMFR_MAX_BYTES="67108864", SMFR_EVENT_CAP="32", SMFR_STOP="0",
-                   SMFR_EVENTS=str(int(args.events)))
+                   SMFR_EVENTS=str(int(args.events)),
+                   SMFR_TRIGGER_WRITE="" if args.trigger_write is None else str(args.trigger_write))
         start = time.perf_counter()
         with (dest / "emulator.log").open("wb") as log:
             subprocess.run([str(args.emulator), "--testRunner", "--timeout=90", "--doNotSaveSettings",
@@ -97,7 +100,7 @@ def main():
     report = {"neutral": True, "matched_files_per_leg": len(signatures[0]), "polls": 2590,
               "wall_seconds_A_B_A2": times, "source_sha256": hashes,
               "source_paths": {k: str(v) for k, v in sources.items()},
-              "interval": args.interval, "events": args.events,
+              "interval": args.interval, "events": args.events, "trigger_write": args.trigger_write,
               "raw_bytes": raw_bytes, "compressed_bytes": packed.stat().st_size,
               "capture_sha256": digest(packed), "summary": summary,
               "independent_memory_matches": reference_matches, "changed_rgb_pixels": rgb_changed,
