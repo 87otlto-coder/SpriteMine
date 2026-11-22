@@ -50,7 +50,8 @@ $output = Join-Path 'F:\Dev\ROMMAGE\OUTPUT\SMB3\World11M1' ('SourcePreview-' + (
 python .\make_m1_bundle.py $rom $output
 if ($LASTEXITCODE -ne 0) { throw 'Source compilation failed' }
 $env:SPRITEMINE_PRIVATE_ROM_ZIP = $rom
-python -m pytest -q
+Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine'
+python -m pytest -q tests/test_world11_source_compiler.py
 if ($LASTEXITCODE -ne 0) { throw 'Regression tests failed' }
 ```
 
@@ -71,7 +72,7 @@ palette inputs are from the same frame and avoids unpacking files manually:
 ```powershell
 Set-Location -LiteralPath 'F:\Dev\ROMMAGE\SOURCE\SpriteMine\tools\m1_world11'
 $rom = 'F:\Dev\ROMMAGE\FIXTURE\SMB3\Super Mario Bros. 3.zip'
-$graphicsZip = 'F:\Dev\ROMMAGE\FIXTURE\SMB3\World11_Frame450840_Graphics.zip'
+$graphicsZip = 'F:\Dev\ROMMAGE\OUTPUT\SMB3\World11M1\World11_Frame450840_Graphics.zip'
 $rgbProfile = 'F:\Dev\ROMMAGE\FIXTURE\SMB3\Palettes\MesenCE_2C02_RGB24.bin'
 $output = Join-Path 'F:\Dev\ROMMAGE\OUTPUT\SMB3\World11M1' ('NativeFrame-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 python .\make_m1_bundle.py $rom $output --frame-graphics-zip $graphicsZip --rgb-profile $rgbProfile
@@ -84,9 +85,10 @@ RAM is 32 bytes. The parser matches each of the four background mapped 1-KiB
 CHR windows to the original ROM, and rejects ambiguous matches. **A single
 frame's mapping is not proof of all columns or animation timing.**
 
-The code is deliberately standalone until integration and review in the
-SpriteMine repository. The owner may use PR #29's compositor on the private
-`scene/recipe.json`. This package does not execute PR #29's full project CI.
+The CLI remains a headless tool in dependent draft PR #31, not yet merged
+into main. The owner may use PR #29's compositor on the private
+`scene/recipe.json`. Public Windows CI tests synthetic inputs; original ROM
+and MesenCE verification are optional private checks only.
 
 ## Evidence and restrictions
 
@@ -98,7 +100,7 @@ SpriteMine repository. The owner may use PR #29's compositor on the private
   [Captain Southbird SMB3 disassembly](https://github.com/captainsouthbird/smb3),
   pinned `09b1bd81a788de8ceec664a34094e84ddb463117`.
 - The original ROM ZIP is **never changed**. No ROM or extracted art is in the
-  source-code ZIP. No source changes have yet been published to GitHub.
+  source-code ZIP. Public implementation is in draft PR #31 (not main).
 - A targeted lower-pipe visual correction was made following the owner's
   MesenCE screenshot. The source's low-nibble+1 pipe-body run is preserved,
   but overlapping body pixels no longer replace already populated Plains
