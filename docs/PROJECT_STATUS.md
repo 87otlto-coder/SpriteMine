@@ -1,6 +1,18 @@
 # SpriteMine project status
 
-**Updated: 2026-11-12.** GitHub is authoritative. This file distinguishes code merged to main from research implemented and checked on other branches.
+**Updated: 2026-11-22 — owner-approved creative production realignment.** GitHub is authoritative. This file distinguishes merged code, unmerged evidence and actual creative outputs.
+
+## CURRENT PRIORITY — compiled World 1-1 animated GIF, not further reverse engineering
+
+SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is a **visually reviewed, playable, seamlessly looping GIF** of a recognizable World 1-1 section, constructed from usable SMB3 assets with independently moving elements and an editable/reproducible composition recipe. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
+
+**Milestone 1 status: NOT YET COMPLETE.** The repository has ROM/CHR extraction and significant accepted rendering research, but **no finished compiled animated World 1-1 stage GIF has been demonstrated or visually accepted**. Do not substitute a screenshot, frame-matched RGB test, hypothetical demo or a report for that file.
+
+**Then:** milestone 2 audio capture/trim/loop/export WAV (music + SFX); milestone 3 reusable asset/project catalog and additional exports; milestone 4 Windows PySide6 UI wrapping proven workflows.
+
+**Relevant unmerged code:** [PRs #21–#25](https://github.com/87otlto-coder/SpriteMine/pull/25) include headless Mario/sprite and World 1-1 background/PPU research. On 2026-11-22 the owner reported **61 local tests passed** on PR #25's accepted implementation and the actual offline verifier returned **13 frames / 638,976 native RGB gameplay pixels / zero mismatches** for a bounded World 1-1 bonus room; prior CPU/CIRAM validation passed 104 frames. These results are genuine but narrow technical evidence, **not a rendered animated stage** and **not merged main features**. Use whichever tested modules shorten the GIF-production path; do not deepen PPU or full-level research without a specific creative blockage. [Static PySide6 PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) is also unmerged and intentionally deferred until the production pipeline is proven.
+
+**Next engineering output:** make the **first complete stage GIF** with a reproducible recipe. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
 
 ## Merged baseline — main
 
@@ -34,12 +46,12 @@ The real graphics observations are supported by locally held source state, captu
 - Research Windows CI migration [PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) and full-Lua syntax follow-up #12 passed hosted Windows and merged into the research base. Graphics #5 and animation #6 inherited the same Windows policy (maintenance PRs #13/#14), preserving synthetic Lua/MMC3/CHR/RGB tests. GUI #4 inherited Windows-only Qt checks (maintenance PR #11) and is mergeable but remains open for remaining native UI acceptance.
 - An old duplicate artifact-policy workflow run is queued even though later authoritative main runs succeeded; do not conflate the stale queue with current main CI failure.
 
-## Next engineering decisions
+## Next engineering decisions (current, supersedes earlier research/UI-first plans)
 
-1. Keep the approved Windows-only CI policy across main, GUI and research branches, with no redundant push+PR runs; already verified on hosted Windows runners.
-2. Complete native PySide6 GUI acceptance in PR #4 before merging to main. The graphics harness and the three-frame animation timeline now share the consolidated research base. Keep the Phase 4 complete walking/jumping-cycle gate open until a real pose transition and full cycle are validated.
-3. Merge the accepted static GUI and research features through reviewable PRs, recording the exact production integration contract.
-4. Continue Phase 4 with a longer deterministic Mario sequence to observe a real pose transition and its held-frame durations; the verified three-frame hold is not a full animation.
-5. Maintain SMB3 scope and original ROM immutability, then integrate sprite inspection, animation exports, level decoding and audio into a usable Windows application.
+1. Build a **headless browse → extract/capture → stage composition → animated-GIF renderer** using existing CHR and native art/frames. Create the smallest recognizable World 1-1 section with a fixed camera and two independent animated objects.
+2. **Open and inspect the actual GIF.** Fix visual issues, alpha, palette and loop seam; preserve a deterministic editable composition recipe, source labels and private output hashes. Milestone 1 is not done until this is successful.
+3. Start **music/SFX audio extraction** only after stage GIF acceptance; deliver playable WAV outputs and a looped music example.
+4. Build reusable asset/project organization from proven creative exports; then finish native GUI acceptance/integration for PR #4 and build the Windows application.
+5. Keep Windows-only CI, source immutability and copyright safeguards. Review/test and integrate only the useful portions of unmerged research PRs #21–#25. New deep ROM/PPU research requires a specific GIF/audio output blocker and a smaller alternative check.
 
 See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
