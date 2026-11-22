@@ -91,3 +91,24 @@ Recorder Lua SHA-256:
 Complete source fingerprints and independent comparison hashes are in each
 private report; sources were rehashed after capture. No captures, ROMs or states
 are committed or uploaded to CI. Commands and limits: [runbook](MESENCE_FLIGHT_RECORDER.md).
+
+## Cross-check against known main-area pipe commits
+
+Reused the completed default and burst A/B/A recording sessions and the
+independent PPU commit evidence from PR #29. Both recording modes produced
+the same snapshot deltas for the two intervals containing the six known
+pipe pattern and attribute commits.
+
+| End-of-frame snapshot interval | Known commits | Changed CIRAM bytes | Changed mapped PPU bytes | Changed palette RAM bytes |
+| --- | ---: | ---: | ---: | ---: |
+| 450146–450176 | 5 | 217 | 434 | 0 |
+| 450176–450206 | 1 | 65 | 130 | 0 |
+
+The intervals also contain other writes. Diff totals measure changes between
+snapshots and mapped PPU bytes can include aliases. The attribute commits
+target CIRAM, so unchanged palette RAM is compatible with these writes.
+The one-frame bursts near this window ran at 450147, 450177 and 450207.
+None coincided with a verified commit. The default snapshots therefore
+bracket the updates, while the targeted PPU trace supplies exact write
+timing and attribution. This check uses archived sessions and launches
+no new replay.
