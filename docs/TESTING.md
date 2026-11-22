@@ -48,3 +48,17 @@ The stock Lua 5.4.8 Windows research mock suite and Windows 3.11/3.12 Python job
 Follow docs/ACTIONS_INCIDENT_2026-11-11.md and AGENTS.md before changing or triggering hosted workflows. Never publish ROM data, capture buffers or private assets. Keep source hashes, decoder versions, offsets, MMC3 mapper state, frame/scanline indices, save-state SHA, emulator build and controller input history when evaluating real SMB3 output.
 
 For unresolved cases (sprite priority, per-scanline CHR fetch, sprite limits, transparency behind moving backgrounds, complete animation durations, GUI interaction), mark them not tested or unsupported rather than implicitly passing them.
+
+## Creative export acceptance (active milestone 1; owner pivot 2026-11-22)
+
+**This overrides the old interpretation that more emulator/PPU research is the next acceptance step.** A passing unit suite is not evidence of a usable animated wallpaper. Before declaring the World 1-1 animated stage milestone complete:
+
+1. Generate actual PNG frame previews and a **GIF file** from a headless browse/extract-or-capture/compose/animate/export command. The output must contain a recognizable stage **section**, static scene layers and at least two independently animated elements.
+2. **Open/view the final GIF** (or review frame-by-frame and the actual loop playback) to check palette accuracy, clean alpha edges, placement/foreground ordering, independent timing, fixed camera, flicker/blank frames and the last-to-first loop seam. Repair visual defects; do not settle for an arbitrary successful encoder exit.
+3. Rebuild the GIF from the same editable recipe and extracted/captured source assets. Record source ROM hash, asset source classes (`raw/captured/decoded/composed-edited`), input file hashes, generator version, frame timing, output path and resulting SHA-256. A changed artifact hash requires investigation, not an automatic claim of deterministic equality.
+4. Keep the game-derived PNG/GIF/JSON project, screenshots and QA previews **private** under `F:\Dev\ROMMAGE\OUTPUT`, source ROM/save states under `FIXTURE` and reports under `REPORTS`. **Never upload copyrighted rendered GIFs or raw captured game artwork to public GitHub or Actions**.
+5. Report the produced files, playback/inspection evidence, remaining defects and acceptance state. Milestone 1 is **not complete** if it only generated a report, contact sheet, still screenshot, synthetic test data or ROM forensic evidence.
+
+For Milestone 2, require actual playable music and SFX exports, documented trim/loop selection and listening checks; music disassembly is not a requirement.
+
+Refer to [product direction](PRODUCT_DIRECTION.md), [creative milestone roadmap](ROADMAP.md) and [AGENTS.md](../AGENTS.md) before adding another capture/ROM investigation gate. Technical research should fix a specific visual/audio output blocker rather than expand coverage for its own sake.
