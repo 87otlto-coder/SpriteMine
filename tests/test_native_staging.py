@@ -7,7 +7,7 @@ from PIL import Image
 
 from spritemine.native_staging import COLUMNS, import_staging
 from spritemine.scene import Scene
-from spritemine.scene_coverage import coverage, inspection
+from spritemine.scene_coverage import acceptance, coverage, inspection
 from spritemine.scene_export import export
 
 
@@ -72,6 +72,38 @@ def test_native_staging_to_scene_exports_and_coverage(tmp_path):
     assert failed["samples"][0]["mismatched_pixels"] == 64
     assert failed["rows"][26][3]["mismatch_bounds_ticks"] == [0]
     assert "026 ???+" in inspection(report)
+
+    black = Image.new("RGB", (16, 16))
+    black.save(tmp_path / "black.png")
+    spec = json.loads(refs.read_text())
+    spec["checks"].append({
+        **spec["checks"][0], "file": "black.png",
+        "anchor": {"capture": [0, 0], "world": [32, 416]},
+    })
+    spec["checks"].append({
+        **spec["checks"][0], "file": "black.png", "crop": [0, 0, 1, 1],
+    })
+    refs.write_text(json.dumps(spec))
+    mixed = coverage(recipe, refs)
+    assert mixed["samples"][1]["mismatched_pixels"] == 0
+    assert mixed["rows"][26][2]["matched_ticks"] == []
+    assert mixed["rows"][26][3]["matched_ticks"] == []
+    gate = acceptance(mixed, [0])
+    assert gate == {
+        "cells": 432, "unresolved_cells": 405, "unverified_cells_by_tick": {0: 432},
+        "passed": False,
+    }
+
+    single = json.loads(recipe.read_text())
+    single["size"] = [16, 16]
+    single["layers"] = [{"tiles": [[single["layers"][0]["tiles"][26][3]]]}]
+    single_recipe = recipe.with_name("single.json")
+    single_recipe.write_text(json.dumps(single))
+    refs.write_text(json.dumps({"checks": [{
+        **spec["checks"][0], "anchor": {"capture": [0, 0], "world": [0, 0]},
+    }]}))
+    assert acceptance(coverage(single_recipe, refs), [0])["passed"]
+    assert not acceptance(coverage(single_recipe, refs), [0, 1])["passed"]
 
     with log.open("a", encoding="ascii", newline="") as out:
         writer = csv.writer(out, delimiter="\t")

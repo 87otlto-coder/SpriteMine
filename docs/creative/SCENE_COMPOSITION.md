@@ -284,3 +284,14 @@ in this native-to-native comparison. Frame 450180 also matches at X 209,
 but occurs in the final attribute commit frame, so use 450181 or later
 for an unambiguous post-commit reference. This establishes reference
 alignment and consistency. Independent compositor RGB remains untested.
+
+Pass `--require-complete-tick 0` to enforce full tile coverage and
+matching references for the static scene. Repeat the option for other ticks
+that need acceptance. The command still writes both reports on failure and
+returns status 1. A cell needs tile coverage across its entire area and
+matching reference crops across its entire area on the requested tick.
+Clear-color matches in unresolved regions do not qualify. If a mismatch
+bounding box intersects the same cell on the same tick, the cell stays
+unverified even when another reference matches it. This gate checks the
+declared canvas and ticks. Compare those against the milestone scope before
+treating a pass as acceptance of the entire level.
