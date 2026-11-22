@@ -190,7 +190,7 @@ def default_recipe()->dict:
     return {
       'recipe_version':1,'project':'SpriteMine M1 — World 1-1 Creative Stage Loop',
       'source_class':'composed/edited','not_native_level_layout':True,
-      'width':512,'height':288,'scale':2,'frames':48,'frame_duration_ms':83,
+      'width':512,'height':288,'scale':2,'frames':48,'frame_duration_ms':80,
       'stage':{'ground_y':208,'dirt_tile_ids':[0x7A,0x7B],
                'captured_pipe':{'x':328,'bottom_y':208},
                'small_pipe':{'x':432,'bottom_y':208,'height':36},
