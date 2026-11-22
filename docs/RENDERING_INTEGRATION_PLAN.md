@@ -11,7 +11,7 @@ Primary milestone remains **Super Mario Bros. 3 USA PRG1 / Revision A**. The cur
 | NES player / mask research | PR #21: 81 recipes, selected canonical poses, 7,528 distinguishable pipe-mask pixels and 864-byte logical bonus map | Selected OAM poses/pipe route only; unmerged |
 | Source-to-CPU background staging | PR #22/#23: 32 pattern + 32 attribute strips; 2,176 bytes match native | Selected first-entry Plains bonus room; unmerged |
 | CPU writes to physical CIRAM | PR #24: owner Windows `passed: true`, 51 tests, 104 frames and zero physical discrepancies | End-frame memory states, not per-dot PPU timing; unmerged |
-| World 1-1 bonus gameplay background | PR #25: private independent prototype matched 13 × 256 × 192 = 638,976 exact RGB pixels; fetch-time MMC3 pages sourced from native register writes | The newly committed CLI still requires owner offline Windows acceptance; HUD and OAM remain separate |
+| World 1-1 bonus gameplay background | PR #25: original-ROM model AND owner's committed CLI matched 13 × 256 × 192 = 638,976 exact RGB pixels, zero differences; fetch-time MMC3 pages derived from native register writes | Accepted for the bounded gameplay viewport; HUD and OAM remain separate; unmerged |
 | Initial CHR desktop explorer | PR #4: runnable PySide6 ROM/bank/tile viewer; owner previously opened bank 0, tile 19 | Additional Windows interaction/exports/error cases pending |
 | Integrated usable Windows app | Not achieved | No consolidated navigation, editor, audio, catalog or installer |
 
