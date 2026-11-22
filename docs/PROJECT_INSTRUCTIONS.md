@@ -22,6 +22,12 @@
 
 ## Synchronization
 
+Optional supporting utility (2026-11-22): `research/mesence/flight_recorder.lua`
+and its Python launcher capture bounded passive NES runtime evidence. See
+`docs/research/MESENCE_FLIGHT_RECORDER.md` and its validation note. Keep it separate
+from extraction/composition; it does not replace creative deliverables or
+require deeper game-mechanics research.
+
 This text is a maintained **GitHub copy** for the ChatGPT Project Settings field; updating GitHub does **not automatically change** the ChatGPT project's existing settings. The project owner may paste the block above into the project's instructions field if needed. Every future assistant should consult the current repository first and treat the product direction in AGENTS.md as authoritative over old project text.
 
 Follow [AGENTS.md](../AGENTS.md) for GitHub Actions storage, Windows-only CI, incident safeguards and artifact retention rules. Preserve historical research evidence but stop extending it unless the creative output is blocked.
