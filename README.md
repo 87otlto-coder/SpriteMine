@@ -1,6 +1,23 @@
-# SpriteMine
+# SpriteMine — Creative Asset Workbench
 
-**SMB3 first.** SpriteMine is a Windows-first tool for inspecting, reconstructing, and eventually exporting audiovisual resources from **Super Mario Bros. 3 (US PRG1 / Revision A)**. The project is still under active development; the integrated desktop milestone is not finished.
+**Project direction changed 2026-11-22.** SpriteMine is a **Windows-first creative toolkit for browsing, extracting/capturing, compiling, animating and exporting** visual and audio assets from classic games. The first and only active target is **Super Mario Bros. 3 (US PRG1 / Revision A)**.
+
+**We are building usable wallpapers, stage GIFs, sprites and audio — not reverse engineering the game exhaustively.** Source-accurate ROM research supports creative output only when necessary.
+
+**Active first milestone: produce a real, smoothly looping, compiled World 1-1 animated stage GIF from reusable extracted/captured components.** Work headlessly with contact sheets/CLI/JSON recipes and inspect the real GIF before starting the audio milestone. **The desktop interface follows the proven headless creative workflows**, rather than preceding them.
+
+**For every new development chat, read:** [AGENTS.md](AGENTS.md) → [product mission](docs/PRODUCT_DIRECTION.md) → [creative milestones](docs/ROADMAP.md) → [status](docs/PROJECT_STATUS.md). This 2026-11-22 decision **supersedes old research-first and full-level-decoding-first instructions** in historical research PRs and discussions.
+
+## Current production milestones
+
+| Order | Output | Status |
+| --- | --- | --- |
+| 1 | **Compiled World 1-1 stage GIF**, seamless loop, ≥2 independently animated objects, editable composition recipe | **Active; not yet delivered** |
+| 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | Pending after M1 |
+| 3 | Browseable/reusable asset projects and further animation/wallpaper exports | Pending |
+| 4 | Usable **Windows PySide6** creative app over working pipelines | Pending |
+
+**Completion is measured by actual playable/visible/audible exports and QA, not by tests, emulator internals understood, or number of decoded game mechanics.**
 
 ## What is actually on main
 
@@ -12,7 +29,7 @@ The currently merged foundation provides:
 
 **Not yet integrated into main:** PySide6 static CHR browser (PR #4), MesenCE graphics research harness (PR #5, merged into the research base; not integrated into main), contiguous animation timeline (PR #6, merged into research; not main), complete Sprite Inspector, level decoding, audio workbench, asset catalog and Windows installer. These features must not be presented as merged merely because they work on research branches.
 
-## Research that has already been validated
+## Historical research evidence (reusable, not the roadmap)
 
 Research PR #5 documents three real SMB3 MesenCE slot-1 A/B/A replay samples, each with the complete 16x16 Mario region matched against the default 2C02 palette and an independent sprites-disabled background (256/256 pixels for standing, walking-right and rising jump). These **three sampled poses** are not exhaustive actor coverage.
 
@@ -20,13 +37,17 @@ Research PR #6 documents a consecutive three-frame capture (emulator frames 4483
 
 These findings require local, licensed game data. Original ROMs, save states, screen buffers and extracted graphics must never be committed to GitHub.
 
+**Latest accepted research outside `main`:** stacked draft [PRs #21–#25](https://github.com/87otlto-coder/SpriteMine/pull/25) have validated selected player/World 1-1 bonus-room structures. At PR #25 implementation commit `a462499`, owner Windows testing reported **61 passed** and a successful **13-frame × 256×192 = 638,976-pixel native bonus-background RGB match** with zero mismatches. These are genuine but **narrow research results**, not a finished GIF or an integrated application. Reuse their components selectively for M1 instead of repeating CPU/PPU investigations. See [technical acceptance](https://github.com/87otlto-coder/SpriteMine/blob/feature/smb3-world11-visible-background/docs/research/SMB3_VISIBLE_BACKGROUND_NATIVE_GATE.md).
+
 ## Windows development workspace
 
 Canonical project root is F:\Dev\ROMMAGE:
 
 - SOURCE — Git repositories, SpriteMine package, development code and documentation.
 - TOOLS — MesenCE emulator and supporting research utilities.
-- FIXTURE — immutable ROMs, save states, frame captures, validation evidence and generated game-asset previews.
+- FIXTURE — immutable ROMs, save states, frame captures and private validation evidence.
+- OUTPUT — generated GIFs, wallpapers, audio, contact sheets and editable creative projects.
+- REPORTS — local output-quality checks, asset inventories and reproducibility summaries.
 
 Primary production checkout: F:\Dev\ROMMAGE\SOURCE\SpriteMine. The owner also uses separate research checkouts; their branch and path are explicitly documented in the applicable research runbook.
 
@@ -79,3 +100,5 @@ GitHub Actions policy is **Windows-only** following the 11 November incident. Ne
 - [Windows testing guidance](docs/TESTING.md)
 - [Research log](docs/RESEARCH_LOG.md)
 - [Engineering instructions](AGENTS.md)
+- [Current creative product direction](docs/PRODUCT_DIRECTION.md)
+- [Milestone 1 animated stage GIF plan](docs/ROADMAP.md)
