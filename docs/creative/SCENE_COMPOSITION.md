@@ -136,3 +136,23 @@ reference frames record PPU coordinates (8, 239) at start, in base nametable
 0. That gives the hardware fetch origin but supplies no mapping to the
 main area's world coordinates. A world comparison needs a verified world
 anchor or camera origin from the corresponding capture.
+
+### Bounded World 1-1 main-area reference alignment
+
+The native screen-8 checkpoint places the upper pipe mouth at columns
+141–142, row 7. The top-left corner maps to world (2256, 112) at 16 pixels
+per logical tile. Independent inspection of the private replay RGB frames
+located the left corner of its 32-pixel top edge at capture (106, 112) in
+frame 450778 and at (108, 112) in frame 450840. The resulting world
+origins are (2150, 0) and (2148, 0), respectively. The sampled PPU
+start-state fine X shifts by two pixels in the same direction as the
+inferred camera motion. Both frames precede the bonus-room junction.
+
+Use scanlines 0–191 as a conservative comparison crop. This inspection
+does not establish an exact main-area HUD split or a vertical scroll
+transition. A separate rerun of the existing pipe-mask verifier on private
+paired captures matched all 7,528 eligible overlap samples. That comparison
+tests the native mask model and is independent of the scene compositor.
+The main-area world anchors can align a future comparison with an
+independently supplied scene. They do not establish scene pixel fidelity
+or coverage outside the sampled pipe.
