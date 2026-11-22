@@ -14,21 +14,13 @@ This direction supersedes the research-first / full-level-decoder-before-UI inte
 
 Every development sprint must advance a working output on this path. Prefer incremental, playable deliverables over expanding explanation of game internals. Headless CLIs, contact sheets and HTML previews are acceptable before the desktop UI.
 
-### Milestone 1 — Compiled animated SMB3 stage GIF (FIRST; active)
+### Milestone 1 — complete World 1-1 main-area panoramic animation (FIRST; active)
 
-Build a headless stage-production pipeline and deliver **one recognizable, visually convincing, seamlessly looping World 1-1 stage section as an actual GIF**. Reuse the verified ROM/CHR and background research where helpful. The composition **does not need to be a byte-for-byte representation of a complete in-game level**; manual layer placement, captured scenery, native decoded tiles, and artist-added timing/effects may coexist with explicit provenance.
+Owner's 2026-11-22 acceptance now requires **the entirety of main World 1-1 as one coherent two-dimensional scene**. The 11×16 logical columns by 27 logical rows give a **nominal 2,816×432 source-coordinate canvas**, though camera offsets and the gameplay/HUD split must be verified. A recognizable subsection or 12-panel animation contact sheet does not pass.
 
-Minimum workflow:
-- **Browse** source graphics and candidate animated elements via existing CHR/asset listing, contact sheets or lightweight preview; the browse path must make useful assets discoverable, not depend on knowing ROM offsets in advance.
-- **Extract/capture** the needed background, foreground, tiles or animation frames with correct colors, transparency, placement and provenance. Prefer the shortest practical method; no complete game simulation prerequisite.
-- **Compile** a stable, fixed-camera stage **section** in editable project data (JSON recipe or comparable), arranging independently controlled layers and objects. Do **not** require full World 1-1 object-generator decoding.
-- **Animate** at least two independently timed or positioned elements (e.g. a question block/coin, an enemy, or another suitable visible effect). Use real captured/decoded frames where feasible, label any constructed or artist-edited movement, and avoid accidental background contamination.
-- **Export** a playable GIF and source/edit recipe to private local output; preview actual frames and the loop. First output may have a deliberately bounded scene rather than a panoramic complete stage.
+**Production sequence:** source-grounded static main map across both X and Y → correct and audit ROM/captured ground, clouds, pipes, blocks, foreground/background, palette, crops and joins → add independent animations to genuinely placed objects → optionally include Mario **once** (default omitted) → add enemy layer **last** using known source placement research. The separate bonus room is a linked, independently exportable scene, not extra main-stage width.
 
-**Acceptance:** an actual GIF opens and plays; its first-to-last loop transition is visually seamless, layer alignment/transparency/colors are convincing, background does not unexpectedly scroll/flicker, moving elements animate independently, and the composition can be regenerated deterministically from the same assets, recipe and tool versions. Preserve the GIF, recipe, asset manifest, a small visual QA report and hashes under private local folders. **Passing unit tests or producing only a screenshot, synthetic animation, JSON plan or technical report does not complete Milestone 1.** Review and iterate on the rendered GIF before marking the milestone done.
-
-No PySide6 interface build or audio sprint is required before the GIF passes.
-
+**Acceptance:** full native scene without repeated placeholder vignettes, visible texture/crop/placement errors or lost vertical regions; full-scene looping GIF, fixed scenery, authentic/clearly labelled motion, editable deterministic recipe, accurate source/capture provenance and screen/row visual QA. Use targeted capture or decoding to fix concrete visual errors; do not require full gameplay reimplementation or expand UI/audio yet. See [full-level acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md).
 ### Milestone 2 — Practical SMB3 audio extraction
 
 After the animated-stage GIF is accepted, capture or extract representative SMB3 music and sound effects, browse/listen, trim and choose loop boundaries, and export useful **WAV** files (FLAC where straightforward), with playback verification and source/time metadata. Native music sequence decoding, complete APU reverse engineering and every sound identity are optional research, **not prerequisites**.

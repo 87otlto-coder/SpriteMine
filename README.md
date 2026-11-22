@@ -12,7 +12,7 @@
 
 | Order | Output | Status |
 | --- | --- | --- |
-| 1 | **Compiled World 1-1 stage GIF**, seamless loop, ≥2 independently animated objects, editable composition recipe | **Active; not yet delivered** |
+| 1 | **Full 11-screen × 27-row main World 1-1 panorama + animated GIF**, accurate 2D geometry, graphics and source placement, no texture defects | **Active; PR #27 is a bounded creative prototype, not accepted M1** |
 | 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | Pending after M1 |
 | 3 | Browseable/reusable asset projects and further animation/wallpaper exports | Pending |
 | 4 | Usable **Windows PySide6** creative app over working pipelines | Pending |

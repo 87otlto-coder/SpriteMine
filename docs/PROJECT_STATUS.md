@@ -4,17 +4,17 @@
 
 **Updated: 2026-11-22 — owner-approved creative production realignment.** GitHub is authoritative. This file distinguishes merged code, unmerged evidence and actual creative outputs.
 
-## CURRENT PRIORITY — compiled World 1-1 animated GIF, not further reverse engineering
+## CURRENT PRIORITY — complete 2D World 1-1 static panorama, then full-scene animated GIF
 
-SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is a **visually reviewed, playable, seamlessly looping GIF** of a recognizable World 1-1 section, constructed from usable SMB3 assets with independently moving elements and an editable/reproducible composition recipe. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
+SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is a **full 11-screen × 27-row main World 1-1 static panorama** correctly assembled in both world X and Y, followed by a **playable, seamlessly looping GIF** of that same world with independently animated correctly placed objects. Mario is omitted by default or appears once; enemies are last. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
 
-**Milestone 1 status: NOT YET COMPLETE.** The repository has ROM/CHR extraction and significant accepted rendering research, but **no finished compiled animated World 1-1 stage GIF has been demonstrated or visually accepted**. Do not substitute a screenshot, frame-matched RGB test, hypothetical demo or a report for that file.
+**Milestone 1 status: NOT COMPLETE.** Unmerged [PR #27](https://github.com/87otlto-coder/SpriteMine/pull/27) produced a real artist-composed 48-frame 1024×576 prototype GIF using selected ROM graphics and captures, with deterministic regeneration and hosted Windows synthetic tests, but **not the complete native stage**. The contact sheet shows time samples, not successive world positions. The exact 2,816×432 source-model panorama, authentic all-region scenery, per-row vertical coverage and full-level GIF **have not been produced or validated**.
 
 **Then:** milestone 2 audio capture/trim/loop/export WAV (music + SFX); milestone 3 reusable asset/project catalog and additional exports; milestone 4 Windows PySide6 UI wrapping proven workflows.
 
 **Relevant unmerged code:** [PRs #21–#25](https://github.com/87otlto-coder/SpriteMine/pull/25) include headless Mario/sprite and World 1-1 background/PPU research. On 2026-11-22 the owner reported **61 local tests passed** on PR #25's accepted implementation and the actual offline verifier returned **13 frames / 638,976 native RGB gameplay pixels / zero mismatches** for a bounded World 1-1 bonus room; prior CPU/CIRAM validation passed 104 frames. These results are genuine but narrow technical evidence, **not a rendered animated stage** and **not merged main features**. Use whichever tested modules shorten the GIF-production path; do not deepen PPU or full-level research without a specific creative blockage. [Static PySide6 PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) is also unmerged and intentionally deferred until the production pipeline is proven.
 
-**Next engineering output:** make the **first complete stage GIF** with a reproducible recipe. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
+**Next engineering output:** a source-grounded **2,816×432 nominal full X/Y static main World 1-1 panorama** (no Mario/enemies) with vertical coverage, completeness and texture audits; then coherent animation and enemies last. The 15 `W101O` source entries are known from November 16 research, but have not been connected to the creative GIF composer. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
 
 ## Merged baseline — main
 
@@ -48,12 +48,11 @@ The real graphics observations are supported by locally held source state, captu
 - Research Windows CI migration [PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) and full-Lua syntax follow-up #12 passed hosted Windows and merged into the research base. Graphics #5 and animation #6 inherited the same Windows policy (maintenance PRs #13/#14), preserving synthetic Lua/MMC3/CHR/RGB tests. GUI #4 inherited Windows-only Qt checks (maintenance PR #11) and is mergeable but remains open for remaining native UI acceptance.
 - An old duplicate artifact-policy workflow run is queued even though later authoritative main runs succeeded; do not conflate the stale queue with current main CI failure.
 
-## Next engineering decisions (current, supersedes earlier research/UI-first plans)
+## Next engineering decisions
 
-1. Build a **headless browse → extract/capture → stage composition → animated-GIF renderer** using existing CHR and native art/frames. Create the smallest recognizable World 1-1 section with a fixed camera and two independent animated objects.
-2. **Open and inspect the actual GIF.** Fix visual issues, alpha, palette and loop seam; preserve a deterministic editable composition recipe, source labels and private output hashes. Milestone 1 is not done until this is successful.
-3. Start **music/SFX audio extraction** only after stage GIF acceptance; deliver playable WAV outputs and a looped music example.
-4. Build reusable asset/project organization from proven creative exports; then finish native GUI acceptance/integration for PR #4 and build the Windows application.
-5. Keep Windows-only CI, source immutability and copyright safeguards. Review/test and integrate only the useful portions of unmerged research PRs #21–#25. New deep ROM/PPU research requires a specific GIF/audio output blocker and a smaller alternative check.
-
+1. Build **complete static main World 1-1** across world X and Y, not a repeated scenic section, using existing original-ROM layout findings and legitimate captures. Identify missing tiles or RNG/cloud state explicitly.
+2. Remove synthetic art and incorrect crops; validate the entire scene against emulator views at multiple camera/vertical positions, with HUD excluded.
+3. Animate correctly placed scene objects, keep the world stationary, allow Mario none or one, and inspect the exported full-scene GIF.
+4. **Last:** add enemies from the already-documented `W101O` source object placements and validate images/motion; do not infer simultaneous visibility from source records.
+5. Preserve private ROM/capture/output custody, Windows-only CI, provenance and accepted evidence; no audio or UI before visual M1 acceptance.
 See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
