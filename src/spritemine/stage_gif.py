@@ -300,6 +300,20 @@ def encode_gif(frames:list[Image.Image],rgb_colors:list[tuple[int,int,int]],ms:i
     indexed[0].save(out,save_all=True,append_images=indexed[1:],duration=ms,loop=0,optimize=False,disposal=2)
 
 
+def write_metatile_atlas(art:Art, path:Path)->None:
+    """Browsable original Plains 16x16 graphics, with source tile IDs for recipes."""
+    cell_w,cell_h=46,52
+    sheet=Image.new('RGB',(16*cell_w,16*cell_h),(34,39,45))
+    draw=ImageDraw.Draw(sheet)
+    for index in range(256):
+        x=(index%16)*cell_w
+        y=(index//16)*cell_h
+        tile=art.metatile(index).resize((40,40),Image.Resampling.NEAREST)
+        sheet.paste(tile.convert('RGB'),(x+3,y+2))
+        draw.text((x+13,y+43),f'{index:02X}',fill=(255,255,255))
+    sheet.save(path)
+
+
 def build(rom_path:Path,capture_path:Path,palette_path:Path,outdir:Path,recipe_path:Path|None=None)->dict:
     outdir.mkdir(parents=True,exist_ok=True)
     recipe=(json.loads(recipe_path.read_text(encoding='utf-8')) if recipe_path else default_recipe())
@@ -313,6 +327,7 @@ def build(rom_path:Path,capture_path:Path,palette_path:Path,outdir:Path,recipe_p
     with CaptureSource(capture_path) as archive:
         capture_fingerprint=archive.fingerprint()
         art=Art(rom,archive,colors)
+        write_metatile_atlas(art,outdir/'World11_Source_Metatiles.png')
         scene=bg_scene(art,recipe)
         frames=[draw_frame(art,recipe,scene,i) for i in range(recipe['frames'])]
     gifpath=outdir/'World11_Stage_Loop.gif'
@@ -343,6 +358,7 @@ def build(rom_path:Path,capture_path:Path,palette_path:Path,outdir:Path,recipe_p
       'capture_frames_used':[SAMPLE_FRAME,450778,450786,450881],
       'plains_quadrants_sha256':QUAD_SHA,'chr_pages_1k_used':art.pages,
       'rgb_profile_sha256':sha(palette_path.read_bytes()),
+      'browse_contact_sheet':'World11_Source_Metatiles.png',
       'gif':gifpath.name,'gif_sha256':sha(gifpath.read_bytes()),
       'gif_frames':count,'loop_count':loop,'frame_duration_ms':durations[0],
       'frame_dimensions':[recipe['width']*recipe['scale'],recipe['height']*recipe['scale']],
