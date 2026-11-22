@@ -1,6 +1,6 @@
 # SMB3 PRG1 — Native bonus-room background RGB gate
 
-**2026-11-22 status: original-ROM private archive independently analyzed; code and synthetic CI in draft PR #25. A new owner Windows run of the final CLI is pending.**
+**2026-11-22 acceptance: PASS for the bounded World 1-1 bonus gameplay background — original-ROM private archive and owner's Windows execution of the committed verifier agree. PR #25 remains draft and unmerged pending integration review.**
 
 ## Exact scope and baseline
 
@@ -88,12 +88,47 @@ This downloads **only public MesenCE GPLv3 source** to `TOOLS`; ROM and capture 
 Expected result if the committed model matches the independent prototype:
 **13 frames × 49,152 = 638,976 compared pixels, 0 differences**. The private Windows CLI result is **not** represented as having happened until its output is supplied. No new emulator replay is needed.
 
+## Accepted owner Windows verification — 2026-11-22
+
+The owner ran the committed `feature/smb3-world11-visible-background`
+at exact commit `a4624992cb7915945de46e855fd3cdcd98bf3b56` on Windows
+PowerShell 5.1. The clean validation worktree
+`F:\Dev\ROMMAGE\SOURCE\SpriteMine-Background-Validation` executed
+**61 passed, 0 failed, 0 skipped** local private-ROM pytest tests in
+1.33 seconds.
+
+The owner then invoked `verify_visible_background.py` against the
+existing preserved private native A/B/A replay and pinned local MesenCE
+default 2C02 palette source. The **official verifier returned**
+`passed: true`, **`sampled_frames: 13`**,
+**`compared_pixels: 638976`**, and **`mismatches: 0`**.
+
+Exact accepted frame subset: **450869–450881**, inclusive;
+**256 × 192** gameplay pixels per frame. Native report is stored privately:
+`F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw\visible-background-verification.json`.
+The owner's console output establishes these results. The private
+JSON, ROM, captured RGB, PPU state, and third-party palette source
+are **not** committed to the public repository.
+
+This result is a real end-to-end **original-ROM CHR + MMC3 register-derived
+CHR mapping + physical CIRAM + scroll + palette → exact native RGB**
+acceptance for the stated viewport. It is **not** a claim of sprite
+composition, HUD scanlines 192–239, within-scanline PPU cycle timing,
+other level sections, or full application functionality.
+
+Hosted [Windows CI run 44959428665](https://github.com/87otlto-coder/SpriteMine/actions/runs/44959428665)
+also passed Python 3.11 and 3.12, **57 public tests passed / 4
+private-fixture skips per version**. Hosted CI is not the native
+emulator evidence; the owner's preserved private replay provides that.
+
+The CLI run described in the preceding reproduction block has now been
+executed successfully; the block remains a reproducibility recipe.
+
 ## Explicit remaining gates
 
-1. Validate exact pipeline CLI and preserve the result with source fingerprints.
-2. Complete HUD rendering: IRQ-switched MMC3 CHR, scroll/nametable state and pixels at scanlines 192–239.
-3. Validate sprite/OAM occlusion and blending against the reconstructed background where sprites are visible; avoid counting invisible/ambiguous sprites.
-4. Generalize only to the *main World 1-1 level*, with deterministic scrolling and level generator state, then show a usable Qt inspector/export flow.
-5. Review/merge existing stacked PRs and native CHR browser PR #4 after tests; do not mark unmerged research as finished product functionality.
+1. Complete HUD rendering: IRQ-switched MMC3 CHR, scroll/nametable state and pixels at scanlines 192–239.
+2. Validate sprite/OAM occlusion and blending against the reconstructed background where sprites are visible; avoid counting invisible/ambiguous sprites.
+3. Generalize only to the *main World 1-1 level*, with deterministic scrolling and level generator state, then show a usable Qt inspector/export flow.
+4. Review/merge existing stacked PRs and native CHR browser PR #4 after tests; do not mark unmerged research as finished product functionality.
 
 No audio, other NES games or speculative whole-ROM recognition is part of this increment.
