@@ -255,3 +255,12 @@ That size covers two logical screens, leaving the logical tile IDs for these
 main-area columns out of the per-event snapshots. The current importer
 therefore cannot establish their logical palette assignments or accept this
 capture as a complete main-area map.
+
+A follow-up replay over frames 450155–450178 added a passive 27-byte
+logical-column read at each main-area pattern event. A/B/A neutrality
+passed. Both halves agreed on logical IDs for columns 140–143. For pipe
+columns 141 and 142, the existing ROM quadrant model matched all 216
+staged pattern bytes. The two adjacent attribute pairs (140,141) and
+(142,143) matched all 28 staged attribute bytes using the logical
+palette model. These are CPU staging comparisons. PPU commit and
+final RGB equivalence for these columns remain separate checks.
