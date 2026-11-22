@@ -12,12 +12,20 @@
 
 | Order | Output | Status |
 | --- | --- | --- |
-| 1 | **Compiled World 1-1 stage GIF**, seamless loop, ≥2 independently animated objects, editable composition recipe | **Active; not yet delivered** |
+| 1 | **Compiled World 1-1 stage GIF**, seamless loop, ≥2 independently animated objects, editable composition recipe | **First playable creative GIF produced from private ROM + capture; owner Windows acceptance pending** |
 | 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | Pending after M1 |
 | 3 | Browseable/reusable asset projects and further animation/wallpaper exports | Pending |
 | 4 | Usable **Windows PySide6** creative app over working pipelines | Pending |
 
 **Completion is measured by actual playable/visible/audible exports and QA, not by tests, emulator internals understood, or number of decoded game mechanics.**
+
+## First working headless creative stage prototype — M1 (2026-11-22)
+
+This **feature branch, not merged `main`**, includes `src/spritemine/stage_gif.py`, which browses all 256 original Plains graphics as a numbered contact sheet, extracts selected original-ROM tiles and captured Mario/coin/pipe artwork from the existing private MesenCE replay, compiles artist-arranged layers, animates independent objects and exports a **48-frame 1024×576 looping GIF**, preview, editable recipe and QA manifest.
+
+A **real GIF was generated and decoded** in the private development environment using the owner's original SMB3 PRG1 input, visually reviewed via its preview and 12-frame contact sheet, and reproducibly rebuilt with identical SHA-256. Native owner Windows F: playback/regeneration still needs review; **M1 is not fully accepted**.
+
+See [M1 creative GIF evidence and exact Windows command](docs/creative/SMB3_WORLD11_STAGE_GIF_M1.md). The creative scene is not the original native stage object list. No copyrighted ROM, screenshots, captured art or rendered GIF is committed to public GitHub.
 
 ## What is actually on main
 
