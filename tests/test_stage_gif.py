@@ -124,3 +124,13 @@ def test_independent_animation_changes_frames_without_mutating_scene():
     mx=r['mario']['anchor_x']; my=r['mario']['feet_y']-8
     assert a.getpixel((mx,my))!=c.getpixel((mx,my))  # Mario pose changed
     assert a.tobytes()!=b.tobytes()
+
+
+def test_browse_contact_sheet_exposes_all_256_plains_metatiles(tmp_path):
+    from spritemine.stage_gif import write_metatile_atlas
+    path=tmp_path/'browse.png'
+    write_metatile_atlas(FakeAssets(),path)
+    with Image.open(path) as sheet:
+        assert sheet.size==(16*46,16*52)
+        assert sheet.mode=='RGB'
+    assert path.stat().st_size>5000
