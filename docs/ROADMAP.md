@@ -1,22 +1,37 @@
-# SMB3-first roadmap and acceptance checks
+# SpriteMine — Creative Production Roadmap (owner realignment: 2026-11-22)
 
-Status is recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md). Work remains **SMB3 PRG1 / Revision A only**.
+**North star:** browse SMB3 resources, extract/capture usable assets, **compile and animate compositions**, preview real results and export wallpapers, animations and audio. Deliver **finished creative files** before deepening ROM reconstruction. See [product direction](PRODUCT_DIRECTION.md) and [AGENTS.md](../AGENTS.md).
 
-| Phase | Deliverable | Demonstrable acceptance |
-|---|---|---|
-| 0. Foundation | ROM parser, 2bpp CHR export, tests | Correct user ROM hashes; 16 bank images / 8,192 tiles; deterministic offsets; CI |
-| 1. Emulator feasibility | Replaceable capture adapter proof | At a reproducible frame, captured OAM/palettes/CHR mapping agree with actual output; state + input replay works |
-| 2. Static explorer | PySide6 ROM, bank, tile, palette views | Load verified ROM, inspect and export any tile with provenance |
-| 3. Sprite inspector | Reconstruct hardware components and visible sprites | Reconstruct Mario from verified OAM components with correct alpha/flip/priority behavior |
-| 4. Animations | Capture, align, preview and export | Mario walk plus one enemy animation export with durations/origins, no background contamination |
-| 5. Level decoder | SMB3 World 1-1 interpreted data | Decode complete World 1-1 layout and object list; compare scrolling sections against emulator |
-| 6. Audio | Captured music and sound effects | Reproducible WAV/FLAC with intervals and limitations; sequence decoding explicitly optional |
-| 7. Windows release | Integrated desktop build + coverage report | Windows launch, import, sprite/animation/level/audio workflows, regression checks and provenance |
+**Active target:** **Super Mario Bros. 3 — USA PRG1 / Revision A** only. **Headless-first, output-first**: a functional CLI plus generated preview is fine before PySide6. The previous eight-phase research/level-decoding/UI-first ladder is retired as the *product development order*; its verified work is retained as reusable technical evidence.
 
-## Dependency gates
+| Order | Creative milestone | Required user-visible deliverable | Acceptance gate |
+| --- | --- | --- | --- |
+| **1 — NOW** | **Compiled animated World 1-1 stage** | Playable, visually reviewed **looping GIF** of a recognizable fixed-camera stage section | Browse useful source graphics; extract/capture and assemble layers/objects; **at least two independently animated elements**; true seamless loop, stable alignment, colors and alpha; editable JSON recipe; reproducible output hash/provenance |
+| **2** | **SMB3 audio production** | Playable music loop and one distinct SFX exported to WAV; optional FLAC | Capture/extract, listen, trim and specify loop points; audible QA; source/timing metadata; deterministic or clearly documented recording reproducibility |
+| **3** | **Reusable asset/project workbench** | Browseable library and a **second composition** reusing assets from M1/M2; additional animation/wallpaper formats | Meaningful asset labels, editable compositions, provenance, search/tags; real exports verified, e.g. PNG sheets/GIF/APNG and MP4/WebM when practical |
+| **4** | **Windows desktop creative kit** | Usable PySide6 app for ROM import → asset browse → composition → preview → export | Working headless services integrated into UI; Windows native interaction, errors, exports and packaging checked |
 
-The emulator adapter is the highest architectural risk: test it before tying UI design to MesenCE internals. Distinguish OAM sprite entries from actual rendered pixels. Do not infer complete levels from screenshot stitching. Default audio milestone is recorded output, not guaranteed original sequences.
+## Milestone 1 — build order (do this before audio or UI)
 
-## Coverage
+1. **Asset browse/discovery:** generate contact sheets or inspectable manifests of World 1-1 backgrounds, tiles, sprite frames and effects. Avoid forcing users/developers to know an arbitrary CHR offset.
+2. **Extract/capture:** use existing ROM/CHR code, captured frames/graphics or narrow decoders only when needed for the intended scene. Preserve authentic palettes, transparency and file origins.
+3. **Compose:** build a small scene recipe containing canvas dimensions, fixed stage/camera, layer ordering, placements, frame sources, animation schedules and output duration. Manual placement/artist adjustments are allowed and must be labelled.
+4. **Animate/render:** create real complete frames with independently animated objects and clean foreground/background ordering, then compile an indefinitely looping GIF.
+5. **Inspect and correct:** open the actual GIF, check all frames and loop transition for flicker, black edges, misaligned tiles, incorrect colors, opaque halos, jerky timing and unwanted scrolling. Fix visible defects.
+6. **Accept:** save reproducible recipe, asset manifest/hash, finished GIF, preview and concise visual QA report in private local output. Mark M1 complete only once this **actual GIF** passes, not merely tests.
 
-Maintain independent counts for raw discovered resources, captured occurrences and validated game-specific decoded assets. Unknowns are not silently counted as completed assets.
+**Initial stage section, not the full game:** World 1-1 is a recognizable starting point. A bounded clean scene with two animated elements meets the first gate; exhaustive World 1-1 object generators, all SMB3 tiles, accurate collision/gameplay, full CPU/PPU emulation and perfect cycle reproduction do not.
+
+## Evidence and scope
+
+- Preserve ROM hashes, bank offsets and exact source names where relevant, but optimize the workflow for usable assets rather than a theoretical complete decoder.
+- Label `raw` vs `captured` vs `decoded` vs `composed/edited` in manifests. A stitched screenshot can be a creative background; do not label it a fully decoded level.
+- **Visual/audio output gates take precedence over emulator internals.** Investigate internals only for a specific blocked or visibly incorrect deliverable, after simpler extract/capture/manual approaches.
+- Existing research PRs #21–#25 include source-accurate CHR, CPU/CIRAM and 13-frame World 1-1 bonus RGB evidence; reuse what helps produce the GIF and **do not launch another renderer-forensics sprint as a prerequisite**.
+- No GUI-first sprint: open PySide6 PR #4 remains valuable for M4 but is not the immediate Milestone 1.
+- Never alter originals or commit copyrighted ROMs, derived art/audio, captures or save states to public GitHub. Follow Windows-only CI; keep outputs local under `F:\Dev\ROMMAGE\OUTPUT`.
+- Track actual delivered assets and output quality. Comprehensive reverse-engineering coverage is **not** a milestone or release criterion.
+
+## Before beginning any new research branch
+
+Link the blocked creative output, explain why capture/raw extraction/manual arrangement cannot solve it, state the smallest experiment and its stop condition, and describe what improved GIF/audio export it will produce. If these are missing, return to the active production pipeline.
