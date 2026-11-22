@@ -206,6 +206,10 @@ under this scoped viewport; the HUD/IRQ split starts at scanline 192,
 and per-dot timing/other areas were not tested. The implementation,
 negative synthetic tests and private offline Windows CLI are in
 [draft PR #25](https://github.com/87otlto-coder/SpriteMine/pull/25).
-The committed CLI still requires owner native offline acceptance against
-the existing private capture. Read the
+The committed CLI was **subsequently accepted** by the owner on Windows
+PowerShell 5.1 at `a462499`: **61 passed**, then
+`verify_visible_background.py` returned **`passed: true`**,
+13 frames, 638,976 compared RGB pixels, **0 mismatches**.
+Private report: `F:\Dev\ROMMAGE\FIXTURE\SMB3\RuntimeInvestigation\pipe-replay-xbhs6ijw\visible-background-verification.json`.
+The capture was reused without another emulator replay. Read the
 [RGB gate](research/SMB3_VISIBLE_BACKGROUND_NATIVE_GATE.md).
