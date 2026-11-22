@@ -59,6 +59,7 @@ def collect_columns(folder, frame, screens, log_hash):
         halves[key] = patterns, ids
         sources[str(sequence)] = {
             "column": column, "half": half, "cpu_cycle": event["cpu_cycle"],
+            "frame": frame, "junction_flag": event["junction_flag"],
             "patterns_sha256": fingerprint(patterns), "logical_sha256": fingerprint(logical),
         }
     if not halves:
@@ -66,26 +67,11 @@ def collect_columns(folder, frame, screens, log_hash):
     return halves, sources
 
 
-def import_staging(capture, frame, graphics_frame, profile, destination, *, screens):
-    """Import one staging frame with an explicitly selected graphics snapshot.
-
-    The mapped PPU dump carries the eight CHR windows in fetch-address order.
-    Selection of a stable graphics frame is an upstream evidence decision.
-    """
-    if not 1 <= screens <= 16 or min(frame, graphics_frame) < 0:
-        raise ValueError("expected 1–16 screens and nonnegative frame numbers")
-    report = load_json(capture / "report.json")
-    if report.get("neutral") is not True:
-        raise ValueError("expected a neutral A/B/A replay report")
-    folder = capture / "B"
-    log_hash = report["background_staging"]["log_sha256"]
-    halves, sources = collect_columns(folder, frame, screens, log_hash)
+def read_graphics(folder, graphics_frame):
     prefix = f"{graphics_frame}-start"
     ppu = (folder / f"{prefix}-ppu.bin").read_bytes()
     palette = (folder / f"{prefix}-palette.bin").read_bytes()
-    rgb = profile.read_bytes()
-    if (len(ppu) != 0x3000 or len(palette) != 32 or max(palette) > 63
-            or len(rgb) != 192):
+    if (len(ppu) != 0x3000 or len(palette) != 32 or max(palette) > 63):
         raise ValueError("invalid mapped PPU, palette RAM or RGB profile length/value")
     state_bytes = (folder / f"{prefix}-ppu-state.txt").read_bytes()
     state = {}
@@ -100,13 +86,49 @@ def import_staging(capture, frame, graphics_frame, profile, destination, *, scre
     if (state["ppu.mask.grayscale"] != "false" or int(state["ppu.paletteRamMask"]) != 63
             or int(state["ppu.intensifyColorBits"]) != 0):
         raise ValueError("unsupported grayscale or emphasis state")
+    return ppu, palette, base, state_bytes
 
+
+def import_staging(capture, frame, graphics_frame, profile, destination, *, screens, additional_frames=()):
+    """Import one staging frame with an explicitly selected graphics snapshot.
+
+    The mapped PPU dump carries the eight CHR windows in fetch-address order.
+    Selection of a stable graphics frame is an upstream evidence decision.
+    """
+    frames = sorted({frame, *additional_frames})
+    if not 1 <= screens <= 16 or min(*frames, graphics_frame) < 0:
+        raise ValueError("expected 1–16 screens and nonnegative frame numbers")
+    report = load_json(capture / "report.json")
+    if report.get("neutral") is not True:
+        raise ValueError("expected a neutral A/B/A replay report")
+    folder = capture / "B"
+    log_hash = report["background_staging"]["log_sha256"]
+    ppu, palette, base, state_bytes = read_graphics(folder, graphics_frame)
+    rgb = profile.read_bytes()
+    if len(rgb) != 192:
+        raise ValueError("expected 192-byte RGB profile")
+    halves, sources = {}, {}
+    snapshot = ppu[:8192], palette, base
+    for selected in frames:
+        if len(frames) > 1:
+            other_ppu, other_palette, other_base, _ = read_graphics(folder, selected)
+            if (other_ppu[:8192], other_palette, other_base) != snapshot:
+                raise ValueError(f"incompatible graphics snapshot at frame {selected}")
+        staged, events = collect_columns(folder, selected, screens, log_hash)
+        for key, value in staged.items():
+            if key in halves and halves[key] != value:
+                raise ValueError(f"conflicting pattern uploads for column {key[0]}, half {key[1]}")
+            halves[key] = value
+        sources.update(events)
+    identities = {(event["logical_sha256"], event["junction_flag"]) for event in sources.values()}
+    if len(frames) > 1 and len(identities) != 1:
+        raise ValueError("cross-frame uploads have inconsistent logical map or junction")
     columns = screens * COLUMNS_PER_SCREEN
     tiles = [[None] * columns for _ in range(ROWS)]
     assets = {}
     provenance = {
         "decoder": "mesence_plains_staging_v1", "capture": capture.name,
-        "staging_frame": frame, "graphics_frame": graphics_frame,
+        "staging_frame": frame, "staging_frames": frames, "graphics_frame": graphics_frame,
         "staging_log_sha256": log_hash, "ppu_sha256": fingerprint(ppu),
         "palette_sha256": fingerprint(palette), "profile_sha256": fingerprint(rgb),
         "ppu_state_sha256": fingerprint(state_bytes),
@@ -158,10 +180,12 @@ def main():
     parser.add_argument("profile", type=Path)
     parser.add_argument("destination", type=Path)
     parser.add_argument("--screens", type=int, required=True)
+    parser.add_argument("--also-frame", type=int, action="append", default=[])
     args = parser.parse_args()
     try:
         print(import_staging(args.capture, args.frame, args.graphics_frame,
-                             args.profile, args.destination, screens=args.screens))
+                             args.profile, args.destination, screens=args.screens,
+                             additional_frames=args.also_frame))
     except (KeyError, ValueError, OSError) as exc:
         parser.exit(2, f"native staging: {exc}\n")
 

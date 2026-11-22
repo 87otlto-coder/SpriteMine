@@ -73,6 +73,32 @@ def test_native_staging_to_scene_exports_and_coverage(tmp_path):
     assert failed["rows"][26][3]["mismatch_bounds_ticks"] == [0]
     assert "026 ???+" in inspection(report)
 
+    with log.open("a", encoding="ascii", newline="") as out:
+        writer = csv.writer(out, delimiter="\t")
+        for sequence, half in enumerate((0, 1), 3):
+            writer.writerow((sequence, "pattern", 8, 200 + half, 0, 0, 1,
+                             0, 4, half, 8 + half, 0, 0, 1))
+            (folder / f"bg-{sequence:04d}-pattern.bin").write_bytes(
+                (folder / f"bg-{half + 1:04d}-pattern.bin").read_bytes()
+            )
+            (folder / f"bg-{sequence:04d}-tiles.bin").write_bytes(bytes([128]) * 432)
+    report_path = capture / "report.json"
+    replay = json.loads(report_path.read_text())
+    replay["background_staging"]["log_sha256"] = hashlib.sha256(log.read_bytes()).hexdigest()
+    report_path.write_text(json.dumps(replay))
+    with pytest.raises(ValueError, match="incompatible graphics snapshot"):
+        import_staging(capture, 7, 7, profile, tmp_path / "mixed", screens=1,
+                       additional_frames=[8])
+    (folder / "8-start-ppu.bin").write_bytes((folder / "7-start-ppu.bin").read_bytes())
+    combined = import_staging(capture, 7, 7, profile, tmp_path / "combined", screens=1,
+                              additional_frames=[8])
+    assert Scene.load(combined).render(0).getpixel((64, 416)) == (9, 0, 0)
+    assert json.loads(combined.read_text())["staging_provenance"]["staging_frames"] == [7, 8]
+    (folder / "bg-0004-tiles.bin").write_bytes(bytes([129]) * 432)
+    with pytest.raises(ValueError, match="inconsistent logical map"):
+        import_staging(capture, 7, 7, profile, tmp_path / "changed-map", screens=1,
+                       additional_frames=[8])
+
     (folder / "bg-0002-pattern.bin").write_bytes(bytes(53))
     with pytest.raises(ValueError, match="pattern or logical length"):
         import_staging(capture, 7, 7, profile, tmp_path / "invalid", screens=1)

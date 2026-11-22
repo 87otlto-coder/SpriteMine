@@ -227,3 +227,15 @@ explicit world anchor per placement and attach a track. Existing motion
 supports edge turns, falling, hopping and hidden resets. Explicit cels permit
 source-derived timing without expanding into a gameplay simulator. Distinguish
 recorded source behavior from authored loop and reset behavior.
+
+Use repeated `--also-frame` arguments to combine uploads from the same replay.
+Every selected staging frame must have the same captured CHR windows, palette
+RAM and background table as the selected graphics snapshot. Full logical-map
+hashes and junction flags must agree across all included uploads. Conflicting
+uploads abort the import. This checks snapshot compatibility. Fetch-time
+stability still requires separate timing evidence.
+
+The four available replay staging logs each contain the same main-area
+observation near the pipe: frame 450781, column 134, left half only. They
+supply no complete main-area column in that window and no upload for the
+anchored pipe at columns 141–142.
