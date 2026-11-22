@@ -1,5 +1,14 @@
 # SpriteMine project status
 
+## Supporting utility — passive recorder (2026-11-22)
+
+The optional standalone [MesenCE flight recorder](research/MESENCE_FLIGHT_RECORDER.md)
+captures bounded NES RAM/PPU deltas, available state and optional CPU-event bursts.
+Native SMB3 A/B/A and independent memory checks passed; its largest change
+interval bracketed known bonus-area entry. See [validation scope](research/MESENCE_FLIGHT_RECORDER_VALIDATION.md).
+This supporting proof of concept does not change the creative milestone or
+claim extraction, complete tracing or automatic area recognition.
+
 **Updated: 2026-11-22 — owner-approved creative production realignment.** GitHub is authoritative. This file distinguishes merged code, unmerged evidence and actual creative outputs.
 
 ## CURRENT PRIORITY — compiled World 1-1 animated GIF, not further reverse engineering
