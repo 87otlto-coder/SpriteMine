@@ -264,3 +264,11 @@ staged pattern bytes. The two adjacent attribute pairs (140,141) and
 (142,143) matched all 28 staged attribute bytes using the logical
 palette model. These are CPU staging comparisons. PPU commit and
 final RGB equivalence for these columns remain separate checks.
+
+The PPU trace matched all four pipe pattern strips and both attribute
+strips, totaling 244 ordered writes with their expected addresses and values.
+The second neutral replay extended the window past frame 450178 and observed
+the final attribute commit at frame 450180. Replaying the recorded writes over
+start-of-frame CIRAM reproduced end-of-frame CIRAM in all six commit frames.
+This validates bounded PPU memory effects. Native RGB equivalence for the
+main area remains open.
