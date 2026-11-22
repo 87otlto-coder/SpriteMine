@@ -82,6 +82,36 @@ def summarize(path):
             "interpretation": "Change candidates, not semantic area labels; snapshots alias transient changes."}
 
 
+def find_writes(path, *, address, value=None, first=None, last=None):
+    """Find retained writes. Omitted writes cannot be filtered by address or value."""
+    if not 0 <= address <= 0xFFFF or value is not None and not 0 <= value <= 0xFF:
+        raise ValueError("Expected a 16-bit address and optional 8-bit value")
+    if first is not None and first < 0 or last is not None and last < 0:
+        raise ValueError("Expected nonnegative frame numbers")
+    if first is not None and last is not None and first > last:
+        raise ValueError("First frame exceeds last frame")
+
+    matches, omitted, footer = [], 0, None
+    for record in records(path):
+        if record["type"] == "end":
+            footer = record
+        if record["type"] != "burst":
+            continue
+        writes = [event for event in record["events"].values() if event["kind"] == "write"]
+        frame = record["time"]["frame"]
+        # A burst is flushed at end-of-frame. Its callbacks can also carry
+        # the preceding frame number around the frame boundary.
+        if (first is None or frame >= first) and (last is None or frame <= last + 1):
+            omitted += record["event_totals"].get("write", 0) - len(writes)
+        for event in writes:
+            if (event["address"] == address and (value is None or event["value"] == value)
+                    and (first is None or event["frame"] >= first)
+                    and (last is None or event["frame"] <= last)):
+                matches.append(event)
+    matches.sort(key=lambda event: (event["frame"], event["cpu_cycle"]))
+    return {"matches": matches, "omitted_writes_in_candidate_bursts": omitted, "footer": footer}
+
+
 def package(folder):
     raw = folder / "capture.jsonl"
     target = folder / "capture.jsonl.gz"
@@ -206,14 +236,24 @@ def main():
     run.add_argument("--headless", action="store_true", help="Test runner; no controller automation")
     inspect = sub.add_parser("inspect")
     inspect.add_argument("capture", type=Path)
+    writes = sub.add_parser("writes", help="Find retained CPU writes in a recording")
+    writes.add_argument("capture", type=Path)
+    writes.add_argument("--address", type=lambda value: int(value, 0), required=True)
+    writes.add_argument("--value", type=lambda value: int(value, 0))
+    writes.add_argument("--first", type=int)
+    writes.add_argument("--last", type=int)
     args = parser.parse_args()
     try:
         if args.action == "capture":
             if args.trigger_write is not None and not 0 <= args.trigger_write <= 65535:
                 parser.error("--trigger-write must be a 16-bit CPU address")
             capture(args)
-        else:
+        elif args.action == "inspect":
             print(json.dumps(summarize(args.capture), indent=2))
+        else:
+            result = find_writes(args.capture, address=args.address, value=args.value,
+                                 first=args.first, last=args.last)
+            print(json.dumps(result, indent=2))
     except (OSError, ValueError, KeyError) as exc:
         parser.exit(2, f"Flight recorder: {exc}\n")
 

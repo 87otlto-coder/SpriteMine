@@ -158,3 +158,9 @@ Use `--trigger-write 0x0380` to record writes to a specific CPU address.
 The recorder includes the triggering write and retains up to the event cap
 per frame. This mode observes the selected address only. It is an alternative
 to the periodic write and execution bursts enabled by `--events`.
+
+Use the `writes` subcommand on a plain or compressed capture to query retained
+events. For example, add `--address 0x0380 --value 0x20 --first 450162 --last 450172`
+after the capture path. The result lists matching writes in frame and CPU-cycle
+order, reports the session footer, and counts omitted writes from candidate
+bursts. Omitted writes cannot be attributed to the requested address or value.

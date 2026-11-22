@@ -26,6 +26,23 @@ class RecorderTests(unittest.TestCase):
                  "changed_bytes": {"ram": 1}, "memory": {"ram": {"256": "ff"}}},
                 {"type": "end", "reason": "frame_limit"}]
 
+    def test_find_writes_filters_events_and_reports_truncation(self):
+        rows = self.rows()
+        event = {"kind": "write", "address": 896, "value": 32, "frame": 17, "cpu_cycle": 9}
+        rows.insert(-1, {"type": "burst", "time": {"frame": 18},
+                         "event_totals": {"write": 4}, "events": {
+                             "write2": {**event, "cpu_cycle": 10},
+                             "write1": event,
+                             "write3": {**event, "value": 7},
+                         }})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.session(tmp, rows)
+            result = recorder.find_writes(path, address=896, value=32, first=17, last=17)
+            self.assertEqual([9, 10], [e["cpu_cycle"] for e in result["matches"]])
+            self.assertEqual(1, result["omitted_writes_in_candidate_bursts"])
+            self.assertTrue(result["footer"])
+            self.assertEqual([], recorder.find_writes(path, address=896, first=18)["matches"])
+
     def test_delta_reconstruction_and_verified_compression(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = self.session(tmp, self.rows())
