@@ -272,3 +272,15 @@ the final attribute commit at frame 450180. Replaying the recorded writes over
 start-of-frame CIRAM reproduced end-of-frame CIRAM in all six commit frames.
 This validates bounded PPU memory effects. Native RGB equivalence for the
 main area remains open.
+
+### Lower pipe reference after PPU commits
+
+Frames 450181–450183 each contain two 32 × 16 lower-pipe patches that
+independently match the anchored native frame 449473 exactly. The patches
+start at capture Y 65 and 129. Their unique horizontal positions are
+207, 204 and 202 respectively, giving world origins (2049,239),
+(2052,239) and (2054,239). Each frame contributes 1,024 matched pixels
+in this native-to-native comparison. Frame 450180 also matches at X 209,
+but occurs in the final attribute commit frame, so use 450181 or later
+for an unambiguous post-commit reference. This establishes reference
+alignment and consistency. Independent compositor RGB remains untested.
