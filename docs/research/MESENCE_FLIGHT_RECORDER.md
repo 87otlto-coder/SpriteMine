@@ -4,6 +4,15 @@ This standalone utility supports investigation of an NES session. It does not
 extract assets, identify game objects, drive Mario, set breakpoints, or change
 memory/input. No application code or existing research branch is required.
 
+## Default capture workflow
+
+Use the flight recorder by default for SpriteMine capture on the validated
+MesenCE 2.2.1 setup. Start with periodic snapshots for memory changes across
+frames. For a known short-lived write, use the address-triggered mode and
+check the report for dropped events. Use the targeted PPU trace when the
+question requires exact commit timing. Pair recorder data with emulator
+frames whenever the question requires a pixel comparison.
+
 ## Run on Windows
 
 Python 3.11+ standard library only; use the existing portable MesenCE 2.2.1
