@@ -4,7 +4,7 @@
 
 **We are building usable wallpapers, stage GIFs, sprites and audio — not reverse engineering the game exhaustively.** Source-accurate ROM research supports creative output only when necessary.
 
-**Active first milestone: produce a real, smoothly looping, compiled World 1-1 animated stage GIF from reusable extracted/captured components.** Work headlessly with contact sheets/CLI/JSON recipes and inspect the real GIF before starting the audio milestone. **The desktop interface follows the proven headless creative workflows**, rather than preceding them.
+**Milestone 1 owner revision (2026-11-22):** The 48-frame World 1-1-inspired GIF in PR #27 is only a prototype. Acceptance now requires the **entire main World 1-1 as one coherent full-width AND full-height two-dimensional scene** (nominal 176×27 metatiles / 2,816×432 native pixels; verify vertical world/scroll coordinates and HUD separation), correct art/crops/palettes/positions, then coherent independently animated objects. Mario absent by default or only one; **enemies last**, reusing existing `W101O` research. See [full-level M1 acceptance](docs/creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md). Work headlessly with contact sheets/CLI/JSON recipes and inspect the real GIF before starting the audio milestone. **The desktop interface follows the proven headless creative workflows**, rather than preceding them.
 
 **For every new development chat, read:** [AGENTS.md](AGENTS.md) → [product mission](docs/PRODUCT_DIRECTION.md) → [creative milestones](docs/ROADMAP.md) → [status](docs/PROJECT_STATUS.md). This 2026-11-22 decision **supersedes old research-first and full-level-decoding-first instructions** in historical research PRs and discussions.
 
@@ -12,7 +12,7 @@
 
 | Order | Output | Status |
 | --- | --- | --- |
-| 1 | **Compiled World 1-1 stage GIF**, seamless loop, ≥2 independently animated objects, editable composition recipe | **Active; not yet delivered** |
+| 1 | **Full 11-screen × 27-row main World 1-1 panorama + animated GIF**, accurate 2D geometry, graphics and source placement, no texture defects | **Active; PR #27 is a bounded creative prototype, not accepted M1** |
 | 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | Pending after M1 |
 | 3 | Browseable/reusable asset projects and further animation/wallpaper exports | Pending |
 | 4 | Usable **Windows PySide6** creative app over working pipelines | Pending |
@@ -102,3 +102,6 @@ GitHub Actions policy is **Windows-only** following the 11 November incident. Ne
 - [Engineering instructions](AGENTS.md)
 - [Current creative product direction](docs/PRODUCT_DIRECTION.md)
 - [Milestone 1 animated stage GIF plan](docs/ROADMAP.md)
+
+
+**Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.

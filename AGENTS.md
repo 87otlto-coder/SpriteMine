@@ -2,11 +2,13 @@
 
 ## Current product mission — CREATIVE PRODUCTION FIRST (2026-11-22)
 
+**Owner M1 revision (2026-11-22) overrides the earlier section-GIF criteria below:** a complete **11-screen × 27-row main World 1-1** panorama (nominal **2,816×432** logical pixels), including vertical world/scroll coverage, correct art/placement and no texture defects, must precede animation. The entire level is one stationary scene (no repeated sections); Mario none or one; **enemies last**. Existing enemy object records are already documented in `W101O` research, but not in GIF code. See [full-level acceptance](docs/creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md).
+
 **Owner-approved realignment:** SpriteMine is a Windows-first **creative asset extraction, composition, animation and export kit**, starting only with **Super Mario Bros. 3 (US PRG1 / Revision A)**. Our goal is to produce usable animated stages/wallpapers, sprites and audio — **not** to reverse engineer the whole game.
 
 **Required reading:** [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md) is the authoritative product brief; [docs/ROADMAP.md](docs/ROADMAP.md) defines the current output-first milestone sequence. These override stale research-first directives in older PRs, docs and chat threads. Prior verified research remains valid, but it is supporting infrastructure, not the goal.
 
-**FIRST deliverable:** a **compiled, animated, seamlessly looping World 1-1 stage GIF**, constructed with a repeatable headless browse → extract/capture → compose → animate → preview → export workflow. It must be a visually inspected, playable GIF, not merely tests, JSON, screenshots, or a PPU validation report. Do not prioritize UI or audio until this first creative output is accepted.
+**FIRST deliverable:** a source-grounded **complete two-dimensional static World 1-1 panorama** (nominal 2,816×432 source-model pixels), followed by a **seamlessly looping animated GIF of that same scene**, constructed through a repeatable headless browse → extract/capture → compose → animate → preview → export workflow. It must be a visually inspected, playable GIF, not merely tests, JSON, screenshots, or a PPU validation report. Do not prioritize UI or audio until this first creative output is accepted.
 
 Be SpriteMine's technical lead and make routine implementation decisions proactively. Avoid unrelated games, consoles, AI recognition or needless abstraction.
 
@@ -46,7 +48,7 @@ in the relevant historical research procedure.
 
 ## Active creative milestone ladder — supersedes previous research phase order
 
-**M1 (active):** Headless World 1-1 **compiled animated stage GIF**. Browse/extract/capture game graphics, compose a scene from independent layers/objects, animate at least two independently controlled elements, preview and export a seamless playable GIF. Save a reusable composition recipe, output and provenance. No GUI prerequisite and **no full level/gameplay decoder prerequisite**.
+**M1 (active):** Headless **complete main World 1-1**, 11×16 by 27 logical 16-pixel tiles. Verify horizontal and vertical world placement, real art, palette and cropping in a full static panorama before independently animating correct placed objects and exporting a seamless GIF. No Mario by default (at most one), enemies integrated **last** using existing source record research. Save the editable recipe, provenance and per-region QA. No GUI or unnecessary gameplay reimplementation.
 
 **M2:** Music + SFX extraction/capture, playback, trim/loop and WAV (optionally FLAC) exports. Deliver at least one playable music loop and one sound effect, with provenance. Full music sequence disassembly is optional.
 
@@ -73,3 +75,6 @@ For SMB3 research, preserve ROM fingerprints, mapper state, timing and input pro
 ## Mandatory GitHub Actions incident guidance
 
 Before editing or running CI, read [docs/ACTIONS_INCIDENT_2026-11-11.md](docs/ACTIONS_INCIDENT_2026-11-11.md). This project is **Windows-only for GitHub Actions**: use `windows-latest`, no Ubuntu/Linux/macOS jobs or OS matrices unless the owner authorizes them. Avoid redundant branch-push builds and unnecessary version combinations. Keep synthetic tests; never upload ROMs or captures. A previous statement above refers to the historical Windows/Ubuntu matrix: that matrix was intentionally retired in the incident follow-up. Do not reintroduce it.
+
+
+**Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.

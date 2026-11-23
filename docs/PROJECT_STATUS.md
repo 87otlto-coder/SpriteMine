@@ -1,18 +1,20 @@
 # SpriteMine project status
 
+**Current verified branch status (2026-11-23):** PRs #29 (compositor), #31 (World 1-1 source compiler) and #32 (ROM-derived roulette) have been merged into `main` with successful Windows checks. Full-width 2,816×432 original-source GIF export is working and was tested on the user's private ROM; **M1 remains unaccepted** due to unresolved random clouds, broad native validation and enemy animation. [Full M1 acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md) defines the goal; PR #27 remains only an older bounded prototype. Prior sections below chronicle development and may refer to those PRs as draft.
+
 **Updated: 2026-11-22 — owner-approved creative production realignment.** GitHub is authoritative. This file distinguishes merged code, unmerged evidence and actual creative outputs.
 
-## CURRENT PRIORITY — compiled World 1-1 animated GIF, not further reverse engineering
+## CURRENT PRIORITY — original-source full World 1-1 animated scene: enemy pass and visual acceptance
 
-SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is a **visually reviewed, playable, seamlessly looping GIF** of a recognizable World 1-1 section, constructed from usable SMB3 assets with independently moving elements and an editable/reproducible composition recipe. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
+SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is an **owner-accepted, full 176×27-cell two-dimensional World 1-1 panorama and independently animated GIF**, constructed from usable SMB3 assets with independently moving elements and an editable/reproducible composition recipe. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
 
-**Milestone 1 status: NOT YET COMPLETE.** The repository has ROM/CHR extraction and significant accepted rendering research, but **no finished compiled animated World 1-1 stage GIF has been demonstrated or visually accepted**. Do not substitute a screenshot, frame-matched RGB test, hypothetical demo or a report for that file.
+**Milestone 1 status: PARTIAL, NOT YET ACCEPTED.** A source-built complete-width 2,816×432 12-frame GIF with original four-phase background and untouched goal roulette has been generated using private inputs. It is not fully source/native-verified in all regions and is missing enemy animation. Do not substitute a bounded reference check for full acceptance.
 
 **Then:** milestone 2 audio capture/trim/loop/export WAV (music + SFX); milestone 3 reusable asset/project catalog and additional exports; milestone 4 Windows PySide6 UI wrapping proven workflows.
 
 **Relevant unmerged code:** [PRs #21–#25](https://github.com/87otlto-coder/SpriteMine/pull/25) include headless Mario/sprite and World 1-1 background/PPU research. On 2026-11-22 the owner reported **61 local tests passed** on PR #25's accepted implementation and the actual offline verifier returned **13 frames / 638,976 native RGB gameplay pixels / zero mismatches** for a bounded World 1-1 bonus room; prior CPU/CIRAM validation passed 104 frames. These results are genuine but narrow technical evidence, **not a rendered animated stage** and **not merged main features**. Use whichever tested modules shorten the GIF-production path; do not deepen PPU or full-level research without a specific creative blockage. [Static PySide6 PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) is also unmerged and intentionally deferred until the production pipeline is proven.
 
-**Next engineering output:** make the **first complete stage GIF** with a reproducible recipe. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
+**Next engineering output:** extend the existing full-stage GIF with real source-derived enemy motion, beginning with Piranha Plants, and run broad-scene visual QA. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
 
 ## Merged baseline — main
 
@@ -25,7 +27,7 @@ SpriteMine is now a **creative asset extraction/composition/animation/audio prod
 
 Verified private ROM ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579. Mapper 4, 256 KiB PRG / 128 KiB CHR, 16 CHR banks / 8,192 raw tiles. Raw tiles do not automatically identify game actors.
 
-**Not on main yet:** desktop browser, live emulator adapter, character/sprite inspector, animation workspace, reconstructed level or audio catalog.
+**Still not accepted or merged on main:** desktop browser, live emulator adapter, character/sprite inspector and audio catalog. The source-level compiler, 2D composition engine and first full-width GIF builder were merged through PRs #29, #31 and #32, but M1 visual acceptance remains open.
 
 ## Unmerged code and independently reported evidence
 
