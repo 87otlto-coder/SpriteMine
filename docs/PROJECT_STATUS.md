@@ -55,3 +55,10 @@ The real graphics observations are supported by locally held source state, captu
 5. Keep Windows-only CI, source immutability and copyright safeguards. Review/test and integrate only the useful portions of unmerged research PRs #21–#25. New deep ROM/PPU research requires a specific GIF/audio output blocker and a smaller alternative check.
 
 See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
+
+## Headless composition engine candidate
+
+The local composition branch adds a recipe-driven PNG/GIF renderer and
+terrain-aware motion tracks. Windows verification covers synthetic inputs and
+exports. See the [scene composition guide](creative/SCENE_COMPOSITION.md).
+[World 1-1 acceptance](https://github.com/87otlto-coder/SpriteMine/pull/28) remains open.
