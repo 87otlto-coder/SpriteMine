@@ -1,5 +1,7 @@
 # SpriteMine — Creative Asset Workbench
 
+**M1 COMPLETE — owner acceptance on 2026-11-23.** A private, reproducible full-width World 1-1 (2,816×432) static panorama, 144-frame looping GIF, PNG sequence and editable scene recipe have been delivered. The composition includes original-background animations, original end-card roulette and all 14 source-positioned enemy actors. Rebuild/frame-level export checks passed and the corresponding source code is merged into `main` (PRs #28, #29 and #31–#34). This is a **creative-production milestone**, not a claim of exhaustive native emulator-equivalent output; cloud randomness and some motion remain intentionally approximate. **Active next milestone: M2 — SMB3 audio capture and export.**
+
 **Project direction changed 2026-11-22.** SpriteMine is a **Windows-first creative toolkit for browsing, extracting/capturing, compiling, animating and exporting** visual and audio assets from classic games. The first and only active target is **Super Mario Bros. 3 (US PRG1 / Revision A)**.
 
 **We are building usable wallpapers, stage GIFs, sprites and audio — not reverse engineering the game exhaustively.** Source-accurate ROM research supports creative output only when necessary.
@@ -12,8 +14,8 @@
 
 | Order | Output | Status |
 | --- | --- | --- |
-| 1 | **Full 11-screen × 27-row main World 1-1 panorama + animated GIF**, accurate 2D geometry, graphics and source placement, no texture defects | **Active; PR #27 is a bounded creative prototype, not accepted M1** |
-| 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | Pending after M1 |
+| 1 | **Complete 11-screen × 27-row World 1-1 panorama + full-stage animated GIF**, editable scene recipe and reproducible PNG sequence | **Complete — owner accepted 2026-11-23** |
+| 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | **Active — next** |
 | 3 | Browseable/reusable asset projects and further animation/wallpaper exports | Pending |
 | 4 | Usable **Windows PySide6** creative app over working pipelines | Pending |
 
