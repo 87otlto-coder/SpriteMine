@@ -1,5 +1,7 @@
 # SpriteMine — Creative Production Roadmap (owner realignment: 2026-11-22)
 
+**Milestone update — 2026-11-23:** The owner accepted **M1 creative production** following the full 2,816×432 World 1-1 stationary panorama, deterministic 144-frame GIF/PNGs, original-source scenery, coin/block/roulette animations and all 14 enemy placements. PRs #28, #29, #31, #32, #33 and #34 are merged. Fidelity work such as RNG clouds, broader native comparisons and exact gameplay physics is explicitly not a prerequisite for moving to **M2 — audio**. The original M1 criteria below remain as historical engineering detail.
+
 **North star:** browse SMB3 resources, extract/capture usable assets, **compile and animate compositions**, preview real results and export wallpapers, animations and audio. Deliver **finished creative files** before deepening ROM reconstruction. See [product direction](PRODUCT_DIRECTION.md) and [AGENTS.md](../AGENTS.md).
 
 **Owner M1 revision (2026-11-22) overrides the earlier section-GIF criteria below:** a complete **11-screen × 27-row main World 1-1** panorama (nominal **2,816×432** logical pixels), including vertical world/scroll coverage, correct art/placement and no texture defects, must precede animation. The entire level is one stationary scene (no repeated sections); Mario none or one; **enemies last**. Existing enemy object records are already documented in `W101O` research, but not in GIF code. See [full-level acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md).
@@ -8,8 +10,8 @@
 
 | Order | Creative milestone | Required user-visible deliverable | Acceptance gate |
 | --- | --- | --- | --- |
-| **1 — NOW** | **Complete 2D World 1-1 panoramic stage** | **2,816×432 nominal logical-coordinate static PNG**, then seamless **full-scene animated GIF**; source dimensions subject to viewport/world-offset verification | All main-stage horizontal/vertical regions, correct terrain, blocks, clouds/pipes, no substituted textures or crops; separately controlled animations; Mario absent or once; enemies last; editable JSON and reproducible QA |
-| **2** | **SMB3 audio production** | Playable music loop and one distinct SFX exported to WAV; optional FLAC | Capture/extract, listen, trim and specify loop points; audible QA; source/timing metadata; deterministic or clearly documented recording reproducibility |
+| **1 — COMPLETE (2026-11-23)** | **Complete 2D World 1-1 panoramic stage** | **2,816×432 nominal logical-coordinate static PNG**, then seamless **full-scene animated GIF**; source dimensions subject to viewport/world-offset verification | All main-stage horizontal/vertical regions, correct terrain, blocks, clouds/pipes, no substituted textures or crops; separately controlled animations; Mario absent or once; enemies last; editable JSON and reproducible QA |
+| **2 — NOW** | **SMB3 audio production** | Playable music loop and one distinct SFX exported to WAV; optional FLAC | Capture/extract, listen, trim and specify loop points; audible QA; source/timing metadata; deterministic or clearly documented recording reproducibility |
 | **3** | **Reusable asset/project workbench** | Browseable library and a **second composition** reusing assets from M1/M2; additional animation/wallpaper formats | Meaningful asset labels, editable compositions, provenance, search/tags; real exports verified, e.g. PNG sheets/GIF/APNG and MP4/WebM when practical |
 | **4** | **Windows desktop creative kit** | Usable PySide6 app for ROM import → asset browse → composition → preview → export | Working headless services integrated into UI; Windows native interaction, errors, exports and packaging checked |
 

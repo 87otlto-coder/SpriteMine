@@ -1,14 +1,16 @@
 # SpriteMine project status
 
+**M1 OWNER-ACCEPTED — 2026-11-23.** The project owner has accepted the working creative-production milestone: a 2,816×432 stationary World 1-1 panorama and 144-frame / 5.76-second looping export, with 51 background animation tracks, the original goal roulette, three Piranha Plants and 11 other enemy actors (66 tracks total). Rebuilds and GIF-to-PNG frame equivalence were verified privately; Windows CI on merged PRs #28, #29 and #31–#34 passed. **This is creative acceptance, not exhaustive native pixel verification.** Randomized clouds, certain renderer approximations, native-per-region validation and exact enemy behavior remain optional fidelity improvements. Historical sections below reflect progress at their original dates and may say "not accepted"; this current owner decision supersedes that status. **Next active milestone: M2 SMB3 audio capture/preview/trim/loop/export.**
+
 **Current verified branch status (2026-11-23):** PRs #29 (compositor), #31 (World 1-1 source compiler) and #32 (ROM-derived roulette) have been merged into `main` with successful Windows checks. Full-width 2,816×432 original-source GIF export is working and was tested on the user's private ROM; **M1 remains unaccepted** due to unresolved random clouds, broad native validation and enemy animation. [Full M1 acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md) defines the goal; PR #27 remains only an older bounded prototype. Prior sections below chronicle development and may refer to those PRs as draft.
 
 **Updated: 2026-11-22 — owner-approved creative production realignment.** GitHub is authoritative. This file distinguishes merged code, unmerged evidence and actual creative outputs.
 
-## CURRENT PRIORITY — original-source full World 1-1 animated scene: enemy pass and visual acceptance
+## CURRENT PRIORITY — M2 original SMB3 music and sound-effect capture/export
 
 SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is an **owner-accepted, full 176×27-cell two-dimensional World 1-1 panorama and independently animated GIF**, constructed from usable SMB3 assets with independently moving elements and an editable/reproducible composition recipe. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
 
-**Milestone 1 status: PARTIAL, NOT YET ACCEPTED.** A source-built complete-width 2,816×432 12-frame GIF with original four-phase background and untouched goal roulette has been generated using private inputs. It is not fully source/native-verified in all regions and is missing enemy animation. Do not substitute a bounded reference check for full acceptance.
+**Milestone 1 status: COMPLETE BY OWNER ACCEPTANCE (2026-11-23).** The first full-width ROM-derived scene was extended to include all documented World 1-1 enemies and its original roulette; the final private export has 144 temporal frames. Some parts remain creatively approximated and full native equivalence is not claimed.
 
 **Then:** milestone 2 audio capture/trim/loop/export WAV (music + SFX); milestone 3 reusable asset/project catalog and additional exports; milestone 4 Windows PySide6 UI wrapping proven workflows.
 
