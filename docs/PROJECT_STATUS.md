@@ -119,3 +119,21 @@ provisional; randomized clouds, enemy/object motions and the collected card
 fanfare / end sequence remain open. The completed private output is an
 animation-preview milestone, not a fully verified final World 1-1 scene.
 Runbook: [goal roulette](../tools/m1_world11/GOAL_ROULETTE.md).
+
+## First original-source World 1-1 Piranha wallpaper pass (draft PR #33)
+
+[Draft PR #33](https://github.com/87otlto-coder/SpriteMine/pull/33) adds the
+three original World 1-1 pipe plants (Venus Fire Trap, standard green, green
+fire) to the complete-width source-backed scene. Sprite OAM tiles and palettes
+come from the verified owner's PRG1 ROM and frame 450840 MesenCE snapshot;
+placement comes from W101O records at ROM file offset 0xC537. Only source code,
+regression tests and instructions are public. Private visual preview: 2,816×432,
+144 PNG time slots at 40ms, 5.76s looping GIF. The GIF may merge identical
+frames, but decoded cumulative timing agrees pixel-for-pixel with all 144 PNGs.
+
+**Explicit limits:** motion cycles and pipe occlusion are authored wallpaper
+approximations, not exact native OAM masks, player-proximity gating or fireball
+behavior. Goal-card and CHR animation rates are ~120ms vs original ~133ms in this
+higher-rate exported preview. All three source positions are reproduced, but
+full stage native pixel QA, clouds and remaining enemy movement are open.
+**M1 is not complete.** See [Piranha wallpaper runbook](../tools/m1_world11/PIRANHA_WALLPAPER.md).
