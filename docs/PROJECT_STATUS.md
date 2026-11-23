@@ -1,20 +1,20 @@
 # SpriteMine project status
 
-**Owner M1 revision (2026-11-22) overrides the earlier section-GIF criteria below:** a complete **11-screen × 27-row main World 1-1** panorama (nominal **2,816×432** logical pixels), including vertical world/scroll coverage, correct art/placement and no texture defects, must precede animation. The entire level is one stationary scene (no repeated sections); Mario none or one; **enemies last**. Existing enemy object records are already documented in `W101O` research, but not in GIF code. See [full-level acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md).
+**Current verified branch status (2026-11-23):** PRs #29 (compositor), #31 (World 1-1 source compiler) and #32 (ROM-derived roulette) have been merged into `main` with successful Windows checks. Full-width 2,816×432 original-source GIF export is working and was tested on the user's private ROM; **M1 remains unaccepted** due to unresolved random clouds, broad native validation and enemy animation. [Full M1 acceptance](creative/SMB3_WORLD11_FULL_LEVEL_M1_ACCEPTANCE.md) defines the goal; PR #27 remains only an older bounded prototype. Prior sections below chronicle development and may refer to those PRs as draft.
 
 **Updated: 2026-11-22 — owner-approved creative production realignment.** GitHub is authoritative. This file distinguishes merged code, unmerged evidence and actual creative outputs.
 
-## CURRENT PRIORITY — complete 2D World 1-1 static panorama, then full-scene animated GIF
+## CURRENT PRIORITY — original-source full World 1-1 animated scene: enemy pass and visual acceptance
 
-SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is a **full 11-screen × 27-row main World 1-1 static panorama** correctly assembled in both world X and Y, followed by a **playable, seamlessly looping GIF** of that same world with independently animated correctly placed objects. Mario is omitted by default or appears once; enemies are last. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
+SpriteMine is now a **creative asset extraction/composition/animation/audio production kit**. The first deliverable is an **owner-accepted, full 176×27-cell two-dimensional World 1-1 panorama and independently animated GIF**, constructed from usable SMB3 assets with independently moving elements and an editable/reproducible composition recipe. Browse, extract/capture, compile, animate, preview and export **headlessly before UI**. See [product direction](PRODUCT_DIRECTION.md) and [new creative roadmap](ROADMAP.md). This supersedes historical research-first or UI-first orders below.
 
-**Milestone 1 status: NOT COMPLETE.** Unmerged [PR #27](https://github.com/87otlto-coder/SpriteMine/pull/27) produced a real artist-composed 48-frame 1024×576 prototype GIF using selected ROM graphics and captures, with deterministic regeneration and hosted Windows synthetic tests, but **not the complete native stage**. The contact sheet shows time samples, not successive world positions. The exact 2,816×432 source-model panorama, authentic all-region scenery, per-row vertical coverage and full-level GIF **have not been produced or validated**.
+**Milestone 1 status: PARTIAL, NOT YET ACCEPTED.** A source-built complete-width 2,816×432 12-frame GIF with original four-phase background and untouched goal roulette has been generated using private inputs. It is not fully source/native-verified in all regions and is missing enemy animation. Do not substitute a bounded reference check for full acceptance.
 
 **Then:** milestone 2 audio capture/trim/loop/export WAV (music + SFX); milestone 3 reusable asset/project catalog and additional exports; milestone 4 Windows PySide6 UI wrapping proven workflows.
 
 **Relevant unmerged code:** [PRs #21–#25](https://github.com/87otlto-coder/SpriteMine/pull/25) include headless Mario/sprite and World 1-1 background/PPU research. On 2026-11-22 the owner reported **61 local tests passed** on PR #25's accepted implementation and the actual offline verifier returned **13 frames / 638,976 native RGB gameplay pixels / zero mismatches** for a bounded World 1-1 bonus room; prior CPU/CIRAM validation passed 104 frames. These results are genuine but narrow technical evidence, **not a rendered animated stage** and **not merged main features**. Use whichever tested modules shorten the GIF-production path; do not deepen PPU or full-level research without a specific creative blockage. [Static PySide6 PR #4](https://github.com/87otlto-coder/SpriteMine/pull/4) is also unmerged and intentionally deferred until the production pipeline is proven.
 
-**Next engineering output:** a source-grounded **2,816×432 nominal full X/Y static main World 1-1 panorama** (no Mario/enemies) with vertical coverage, completeness and texture audits; then coherent animation and enemies last. The 15 `W101O` source entries are known from November 16 research, but have not been connected to the creative GIF composer. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
+**Next engineering output:** extend the existing full-stage GIF with real source-derived enemy motion, beginning with Piranha Plants, and run broad-scene visual QA. Review the GIF itself for composition, alpha, authentic palette, independent motion and seamless loop; save private local files under `F:\Dev\ROMMAGE\OUTPUT` and QA under `REPORTS`. Preserve original ROMs/captures under `FIXTURE`.
 
 ## Merged baseline — main
 
@@ -27,7 +27,7 @@ SpriteMine is now a **creative asset extraction/composition/animation/audio prod
 
 Verified private ROM ZIP SHA-256: 4377a7f5e6eb50bdd2ac6f249bf1a7085500aca8eb41f38545c3a2731c51a579. Mapper 4, 256 KiB PRG / 128 KiB CHR, 16 CHR banks / 8,192 raw tiles. Raw tiles do not automatically identify game actors.
 
-**Not on main yet:** desktop browser, live emulator adapter, character/sprite inspector, animation workspace, reconstructed level or audio catalog.
+**Still not accepted or merged on main:** desktop browser, live emulator adapter, character/sprite inspector and audio catalog. The source-level compiler, 2D composition engine and first full-width GIF builder were merged through PRs #29, #31 and #32, but M1 visual acceptance remains open.
 
 ## Unmerged code and independently reported evidence
 
@@ -48,11 +48,74 @@ The real graphics observations are supported by locally held source state, captu
 - Research Windows CI migration [PR #9](https://github.com/87otlto-coder/SpriteMine/pull/9) and full-Lua syntax follow-up #12 passed hosted Windows and merged into the research base. Graphics #5 and animation #6 inherited the same Windows policy (maintenance PRs #13/#14), preserving synthetic Lua/MMC3/CHR/RGB tests. GUI #4 inherited Windows-only Qt checks (maintenance PR #11) and is mergeable but remains open for remaining native UI acceptance.
 - An old duplicate artifact-policy workflow run is queued even though later authoritative main runs succeeded; do not conflate the stale queue with current main CI failure.
 
-## Next engineering decisions
+## Next engineering decisions (current, supersedes earlier research/UI-first plans)
 
-1. Build **complete static main World 1-1** across world X and Y, not a repeated scenic section, using existing original-ROM layout findings and legitimate captures. Identify missing tiles or RNG/cloud state explicitly.
-2. Remove synthetic art and incorrect crops; validate the entire scene against emulator views at multiple camera/vertical positions, with HUD excluded.
-3. Animate correctly placed scene objects, keep the world stationary, allow Mario none or one, and inspect the exported full-scene GIF.
-4. **Last:** add enemies from the already-documented `W101O` source object placements and validate images/motion; do not infer simultaneous visibility from source records.
-5. Preserve private ROM/capture/output custody, Windows-only CI, provenance and accepted evidence; no audio or UI before visual M1 acceptance.
+1. Build a **headless browse → extract/capture → stage composition → animated-GIF renderer** using existing CHR and native art/frames. Create the smallest recognizable World 1-1 section with a fixed camera and two independent animated objects.
+2. **Open and inspect the actual GIF.** Fix visual issues, alpha, palette and loop seam; preserve a deterministic editable composition recipe, source labels and private output hashes. Milestone 1 is not done until this is successful.
+3. Start **music/SFX audio extraction** only after stage GIF acceptance; deliver playable WAV outputs and a looped music example.
+4. Build reusable asset/project organization from proven creative exports; then finish native GUI acceptance/integration for PR #4 and build the Windows application.
+5. Keep Windows-only CI, source immutability and copyright safeguards. Review/test and integrate only the useful portions of unmerged research PRs #21–#25. New deep ROM/PPU research requires a specific GIF/audio output blocker and a smaller alternative check.
+
 See README.md, docs/ROADMAP.md, docs/ACTIONS_INCIDENT_2026-11-11.md and research runbooks on their respective branches.
+
+## Headless composition engine candidate
+
+The local composition branch adds a recipe-driven PNG/GIF renderer and
+terrain-aware motion tracks. Windows verification covers synthetic inputs and
+exports. See the [scene composition guide](creative/SCENE_COMPOSITION.md).
+[World 1-1 acceptance](https://github.com/87otlto-coder/SpriteMine/pull/28) remains open.
+
+## First source-driven World 1-1 main-area build (draft PR #31)
+
+[Draft PR #31](https://github.com/87otlto-coder/SpriteMine/pull/31), based on
+PR #29, adds a private-ROM-only headless compiler for the full 176 × 27 logical
+World 1-1 canvas, a frame-local PPU/palette-aware metatile renderer, version-1
+private scene recipes, source provenance and visual reference tests. The ROM,
+extracted artwork and independent game captures stay out of GitHub.
+
+Local private verification on 2026-11-22: 15 Python tests passed; a bounded
+pipe-floor screenshot crop matched 7,680 / 7,680 displayed pixels; a compressed
+recording of the late-pipe scene put 45,758 / 46,176 compared pixels within 50
+RGB units per channel (mouse excluded); the goal black/sky silhouette matched
+4,960 / 4,960 classified pixels. **Only the first result is an exact screenshot
+pixel check.** The video-derived checks are approximate and must **not** be
+counted as lossless native RGB24 coverage. The game's black zigzag goal edge and
+outlined black goal scene are authentic, not rendering corruption.
+
+The model executes 84 / 86 parsed commands, with randomized-cloud placement
+unresolved. Big-block shadows and goal geometry are still provisional until
+lossless native map validation. Dynamic CHR mapping, animation, enemy tracks,
+bonus-room composition and final complete GIF acceptance remain open. This
+milestone is **not complete**. See
+[the compiler runbook](../tools/m1_world11/README.md) and
+[scene composition documentation](creative/SCENE_COMPOSITION.md).
+
+
+## Original goal-card roulette and animated full-stage preview (draft PR #32)
+
+[Draft PR #32](https://github.com/87otlto-coder/SpriteMine/pull/32) (stacked on
+[PR #31](https://github.com/87otlto-coder/SpriteMine/pull/31), then
+[PR #29](https://github.com/87otlto-coder/SpriteMine/pull/29)) adds the
+headless source-backed 4-phase World 1-1 background animation and the original
+3-symbol end-level roulette. The result is a **private, full-width looping GIF**
+(2,816 × 432; 12 distinct frames; 130 ms per frame; 1,560 ms combined loop),
+plus numbered PNGs, editable recipe and deterministic SHA-256 manifests.
+
+The card uses original ROM OAM 8x16 pattern indices $51/$53/$55 (mirrored
+second half), captured sprite palettes 1/2/1, and source placement (2688,336)
+from object record $41,$A8,$15. Original disassembly routine
+`EndLevelCard_Untouched` changes the card every 8 game ticks (~133.1 ms
+NTSC). These assets are **decoded privately from the user's original PRG1 ROM**,
+not copied from the compressed gameplay recording or hand-drawn.
+
+On 2026-11-22: 9 local targeted tests passed with private source data; the
+12-frame GIF and corresponding PNG RGB pixels matched exactly, and two exports
+produced the same GIF SHA-256. GitHub CI is synthetic, with private integration
+tests skipped. The owner H.264 recording demonstrates the same mushroom,
+flower and star visually, but is not a lossless native-frame validation.
+
+**M1 is not yet accepted:** full-level geometry and dynamic CHR coverage are
+provisional; randomized clouds, enemy/object motions and the collected card
+fanfare / end sequence remain open. The completed private output is an
+animation-preview milestone, not a fully verified final World 1-1 scene.
+Runbook: [goal roulette](../tools/m1_world11/GOAL_ROULETTE.md).

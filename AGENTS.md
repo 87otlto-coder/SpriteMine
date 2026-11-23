@@ -75,3 +75,6 @@ For SMB3 research, preserve ROM fingerprints, mapper state, timing and input pro
 ## Mandatory GitHub Actions incident guidance
 
 Before editing or running CI, read [docs/ACTIONS_INCIDENT_2026-11-11.md](docs/ACTIONS_INCIDENT_2026-11-11.md). This project is **Windows-only for GitHub Actions**: use `windows-latest`, no Ubuntu/Linux/macOS jobs or OS matrices unless the owner authorizes them. Avoid redundant branch-push builds and unnecessary version combinations. Keep synthetic tests; never upload ROMs or captures. A previous statement above refers to the historical Windows/Ubuntu matrix: that matrix was intentionally retired in the incident follow-up. Do not reintroduce it.
+
+
+**Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.

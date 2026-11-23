@@ -102,3 +102,6 @@ GitHub Actions policy is **Windows-only** following the 11 November incident. Ne
 - [Engineering instructions](AGENTS.md)
 - [Current creative product direction](docs/PRODUCT_DIRECTION.md)
 - [Milestone 1 animated stage GIF plan](docs/ROADMAP.md)
+
+
+**Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.

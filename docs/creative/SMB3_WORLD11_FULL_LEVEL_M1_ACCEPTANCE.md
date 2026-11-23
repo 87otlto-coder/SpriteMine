@@ -28,7 +28,7 @@
 ## What is already known (avoid rework)
 
 - PR #27 implements a headless GIF writer and independent animation schedules, **but its stage geometry is manually composed**. It repeats scenery and crops local screenshot regions, and it does not expose a native full-level tile layout.
-- World 1-1 research has verified the header/stream fingerprint and statically interpreted many generator placements, including the source enemy object list and camera-dependent spawning. This is source-level evidence, **not a finished whole-main-area ROM decoder or native full-area render**.
+- World 1-1 research verified the header/stream and object placements. PR #31 now compiles a **provisional full 176×27 logical scene** and PR #32 generates a **12-frame full-width GIF** with real background animation and untouched goal roulette. Neither establishes complete native pixel acceptance: RNG/clouds, some generators and enemies remain outstanding.
 - PR #25's 638,976 exact pixels were from a **bounded bonus-room background**, not a whole 11-screen by 27-row main-area match.
 
 See the source-derived [World 1-1 reconstruction research](https://github.com/87otlto-coder/SpriteMine/blob/research/smb3-rom-spelunking-20261116/docs/research/SMB3_WORLD1_1_RECONSTRUCTION.md), [background PPU row staging research](https://github.com/87otlto-coder/SpriteMine/blob/research/smb3-rom-spelunking-20261116/docs/research/SMB3_BACKGROUND_PPU_RENDERING_SPELUNKING_20261118.md), and [PR #27 prototype](https://github.com/87otlto-coder/SpriteMine/pull/27).

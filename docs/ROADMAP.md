@@ -36,3 +36,6 @@ Do not mistake 27 rows of logical/PPU staging for 432 pixels concurrently visibl
 ## Before beginning any new research branch
 
 Link the blocked creative output, explain why capture/raw extraction/manual arrangement cannot solve it, state the smallest experiment and its stop condition, and describe what improved GIF/audio export it will produce. If these are missing, return to the active production pipeline.
+
+
+**Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.

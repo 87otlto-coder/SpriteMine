@@ -62,3 +62,6 @@ Keep SMB3 PRG1 the only active game until these creative workflows work end to e
 3. Reuse accepted research only where it shortens the creative output path.
 4. Prefer writing/running composition and export code over another explanatory research report.
 5. Report what output files were actually produced, opened/visually checked, what remains flawed and how the next change improves the finished asset.
+
+
+**Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.
