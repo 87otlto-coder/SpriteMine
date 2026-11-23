@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source_kind": "captured",
+  "source_context": "Example only: MesenCE private SMB3 recording",
+  "source_disclaimer": "Example timestamps are placeholders, not real original game loop timings",
+  "exports": [
+    {
+      "name": "music_loop_example",
+      "kind": "music",
+      "start_s": 2.0,
+      "end_s": 8.0,
+      "loop": true,
+      "crossfade_ms": 80,
+      "note": "Select a musical phrase by ear first"
+    },
+    {
+      "name": "sound_effect_example",
+      "kind": "sfx",
+      "start_s": 10.0,
+      "end_s": 11.0,
+      "loop": false,
+      "fade_in_ms": 8,
+      "fade_out_ms": 20,
+      "note": "Separate take strongly preferred"
+    }
+  ]
+}

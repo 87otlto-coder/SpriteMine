@@ -164,3 +164,29 @@ verified emulator gameplay. Random clouds, per-region native pixel
 acceptance and visual approval of the complete animated stage remain open.
 M1 is not yet accepted. Runbook:
 [ground actors](../tools/m1_world11/GROUND_ACTORS_WALLPAPER.md).
+
+## M2 first captured-audio workbench pass (draft PR #36)
+
+[Draft PR #36](https://github.com/87otlto-coder/SpriteMine/pull/36)
+provides a headless **captured audio → inspect/edit recipe → PCM16 WAV export**
+workbench. It requires no music sequence decoding or APU simulation. Input can be
+signed PCM16 WAV directly, or a video/audio container converted to PCM16 with
+optional FFmpeg. Versioned JSON clip edits, SHA-256 source/output provenance,
+frame-accurate trim intervals, sample-continuous overlap loops and SFX fades
+are implemented. Tests are synthetic only on public CI.
+
+The first private source was the owner's 2026-11-22 MesenCE SMB3 PRG1 gameplay
+recording (H.264/AAC, 23.232s, 48kHz stereo, SHA-256
+`2706294c870f0851c6559c1a7a73201728b6350e38a993538866ff0c8fa5cebc`).
+First private deliverables: **6.10s provisional bonus-room music loop**, **3.27s
+provisional main-stage music loop** and **1.45s captured goal-card pickup audio**.
+All three WAV outputs reproduced byte-for-byte in a second export; 16 synthetic
+unit tests pass locally. The private WAVs, video and capture metadata remain
+outside public GitHub.
+
+**M2 remains in progress.** The AAC soundtrack includes music and SFX mixed
+together; editorial loop boundaries are not verified native song markers.
+Audio quality and musical seams need owner listening review. Next: capture a
+clean original WAV directly from MesenCE 2.2.1 (separate music and effect takes),
+then tune the trims and verify again. Runbook:
+[audio capture and export](audio/M2_AUDIO_CAPTURE_AND_EXPORT.md).

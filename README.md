@@ -15,7 +15,7 @@
 | Order | Output | Status |
 | --- | --- | --- |
 | 1 | **Complete 11-screen × 27-row World 1-1 panorama + full-stage animated GIF**, editable scene recipe and reproducible PNG sequence | **Complete — owner accepted 2026-11-23** |
-| 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | **Active — next** |
+| 2 | Playable **music loop + SFX WAV** outputs, trim/loop/provenance | **Active — first captured WAV exports working; clean takes and listening QA open** |
 | 3 | Browseable/reusable asset projects and further animation/wallpaper exports | Pending |
 | 4 | Usable **Windows PySide6** creative app over working pipelines | Pending |
 
@@ -107,3 +107,8 @@ GitHub Actions policy is **Windows-only** following the 11 November incident. Ne
 
 
 **Implementation update (2026-11-23):** The complete-width source-driven preview and looping GIF are now implemented on `main` through PRs #29, #31 and #32. Their existence does not imply complete native validation. Continue M1 with original-source enemy animations, per-region visual QA and final owner acceptance; the goal roulette is already implemented.
+
+
+## M2 — capture-based audio editor
+
+The headless audio editor accepts original **PCM16 WAV** captures (or MP4/AAC via optional FFmpeg), applies JSON-defined clip trimming, sample-continuous crossfade loops and SFX fades, and exports reproducible PCM16 WAV files with SHA-256 provenance. [Windows capture/export instructions](docs/audio/M2_AUDIO_CAPTURE_AND_EXPORT.md). A first private source-backed gameplay recording produced music and goal-card pickup sample WAVs, but these **contain mixed audio** and have not passed clean native recording or owner listening acceptance. This is M2 progress, not complete M2.
