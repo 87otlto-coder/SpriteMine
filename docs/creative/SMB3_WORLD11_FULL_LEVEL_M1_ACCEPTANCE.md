@@ -1,5 +1,7 @@
 # Milestone 1 acceptance — complete two-dimensional World 1-1
 
+**Owner acceptance recorded 2026-11-23:** This creative milestone was accepted after delivery of the full 2,816×432 World 1-1 stage panorama and looping 144-frame GIF, plus editable recipe and deterministic PNG exports, with source-derived coin/block animations, goal-card roulette and all 14 source-positioned enemies. This is creative deliverable acceptance, **not a declaration that every logical tile, randomized cloud or frame is native pixel-perfect**. Remaining accuracy research is optional follow-up and is not a blocker for M2. The original detailed gates below are retained as a record of the initial targets.
+
 **Owner revision: 2026-11-22.** This supersedes the earlier 'recognizable section' GIF acceptance in older roadmap text and PR #27. The existing artist-composed 48-frame GIF is a useful **prototype**, not a completed M1 deliverable.
 
 ## Target geometry and source evidence
