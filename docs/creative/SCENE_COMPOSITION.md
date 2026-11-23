@@ -321,3 +321,26 @@ The upper and middle native references use the previously checked world
 origins (2148,0) and (2173,150). This gives native reference coverage over
 all 108 cells in the four-column region. Compositor comparison remains
 verified for the existing two-column render only.
+
+## Source-driven World 1-1 private scene bundle (draft PR #31)
+
+The original ROM command stream can now produce a full 176 × 27 logical
+canvas and compositor-v1 recipe through
+[`tools/m1_world11/make_m1_bundle.py`](../../tools/m1_world11/make_m1_bundle.py).
+The private builder accepts the verified SMB3 ZIP and a same-frame PPU/palette
+ZIP, plus a 192-byte MesenCE 2C02 RGB profile. It resolves CHR page selections
+against the original ROM and refuses unmatched or ambiguous pages; the captured
+frame 450840 uses pages [8,9,100,101]. Full-level equivalence and dynamic CHR
+mapping are explicitly *not* inferred from this single snapshot.
+
+The owner-provided 23s MesenCE playthrough gives independent compressed-video
+shape evidence for pipes, terrain and goal. Two checks are reproducible with
+`tools/m1_world11/verify_video_reference.py`: a tolerant late-pipe comparison
+(origin 2208,239; mouse excluded) and a black/sky goal-edge class check
+(origin 2456,239). Neither qualifies as exact native RGB24 validation.
+A separate read-only screenshot comparator guards the previously corrected
+row-26 pipe/floor overlap. The authentic diagonal goal transition and goal
+silhouette are to be retained. Source-modeled shadows, unseeded randomized
+clouds, and animation are not yet accepted. See
+[the full runbook](../../tools/m1_world11/README.md) for local PowerShell
+instructions, private artifact boundaries and optional regression tests.
