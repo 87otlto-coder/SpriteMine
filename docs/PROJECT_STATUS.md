@@ -137,3 +137,28 @@ behavior. Goal-card and CHR animation rates are ~120ms vs original ~133ms in thi
 higher-rate exported preview. All three source positions are reproduced, but
 full stage native pixel QA, clouds and remaining enemy movement are open.
 **M1 is not complete.** See [Piranha wallpaper runbook](../tools/m1_world11/PIRANHA_WALLPAPER.md).
+
+## Full source-placement enemy wallpaper pass (draft PR #34)
+
+[Draft PR #34](https://github.com/87otlto-coder/SpriteMine/pull/34)
+adds the 11 remaining World 1-1 source enemy entries: four Goombas,
+two red Koopas, one green Koopa, a Paragoomba, and three hopping green
+Paratroopas. Source graphics are OAM components reconstructed from CHR-ROM
+and a verified frame-450840 MesenCE palette/CHR snapshot. All 15 W101O
+entries are now represented as source positions in the private scene:
+14 enemies plus one untouched goal roulette. This artistic wallpaper displays
+them simultaneously; runtime enemy activation is not represented.
+
+Private local output: one fixed **2,816×432**, **144-frame**, **5.76-second**
+looping GIF and matching numbered PNGs, with **66 independently controlled
+tracks** (51 original background, 1 goal, 3 plants, 11 additional enemies).
+The decoded GIF matched all 144 private PNGs exactly in RGB space, and a
+second private build produced identical new assets/recipe. Original source
+sprite artwork and capture are not checked into the public repo.
+
+**Limitations:** enemy motion, terrain-contact adjustments, OAM piece
+alignment and simultaneous presentation are authored wallpaper choices, not
+verified emulator gameplay. Random clouds, per-region native pixel
+acceptance and visual approval of the complete animated stage remain open.
+M1 is not yet accepted. Runbook:
+[ground actors](../tools/m1_world11/GROUND_ACTORS_WALLPAPER.md).
