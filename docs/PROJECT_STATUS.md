@@ -267,3 +267,25 @@ silent resume request, source aliases and state-dependent effect previews.
 The next milestone can begin catalog/UI integration once the naming follow-up
 is integrated; do not reopen the approved audio extraction design without
 a specific defect. See the catalog runbook for native validation commands.
+
+## M3 — first unified private asset workbench (2026-11-27)
+
+Owner approved the isolated audio library and World 1 background map test,
+and explicitly authorized moving to M3. M2 creative acceptance stands;
+native Windows GME validation remains outstanding. M3 is active.
+
+First integration: 292 hash-verified existing private files (204 graphics,
+3 animations, 36 music exports, 7 jingles, 32 SFX, 10 solo channels), plus
+metadata for the silent resume request. Stable scoped IDs, search and type
+filters, browser previews, original-file export and provenance are supported.
+The second creative composition reuses the World 1 animated background map
+and correct map theme, with independent loops and an editable JSON recipe.
+A 14.4s 1024x576 30fps H.264/AAC preview was produced using FFmpeg; it is
+not an exact shared audiovisual loop. Five synthetic tests passed; all
+292 asset hashes verified, metadata byte-identical on rebuild, private ZIP
+integrity passed. The map is background only; no native map pixel comparison,
+HUD or moving map sprites. The prototype map extractor is not yet integrated.
+
+M3 remains in progress pending owner review, flexible import/editing and
+native Windows browser/FFmpeg validation. See [M3 workbench](creative/M3_ASSET_LIBRARY.md).
+No private game assets or generated media are committed.
