@@ -36,6 +36,49 @@ REQUESTS = tuple([Request(n,'music',0x4f5,i) for i,n in enumerate(MAP_MUSIC,1)] 
     [Request('pause','effect',0x4f7,1),Request('resume','effect',0x4f7,2,'Requires paused state; standalone request may be silent.')])
 
 
+# Stable request names remain filenames/CLI selectors. Presentation names are
+# independent of those identifiers. Source symbols refer to pinned smb3.asm.
+MUSIC_NAMES = {
+    **{f'world_{i}': (f'World {i} — Map Theme', f'MUS2A_WORLD{i}') for i in range(1, 9)},
+    'sky_coin_heaven': ('Sky / Coin Heaven Theme', 'MUS2A_SKY'),
+    'invincibility': ('Invincibility Theme', 'MUS2A_INVINCIBILITY'),
+    'warp_whistle': ('Warp Whistle', 'MUS2A_WARPWHISTLE'),
+    'music_box': ('Music Box', 'MUS2A_MUSICBOX'),
+    'throne_room': ('Throne Room Theme', 'MUS2A_THRONEROOM'),
+    'bonus_game': ('Bonus Game Theme', 'MUS2A_BONUSGAME'),
+    'ending': ('Ending Theme', 'MUS2A_ENDING'),
+    'overworld': ('Ground Theme (World 1-1)', 'MUS2B_OVERWORLD'),
+    'underground': ('Underground Theme (World 1-1 Bonus Room)', 'MUS2B_UNDERGROUND'),
+    'underwater': ('Underwater Theme', 'MUS2B_UNDERWATER'),
+    'fortress': ('Fortress Theme', 'MUS2B_FORTRESS'),
+    'boss': ('Boss Theme', 'MUS2B_BOSS'),
+    'airship': ('Airship Theme', 'MUS2B_AIRSHIP'),
+    'hammer_bros_battle': ('Hammer Bros. Battle Theme', 'MUS2B_BATTLE'),
+    'toad_house': ('Toad House Theme', 'MUS2B_TOADHOUSE'),
+    'athletic': ('Athletic Theme', 'MUS2B_ATHLETIC'),
+    'p_switch': ('P-Switch Request (Isolated)', 'MUS2B_PSWITCH'),
+    'bowser': ('Bowser Theme', 'MUS2B_BOWSER'),
+    'world_8_letter': ('World 8 Letter Theme', 'MUS2B_WORLD8LETTER'),
+}
+
+
+def presentation_metadata(entry: dict) -> dict:
+    """Return labels only for matching documented request IDs; never rename files."""
+    name = entry['name']
+    request = next((r for r in REQUESTS if r.name == name), None)
+    if request and (entry['queue'], entry['value'], entry['category']) == (request.queue, request.value, request.category):
+        if name in MUSIC_NAMES:
+            display_name, source_symbol = MUSIC_NAMES[name]
+            return {'display_name': display_name, 'source_symbol': source_symbol}
+    return {'display_name': name.replace('_', ' ').title()}
+
+
+def apply_presentation_metadata(manifest: dict) -> None:
+    """Upgrade presentation in-place, without changing render/provenance fields."""
+    for entry in manifest['requests']:
+        entry.update(presentation_metadata(entry))
+
+
 def adapter(raw: bytes, request: Request, diagnostic: bool = False) -> bytes:
     if audio.sha(raw) != audio.ROM_SHA256:
         raise ValueError('ROM fingerprint mismatch')
@@ -84,9 +127,11 @@ def render_request(raw: bytes, gme: audio.GME, request: Request, out: Path) -> d
 def make_index(out: Path, manifest: dict) -> None:
     rows=[]
     for entry in manifest['requests']:
-        name=html.escape(entry['name'].replace('_',' ').title())
+        name=html.escape(entry.get('display_name', presentation_metadata(entry)['display_name']))
+        symbol = html.escape(entry.get('source_symbol', ''))
+        source_label = f' · <code>{symbol}</code>' if symbol else ''
         files=''.join(f'<div><a href="{html.escape(e["file"],quote=True)}">{html.escape(e["file"])}</a> · {e["seconds"]:.3f}s · full-scale samples {e["full_scale_samples"]}<br><audio controls preload="none" src="{html.escape(e["file"],quote=True)}" {"loop" if e["file"].endswith("_loop.wav") else ""}></audio></div>' for e in entry['exports']+entry.get('stems',[]))
-        rows.append(f'<article><h3>{name}</h3><p>{entry["category"]} · ${entry["queue"]:04X}/${entry["value"]:02X} · {html.escape(entry["status"])}</p><p>{html.escape(entry.get("context",""))}</p>{files}</article>')
+        rows.append(f'<article><h3>{name}</h3><p>{entry["category"]} · ${entry["queue"]:04X}/${entry["value"]:02X}{source_label} · {html.escape(entry["status"])}</p><p>{html.escape(entry.get("context",""))}</p>{files}</article>')
     page='<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>SpriteMine Audio Catalog</title><style>body{background:#14171b;color:#eee;font:16px system-ui;margin:32px auto;max-width:1000px;padding:0 20px}article{border-top:1px solid #41464e;padding:12px 0}a{color:#9dd8ff}p{color:#b9c3ce}audio{width:min(100%,450px);margin:6px 0 12px}</style><h1>SpriteMine · SMB3 audio catalog</h1><p>Private original-ROM emulated renders. Source-marker loops are not exact APU-state equality. Single-request effects may depend on game context. See manifest.json for hashes and limitations.</p>'+''.join(rows)+'</html>'
     (out/'index.html').write_text(page,encoding='utf-8')
 
@@ -124,6 +169,7 @@ def export_catalog(rom: Path,out: Path,library: str|None=None,requests=REQUESTS,
                              'Full-scale samples reported, not repaired; individual listening approval pending.',
                              'Source aliases may share identical audio. Not exhaustive gameplay sound coverage.',
                              'Solo voices use GME mute masks; separate PCM files need not sum to the mixed render.']}
+    apply_presentation_metadata(manifest)
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n',encoding='utf-8')
     make_index(out,manifest)
     return manifest

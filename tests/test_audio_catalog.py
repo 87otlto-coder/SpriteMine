@@ -56,3 +56,28 @@ def test_private_catalog_subset(tmp_path):
     assert ov['loop']['inferred_game_ticks']==1536 and len(ov['stems'])==5
     assert all(x['samples_per_channel']==ov['loop']['duration_samples'] for x in ov['stems'])
     assert next(x for x in m['requests'] if x['name']=='resume')['exports']==[]
+
+
+def test_music_presentation_metadata(tmp_path):
+    import copy
+    entries = [dict(name=r.name, category=r.category, queue=r.queue, value=r.value,
+                    exports=[{'file': r.name + '_loop.wav', 'sha256': 'unchanged',
+                              'seconds': 1.0, 'full_scale_samples': 0}], status='pending')
+               for r in c.REQUESTS if r.category == 'music']
+    before = copy.deepcopy(entries)
+    manifest = {'requests': entries}
+    c.apply_presentation_metadata(manifest)
+    assert len(c.MUSIC_NAMES) == 27
+    assert all(e.get('source_symbol') for e in entries)
+    assert {e['source_symbol'] for e in entries} == {v[1] for v in c.MUSIC_NAMES.values()}
+    by_name = {e['name']: e for e in entries}
+    assert by_name['overworld']['display_name'] == 'Ground Theme (World 1-1)'
+    assert by_name['overworld']['source_symbol'] == 'MUS2B_OVERWORLD'
+    assert by_name['world_1']['display_name'] == 'World 1 — Map Theme'
+    assert by_name['world_1']['source_symbol'] == 'MUS2A_WORLD1'
+    assert [{k: v for k, v in e.items() if k not in ('display_name', 'source_symbol')} for e in entries] == before
+    c.make_index(tmp_path, manifest)
+    page = (tmp_path/'index.html').read_text(encoding='utf-8')
+    assert 'Ground Theme (World 1-1)' in page and 'MUS2B_OVERWORLD' in page
+    assert 'World 1 — Map Theme' in page and 'href="overworld_loop.wav"' in page
+    assert 'source_symbol' not in c.presentation_metadata(dict(by_name['overworld'], value=0x20))
