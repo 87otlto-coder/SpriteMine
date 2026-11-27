@@ -190,3 +190,32 @@ Audio quality and musical seams need owner listening review. Next: capture a
 clean original WAV directly from MesenCE 2.2.1 (separate music and effect takes),
 then tune the trims and verify again. Runbook:
 [audio capture and export](audio/M2_AUDIO_CAPTURE_AND_EXPORT.md).
+
+## M2 — isolated original sound-engine playback (2026-11-24; PR #37)
+
+Owner listening review rejected the earlier mixed gameplay WAVs: game effects
+intruded and musical loop cuts were inaccurate. Keep PR #36's general capture
+editor, but no longer use mixed gameplay captures for isolated music.
+
+The new headless module runs the verified PRG1 ROM's original sound engine
+through a private in-memory NSF adapter and a separately installed Game Music
+Emu shared library. It maps source banks 28, 29, 31 and invokes the original
+sound engine without gameplay. No downloaded NSF, copyrighted ROM/audio,
+or third-party library code is committed. Credits and original source references
+are in the [isolated audio runbook](audio/SMB3_ISOLATED_AUDIO.md).
+
+Private GME 0.6.3 playback tests produced four PCM16 48kHz stereo WAVs:
+Overworld intro + first cycle, Overworld loop (25.562s), Underground loop
+(19.172s), and isolated coin (1.000s incl. decay). Native loop-segment markers
+repeat at intervals consistent with 1536 and 1152 engine ticks respectively.
+Separate diagnostic playback locates markers at 2ms resolution; no diagnostic
+tones are added to normal renders, and no editorial crossfades are applied.
+12 synthetic tests passed; 13 passed with private ROM and GME, including
+byte-identical repeat exports. Some full-scale PCM samples remain in the
+intro and Underground output; listening and exact APU-state equality have
+not been established. Windows DLL playback remains unvalidated.
+
+**M2 remains in progress** pending owner listening acceptance and Windows
+native playback validation. Do not claim every music track/SFX or the original
+music sequence format has been decoded. This is isolated execution of original
+code, not an independently reverse-engineered sequencer.
