@@ -55,7 +55,14 @@ def build_nsf(raw: bytes, track: str, *, diagnostic: bool = False) -> bytes:
 def _make_adapter(prg: bytes, track: str, diagnostic: bool = False) -> bytes:
     if len(prg) != 262144 or track not in TRACKS or (diagnostic and track == 'coin'):
         raise ValueError('Invalid PRG size or track')
-    queue, value = TRACKS[track]
+    return _make_queue_adapter(prg, *TRACKS[track], diagnostic=diagnostic)
+
+
+def _make_queue_adapter(prg: bytes, queue: int, value: int, *, diagnostic: bool = False) -> bytes:
+    if len(prg) != 262144 or queue not in range(0x04F1, 0x04F8) or not 1 <= value <= 255:
+        raise ValueError('Invalid PRG size or audio request')
+    if diagnostic and queue != 0x04F5:
+        raise ValueError('Loop diagnostics require music set 2')
     # Init: reset channel enables, enable four channels, enqueue exactly one event.
     init = bytes([0xA9, 0, 0x8D, 0x15, 0x40, 0xA9, 0x0F, 0x8D, 0x15, 0x40,
                   0xA9, value, 0x8D, queue & 255, queue >> 8, 0x60])
@@ -121,7 +128,7 @@ class GME:
         if err: raise RuntimeError(err.decode('utf-8', 'replace'))
 
     def render(self, nsf: bytes, seconds: int, *, mute_mask: int = 0) -> array:
-        if not 1 <= seconds <= 120: raise ValueError('Render duration must be 1–120 seconds')
+        if not 1 <= seconds <= 300: raise ValueError('Render duration must be 1–300 seconds')
         data = ct.create_string_buffer(nsf); emu = ct.c_void_p()
         self._check(self.lib.gme_open_data(data, len(nsf), ct.byref(emu), RATE))
         try:

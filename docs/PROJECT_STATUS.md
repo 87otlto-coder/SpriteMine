@@ -219,3 +219,27 @@ not been established. Windows DLL playback remains unvalidated.
 native playback validation. Do not claim every music track/SFX or the original
 music sequence format has been decoded. This is isolated execution of original
 code, not an independently reverse-engineered sequencer.
+
+## M2 — source-request audio catalog (2026-11-27; PR #38)
+
+The owner approved the first isolated original-ROM audio renders. PR #37 is
+merged. The catalog extension enumerates 67 documented queue/value pairs:
+27 set-2 music requests, seven jingles, 33 sound-effect requests. All music
+requests yielded recurring source markers; all seven jingles and 32 effects
+rendered audible output. Standalone resume was silent. P-Switch and Toad House
+are byte-identical isolated renders and share source segments; context-driven
+differences are not claimed. Nine delayed-entry music requests have separate
+initial playback through the selected repeat boundary. Ten solo voice renders
+for Overworld/Underground use GME mute masks, not source separation.
+
+Private local build: 85 WAVs, offline HTML listening index, provenance
+manifest. All 75 primary WAV hashes match across independent full builds.
+Eighteen local audio tests pass, including two private ROM/GME tests; all 85
+WAV headers and manifest hashes verified. Twelve primary WAVs contain 342
+full-scale PCM samples, disclosed without postprocessing. Loop markers have
+2ms resolution, not exact APU phase equality. Context-dependent effects,
+per-asset listening and native Windows DLL playback remain open. The library
+covers documented requests, not all gameplay audio or distinct sequences.
+
+See [catalog runbook](audio/SMB3_AUDIO_CATALOG.md). All game data/audio remains
+private. M2 is in progress pending final owner acceptance.
