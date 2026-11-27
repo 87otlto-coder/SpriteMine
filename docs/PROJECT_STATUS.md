@@ -243,3 +243,27 @@ covers documented requests, not all gameplay audio or distinct sequences.
 
 See [catalog runbook](audio/SMB3_AUDIO_CATALOG.md). All game data/audio remains
 private. M2 is in progress pending final owner acceptance.
+
+## M2 — owner review and music presentation correction (2026-11-27)
+
+**Creative audio catalog accepted by the owner**, with a naming correction:
+MUS2B_OVERWORLD ($04F5/$10) is the Ground Theme used in World 1-1, not
+the World 1 map theme (MUS2A_WORLD1, $04F5/$01). PR #38 passed Windows CI
+and was merged. The naming follow-up preserves stable request names and
+filenames but adds human-readable display_name and exact source_symbol
+metadata for all 27 music requests. World 1-1 and bonus room usage is
+verified from the pinned source level headers. The existing private catalog
+was upgraded without re-rendering: all 85 existing WAV hashes and WAV
+headers match the original manifest, and all original metadata fields
+are unchanged. 19 local audio tests passed, including two private ROM/GME
+tests and a new naming regression test.
+
+The owner described the expanded audio library as very good. This establishes
+creative acceptance, not exhaustive per-track listening or native Windows
+DLL acceptance. M2 technical closure remains gated on an actual Windows GME
+DLL smoke test. Known limitations remain: source-marker rather than exact
+APU-state loop equality, 342 full-scale samples in 12 primary WAVs, one
+silent resume request, source aliases and state-dependent effect previews.
+The next milestone can begin catalog/UI integration once the naming follow-up
+is integrated; do not reopen the approved audio extraction design without
+a specific defect. See the catalog runbook for native validation commands.

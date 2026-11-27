@@ -40,3 +40,18 @@ if ($LASTEXITCODE -ne 0) { throw 'Audio checks failed.' }
 ## Verification on 2026-11-27
 
 GME 0.6.3 on the private development environment: all 75 primary WAV hashes matched across independent builds; 85 WAV metadata/manifest hash checks passed including ten solo exports. The private subset test repeats the selected music/effect exports and Overworld solo files. Eighteen combined local audio tests passed (including two private tests). Twelve primary WAVs contain a total of 342 full-scale PCM samples; the exporter reports these instead of normalizing or hiding them. Windows native DLL playback and per-asset listening review remain outstanding. Do not publish generated audio, the ROM, or private metadata/outputs in GitHub. M2 is still open pending final owner acceptance.
+
+
+## Presentation names and owner review
+
+The owner approved the expanded catalog on 2026-11-27 and flagged the ambiguous
+Overworld label. The original `MUS2B_OVERWORLD` ($04F5/$10) is the Ground Theme
+used by World 1-1; `MUS2A_WORLD1` ($04F5/$01) is the World 1 map theme.
+`MUS2B_UNDERGROUND` ($20) is used by the World 1-1 bonus room. See the pinned
+Southbird `PRG/levels/Plains/1-1.asm` and `1-1Bonus.asm` level headers and
+`smb3.asm` music constants. All 27 music request entries now include
+`display_name` and `source_symbol`. Stable `name`, queue/value, filenames,
+loop data and WAV hashes are unchanged. An existing catalog can be upgraded
+using `apply_presentation_metadata` and `make_index` without re-rendering.
+Owner approval covers the creative usefulness of the library, not exhaustive
+per-asset listening, exact APU state continuity or native Windows DLL playback.
